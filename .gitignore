@@ -30,6 +30,7 @@ pnpm-debug.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # local agent/skill tooling (machine-specific symlinks, not app code)
 .claude/
