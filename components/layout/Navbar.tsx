@@ -17,12 +17,9 @@ const NAV_LINKS = [
 
 export function Navbar() {
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-[1400px] items-center justify-between gap-6 px-4 sm:px-6 lg:px-8">
-        <Link
-          href="/"
-          className="font-display text-2xl tracking-wide text-foreground sm:text-3xl"
-        >
+    <header className="sticky top-0 z-40 h-[66px] border-b border-border bg-background">
+      <div className="mx-auto flex h-full max-w-[1400px] items-center justify-between gap-6 px-4 sm:px-6 lg:px-8">
+        <Link href="/" className="text-heading text-white">
           SHIRT BAZAAR
         </Link>
 
@@ -31,7 +28,7 @@ export function Navbar() {
             <Link
               key={link.href}
               href={link.href}
-              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+              className="text-body text-foreground transition-colors hover:text-white"
             >
               {link.label}
             </Link>
@@ -52,16 +49,14 @@ export function Navbar() {
           </SheetTrigger>
           <SheetContent side="right" className="flex flex-col gap-1 p-0">
             <SheetHeader className="border-b border-border">
-              <SheetTitle className="font-display text-xl tracking-wide">
-                SHIRT BAZAAR
-              </SheetTitle>
+              <SheetTitle className="text-heading text-white">SHIRT BAZAAR</SheetTitle>
             </SheetHeader>
             <nav className="flex flex-col gap-1 p-4">
               {NAV_LINKS.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="rounded-md px-3 py-2.5 text-sm text-foreground hover:bg-secondary"
+                  className="text-body rounded-md px-3 py-2.5 text-foreground hover:bg-secondary hover:text-white"
                 >
                   {link.label}
                 </Link>

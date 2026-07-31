@@ -1,18 +1,13 @@
 import type { Metadata } from "next"
-import { Bebas_Neue, Geist_Mono, Inter } from "next/font/google"
+import { Geist_Mono, Inter } from "next/font/google"
 
 import "./globals.css"
 import { cn } from "@/lib/utils";
 
-// Pinned to regular + medium only — docs/DESIGN_SYSTEM.md reserves any
-// heavier weight strictly for the display face (Bebas Neue).
-const inter = Inter({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-sans" })
-
-const bebasNeue = Bebas_Neue({
-  subsets: ["latin"],
-  weight: "400",
-  variable: "--font-display",
-})
+// 300/400 for headline+body copy (docs/DESIGN_SYSTEM.md); 500 stays loaded
+// only so reused shadcn primitives (buttons, badges, labels) keep rendering
+// their stock `font-medium` chrome instead of a synthesized fake-bold.
+const inter = Inter({ subsets: ["latin"], weight: ["300", "400", "500"], variable: "--font-sans" })
 
 const fontMono = Geist_Mono({
   subsets: ["latin"],
@@ -41,7 +36,6 @@ export default function RootLayout({
         fontMono.variable,
         "font-sans",
         inter.variable,
-        bebasNeue.variable,
       )}
     >
       <body>{children}</body>

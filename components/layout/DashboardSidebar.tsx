@@ -39,7 +39,7 @@ export function DashboardSidebar() {
       <SidebarHeader>
         <Link
           href="/"
-          className="px-2 py-1.5 font-display text-xl tracking-wide text-foreground"
+          className="text-heading px-2 py-1.5 text-white"
         >
           SHIRT BAZAAR
         </Link>

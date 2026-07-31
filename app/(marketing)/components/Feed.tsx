@@ -5,10 +5,8 @@ export function Feed({ columns }: { columns: FeedColumn[] }) {
   if (columns.length === 0) {
     return (
       <div className="flex min-h-[40vh] flex-col items-center justify-center gap-2 text-center">
-        <p className="font-display text-3xl tracking-wide text-foreground">
-          No columns yet
-        </p>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-heading-lg text-white">No columns yet</p>
+        <p className="text-body-sm text-muted-foreground">
           Check back soon — new vibes are dropping.
         </p>
       </div>

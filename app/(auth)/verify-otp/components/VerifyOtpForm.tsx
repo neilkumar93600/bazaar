@@ -47,7 +47,7 @@ export function VerifyOtpForm({ email }: { email: string }) {
             setResent(true);
           });
         }}
-        className="text-center text-sm text-muted-foreground hover:text-foreground disabled:opacity-50"
+        className="text-body-sm text-muted-foreground hover:text-foreground disabled:opacity-50"
       >
         {isResending ? "Sending…" : resent ? "Code resent" : "Resend code"}
       </button>

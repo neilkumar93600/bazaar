@@ -43,7 +43,7 @@ export function LoginForm() {
           {isPending ? "Signing in…" : "Sign in"}
         </Button>
       </FieldGroup>
-      <p className="text-center text-sm text-muted-foreground">
+      <p className="text-body-sm text-muted-foreground">
         Don&apos;t have an account?{" "}
         <Link href="/signup" className="text-foreground underline underline-offset-4">
           Sign up

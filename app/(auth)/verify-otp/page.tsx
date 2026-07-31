@@ -9,11 +9,11 @@ export default async function VerifyOtpPage(props: PageProps<"/verify-otp">) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1.5 text-center">
-        <h1 className="text-2xl font-medium tracking-tight text-foreground">
+      <div className="flex flex-col gap-1.5">
+        <h1 className="text-heading-sm text-white">
           Check your email
         </h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-body-sm text-muted-foreground">
           Enter the code we sent to confirm your account.
         </p>
       </div>

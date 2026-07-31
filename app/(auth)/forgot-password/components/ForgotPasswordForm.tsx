@@ -18,7 +18,7 @@ export function ForgotPasswordForm() {
 
   if (state.submitted) {
     return (
-      <p className="text-center text-sm text-muted-foreground">
+      <p className="text-body-sm text-muted-foreground">
         If an account exists for that email, a reset link is on its way.
       </p>
     );
@@ -36,7 +36,7 @@ export function ForgotPasswordForm() {
           {isPending ? "Sending…" : "Send reset link"}
         </Button>
       </FieldGroup>
-      <p className="text-center text-sm text-muted-foreground">
+      <p className="text-body-sm text-muted-foreground">
         Remembered it?{" "}
         <Link href="/login" className="text-foreground underline underline-offset-4">
           Sign in

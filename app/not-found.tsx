@@ -14,7 +14,7 @@ export default function NotFound() {
       <header className="w-full max-w-6xl flex items-center justify-between py-2">
         <Link
           href="/"
-          className="font-display text-xl sm:text-2xl tracking-wide text-foreground hover:text-primary transition-colors flex items-center gap-2"
+          className="text-heading text-white hover:text-primary transition-colors flex items-center gap-2"
         >
           <ShoppingBag className="size-6 text-primary" />
           <span>SHIRT BAZAAR</span>
@@ -32,7 +32,7 @@ export default function NotFound() {
         {/* Massive 3D 404 Display */}
         <div className="relative flex items-center justify-center select-none my-6">
           {/* Background huge '4' left */}
-          <span className="font-display text-[150px] sm:text-[210px] md:text-[260px] leading-none tracking-tighter bg-gradient-to-b from-foreground/25 via-foreground/10 to-transparent bg-clip-text text-transparent drop-shadow-sm">
+          <span className="text-[150px] sm:text-[210px] md:text-[260px] leading-none tracking-tighter bg-gradient-to-b from-foreground/25 via-foreground/10 to-transparent bg-clip-text text-transparent drop-shadow-sm">
             4
           </span>
 
@@ -51,17 +51,17 @@ export default function NotFound() {
           </div>
 
           {/* Background huge '4' right */}
-          <span className="font-display text-[150px] sm:text-[210px] md:text-[260px] leading-none tracking-tighter bg-gradient-to-b from-foreground/25 via-foreground/10 to-transparent bg-clip-text text-transparent drop-shadow-sm">
+          <span className="text-[150px] sm:text-[210px] md:text-[260px] leading-none tracking-tighter bg-gradient-to-b from-foreground/25 via-foreground/10 to-transparent bg-clip-text text-transparent drop-shadow-sm">
             4
           </span>
         </div>
 
         {/* Copy & Heading */}
         <div className="space-y-3 px-4">
-          <h1 className="font-display text-3xl sm:text-4xl md:text-5xl tracking-tight text-foreground">
+          <h1 className="text-heading-lg text-white">
             Oops, we couldn&apos;t find that shirt!
           </h1>
-          <p className="text-base sm:text-lg text-muted-foreground max-w-lg mx-auto leading-relaxed">
+          <p className="text-body text-muted-foreground max-w-lg mx-auto">
             Looks like this page got lost in the laundry or moved to a different rack. Let&apos;s get you back to familiar grounds.
           </p>
         </div>
