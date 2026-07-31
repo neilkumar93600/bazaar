@@ -14,11 +14,11 @@ One line per route from `docs/ARCHITECTURE.md`. Check off as each ships (route f
 - [ ] `/search` — cross-vibe, cross-creator search
 
 ## Auth
-- [ ] `/login`
-- [ ] `/signup`
-- [ ] `/forgot-password`
-- [ ] `/verify-otp`
-- [ ] `/reset-password`
+- [x] `/login` — email+password via `signInWithPassword`
+- [x] `/signup` — email+password via `signUp` -> `/verify-otp`
+- [x] `/forgot-password` — `resetPasswordForEmail`, always reports success
+- [x] `/verify-otp` — `verifyOtp(type: 'signup')` -> `/onboarding`, resend action
+- [x] `/reset-password` — `updateUser({ password })`
 
 ## Legal
 - [ ] `/terms`
@@ -45,6 +45,20 @@ One line per route from `docs/ARCHITECTURE.md`. Check off as each ships (route f
 - [ ] `/dashboard/orders` — purchase history
 
 ## Notes
+- File structure for every remaining route (storefront, legal, public,
+  dashboard, onboarding) is scaffolded with a real `page.tsx` (and
+  `layout.tsx` for `/dashboard`'s sidebar) so the route table fully
+  resolves — content is a shared `ComingSoon` placeholder, routes stay
+  unchecked above until built out for real.
+- Auth flow decision (not explicit in TRD, recorded so it isn't
+  re-derived): signup is email+password (`signUp`), not passwordless —
+  the OTP step is only the post-signup email-verification step
+  (`verifyOtp(type: 'signup')`), not how returning users log in.
+  Returning login is `signInWithPassword`. This assumes the Supabase
+  project's "Confirm signup" email template sends a token/code (not
+  just a magic link) — verify that in the dashboard once auth is live.
+- `proxy.ts` gates `/dashboard*` and `/onboarding` behind a session,
+  and bounces logged-in users away from `/login` and `/signup`.
 - Migration source of truth lives in `supabase/migrations/` (RLS policy per table per `docs/SECURITY.md`, hardened against the supabase-postgres-best-practices skill: `(select auth.uid())`, FK indexes, `security_invoker` view). Seed data (6 vibes + placeholder designs) in `supabase/seed.sql`.
 - Blocked on: Supabase MCP OAuth (`claude /mcp` in an interactive terminal, pick `supabase`, authenticate) — needed to (1) apply the migration + seed, (2) pull the project URL/anon key into `.env.local` (see `.env.example`), (3) render/verify `/` against live data.
 - Env vars required by the app: see `.env.example`.
