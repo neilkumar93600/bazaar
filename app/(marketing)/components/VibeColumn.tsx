@@ -9,13 +9,16 @@ export function VibeColumn({ column }: { column: FeedColumn }) {
     <div
       className="flex w-[78vw] shrink-0 snap-start flex-col gap-4 rounded-3xl p-3 sm:w-[300px] md:w-auto md:shrink md:snap-align-none md:p-0"
       style={{
-        background: `linear-gradient(180deg, hsl(${hue} 55% 55% / 0.10), transparent 55%)`,
+        // Desaturated per docs/DESIGN_SYSTEM.md — a muted tag color, not a
+        // saturated hue, so columns read as distinguishable without
+        // competing with the amber accent.
+        background: `linear-gradient(180deg, hsl(${hue} 22% 50% / 0.12), transparent 55%)`,
       }}
     >
       <header className="flex items-center gap-2.5 px-1">
         <span
           className="size-2.5 shrink-0 rounded-full"
-          style={{ backgroundColor: `hsl(${hue} 60% 58%)` }}
+          style={{ backgroundColor: `hsl(${hue} 35% 55%)` }}
           aria-hidden
         />
         <h2 className="font-display text-2xl tracking-wide text-foreground">

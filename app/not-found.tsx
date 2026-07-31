@@ -32,7 +32,7 @@ export default function NotFound() {
         {/* Massive 3D 404 Display */}
         <div className="relative flex items-center justify-center select-none my-6">
           {/* Background huge '4' left */}
-          <span className="font-display text-[150px] sm:text-[210px] md:text-[260px] leading-none font-extrabold tracking-tighter bg-gradient-to-b from-foreground/25 via-foreground/10 to-transparent bg-clip-text text-transparent drop-shadow-sm">
+          <span className="font-display text-[150px] sm:text-[210px] md:text-[260px] leading-none tracking-tighter bg-gradient-to-b from-foreground/25 via-foreground/10 to-transparent bg-clip-text text-transparent drop-shadow-sm">
             4
           </span>
 
@@ -51,14 +51,14 @@ export default function NotFound() {
           </div>
 
           {/* Background huge '4' right */}
-          <span className="font-display text-[150px] sm:text-[210px] md:text-[260px] leading-none font-extrabold tracking-tighter bg-gradient-to-b from-foreground/25 via-foreground/10 to-transparent bg-clip-text text-transparent drop-shadow-sm">
+          <span className="font-display text-[150px] sm:text-[210px] md:text-[260px] leading-none tracking-tighter bg-gradient-to-b from-foreground/25 via-foreground/10 to-transparent bg-clip-text text-transparent drop-shadow-sm">
             4
           </span>
         </div>
 
         {/* Copy & Heading */}
         <div className="space-y-3 px-4">
-          <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-foreground">
+          <h1 className="font-display text-3xl sm:text-4xl md:text-5xl tracking-tight text-foreground">
             Oops, we couldn&apos;t find that shirt!
           </h1>
           <p className="text-base sm:text-lg text-muted-foreground max-w-lg mx-auto leading-relaxed">
@@ -68,7 +68,7 @@ export default function NotFound() {
 
         {/* Action Buttons */}
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <Button render={<Link href="/" />} size="lg" className="gap-2 font-semibold shadow-lg shadow-primary/20">
+          <Button render={<Link href="/" />} size="lg" className="gap-2 font-medium shadow-lg shadow-primary/20">
             <ArrowLeft className="size-4" />
             Back to Home
           </Button>
