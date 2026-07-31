@@ -64,6 +64,21 @@
         rgba(0, 0, 0, 0) 55%
     );
 
+    /* Pietra storefront tokens (docs/CREATOR_STOREFRONT_DESIGN.md) — scoped
+       to the creator storefront page only, which renders as a light-themed
+       island inside the otherwise all-dark shell (Navbar/Footer unchanged).
+       Additive only: not a site-wide palette migration. */
+    --color-ember-coral: #ff5c3c;
+    --color-cream-paper: #f8f6f2;
+    --color-charcoal: #141414;
+    --color-mid-gray: #6b6b6b;
+    --color-silver: #c4c4c4;
+    --background-image-category-royal: radial-gradient(127.58% 127.5% at 25.04% 20.84%, rgb(83, 90, 255) 0%, rgb(125, 51, 247) 100%);
+    --background-image-category-sky: radial-gradient(208.48% 182.32% at -0.04% -0.23%, rgb(65, 175, 255) 0%, rgb(72, 101, 255) 100%);
+    --background-image-category-verdant: radial-gradient(213.37% 213.37% at 27.54% 0%, rgb(113, 206, 81) 0%, rgb(50, 203, 139) 100%);
+    --background-image-category-magenta: radial-gradient(127.58% 127.5% at 25.04% 20.84%, rgb(200, 83, 255) 0%, rgb(247, 51, 239) 100%);
+    --background-image-category-sunrise: linear-gradient(43deg, rgb(255, 74, 74) 26.92%, rgb(233, 170, 75) 77.91%);
+
     /* Type scale (docs/DESIGN.md) — each `text-{name}` utility bundles
        font-size, line-height, letter-spacing and weight together via
        Tailwind v4's paired --text-{name}--* theme keys. */
@@ -136,6 +151,16 @@
     --sidebar-accent-foreground: #ffffff;
     --sidebar-border: #3e3a46;
     --sidebar-ring: #077ac7;
+}
+
+/* Pietra storefront shadows (docs/CREATOR_STOREFRONT_DESIGN.md) — plain
+   custom properties, not registered under Tailwind's --shadow-* theme
+   namespace, so they never override the default shadow scale used
+   elsewhere. Applied via arbitrary-value utilities, e.g.
+   shadow-[var(--shadow-storefront-card)]. */
+:root {
+    --shadow-storefront-card: rgba(239, 227, 225, 0.3) 5px 5px 24px 0px;
+    --shadow-storefront-card-hover: rgba(134, 137, 141, 0.2) 0px 0px 40px 0px;
 }
 
 @layer base {
