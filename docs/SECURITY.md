@@ -6,7 +6,7 @@
 - Session cookies are httpOnly, secure, and at minimum SameSite=Lax.
 
 ## Row Level Security (minimum one policy per table)
-- `profiles`: a user can read/update only their own row; public profile fields are exposed through a view, not the raw table.
+- `profiles`: publicly readable (needed for storefront/creator-handle lookups); a user can update only their own row.
 - `designs`: publicly readable (feed/storefront); insert and update restricted to the owning generation job or the claimant.
 - `claims`: inserted only via a server-side function that validates payment completion; a user can read their own claims plus the public claim metadata (owner handle) needed to render storefronts.
 - `storefronts`: publicly readable; updatable only by the owning user via a server function.
