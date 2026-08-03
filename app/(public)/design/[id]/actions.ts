@@ -4,8 +4,23 @@ import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
 import { charge } from "@/lib/payments/checkout";
+import { getDesignDetail, type DesignDetail } from "@/lib/data/design";
 
 export type ClaimState = { error?: string };
+
+export async function getDesignDialogData(
+  designId: string
+): Promise<{ design: DesignDetail | null; viewerIsLoggedIn: boolean }> {
+  const [design, supabase] = await Promise.all([
+    getDesignDetail(designId),
+    createClient(),
+  ]);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  return { design, viewerIsLoggedIn: Boolean(user) };
+}
 
 export async function claimDesign(designId: string): Promise<ClaimState> {
   const supabase = await createClient();

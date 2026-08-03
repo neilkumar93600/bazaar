@@ -3,16 +3,11 @@ import type { ReactNode } from "react";
 import { Footer } from "@/components/layout/Footer";
 import { Navbar } from "@/components/layout/Navbar";
 import { PageTransition } from "@/components/ui/motion";
+import { DesignDialogProvider } from "@/components/design/DesignDialogProvider";
 import { getNotifications } from "@/lib/data/notifications";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function PublicLayout({
-  children,
-  modal,
-}: {
-  children: ReactNode;
-  modal: ReactNode;
-}) {
+export default async function PublicLayout({ children }: { children: ReactNode }) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -35,13 +30,14 @@ export default async function PublicLayout({
   }
 
   return (
-    <div className="flex min-h-svh flex-col">
-      <Navbar user={navbarUser} notifications={notifications} />
-      <main className="flex-1">
-        <PageTransition>{children}</PageTransition>
-      </main>
-      <Footer />
-      {modal}
-    </div>
+    <DesignDialogProvider>
+      <div className="flex min-h-svh flex-col">
+        <Navbar user={navbarUser} notifications={notifications} />
+        <main className="flex-1">
+          <PageTransition>{children}</PageTransition>
+        </main>
+        <Footer />
+      </div>
+    </DesignDialogProvider>
   );
 }
