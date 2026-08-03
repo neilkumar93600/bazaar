@@ -60,7 +60,7 @@ export function TrendingRow({ designs }: { designs: TrendingDesign[] }) {
       <div
         ref={scrollerRef}
         onScroll={updateEdges}
-        className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2"
+        className="no-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto"
       >
         {designs.map((design) => (
           <div key={design.id} className="w-[200px] shrink-0 snap-start sm:w-[240px]">
