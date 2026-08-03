@@ -15,7 +15,7 @@
 - `reference_uploads`: readable and writable only by the owning user.
 - `column_rentals`: publicly readable (to render the takeover); writable only by the renting user via a server function that validates payment.
 - `vibes`: publicly readable; writable only by the service role — vibe/column names are curated, not user-created, in v1.
-- `generation_jobs`: readable and writable only by the owning user.
+- `generation_jobs`: writable only by the owning user; readable by the owning user, plus publicly readable for a row that produced an approved design (the design dialog's "who created this" creator box needs that, for any visitor).
 - `pod_provider_mapping`: readable and writable only by the service role; never exposed to any client, admin-only by design.
 - `messages`: readable only by the sender or recipient; insertable by an authenticated user only when the recipient exists.
 
