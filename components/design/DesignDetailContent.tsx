@@ -1,6 +1,6 @@
 import Image from "next/image"
 import Link from "next/link"
-import { format, formatDistanceToNowStrict } from "date-fns"
+import { formatDistanceToNowStrict } from "date-fns"
 
 import type { DesignDetail } from "@/lib/data/design"
 import { formatCents } from "@/lib/utils"
@@ -15,7 +15,7 @@ export function DesignDetailContent({
   viewerIsLoggedIn: boolean
 }) {
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex min-w-0 flex-col gap-4">
       <div className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl border border-border bg-card">
         <Image
           src={design.imageUrl}
@@ -27,19 +27,48 @@ export function DesignDetailContent({
         />
       </div>
 
-      <div className="flex items-baseline justify-between gap-3">
-        <span className="text-heading-lg text-foreground">
-          {design.vibeName ?? "Unfiled"}
+      <div className="flex flex-col gap-1">
+        <span className="text-caption font-medium tracking-wide text-muted-foreground uppercase">
+          Minted {formatDistanceToNowStrict(new Date(design.createdAt), { addSuffix: true })}
         </span>
-        <span className="font-mono text-heading-sm text-gold-leaf">
-          {formatCents(design.priceCents)}
-        </span>
+        <div className="flex items-baseline justify-between gap-3">
+          <span className="truncate text-heading-lg text-foreground">
+            {design.vibeName ?? "Unfiled"}
+          </span>
+          <span className="shrink-0 font-mono text-heading-sm text-gold-leaf">
+            {formatCents(design.priceCents)}
+          </span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 rounded-xl border border-border bg-card p-4">
+        <div className="flex min-w-0 flex-col gap-1">
+          <span className="text-caption font-medium tracking-wide text-muted-foreground uppercase">
+            Edition
+          </span>
+          <span className="text-body-sm font-medium text-foreground">1 of 1 — never again</span>
+        </div>
+        <div className="flex min-w-0 flex-col gap-1">
+          <span className="text-caption font-medium tracking-wide text-muted-foreground uppercase">
+            Status
+          </span>
+          <span className="text-body-sm font-medium break-words text-foreground">
+            {design.isClaimed
+              ? design.claimantHandle
+                ? `Claimed by @${design.claimantHandle}`
+                : "Claimed"
+              : "Unclaimed"}
+          </span>
+        </div>
       </div>
 
       {design.prompt && (
-        <p className="text-body-sm text-muted-foreground italic">
-          &ldquo;{design.prompt}&rdquo;
-        </p>
+        <div className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4">
+          <span className="text-caption font-medium tracking-wide text-muted-foreground uppercase">
+            Prompt
+          </span>
+          <p className="font-mono text-body-sm break-words text-muted-foreground">{design.prompt}</p>
+        </div>
       )}
 
       {design.creator && (
@@ -74,38 +103,16 @@ export function DesignDetailContent({
       )}
 
       {design.isClaimed ? (
-        <div className="glass-surface flex flex-col gap-4 rounded-xl border bg-card p-6 text-card-foreground">
-          <p className="text-body-sm text-muted-foreground">
-            {design.claimantHandle ? (
-              <>
-                One-of-one. Claimed by{" "}
-                <Link
-                  href={`/creator/${design.claimantHandle}`}
-                  className="text-foreground underline underline-offset-4"
-                >
-                  @{design.claimantHandle}
-                </Link>
-                {design.claimedAt &&
-                  ` · ${format(new Date(design.claimedAt), "MMM d, yyyy")}`}
-              </>
-            ) : (
-              "One-of-one. Claimed."
-            )}
-          </p>
-          {design.claimantHandle && (
-            <Button variant="outline" render={<Link href={`/creator/${design.claimantHandle}`} />}>
-              View storefront
-            </Button>
-          )}
-        </div>
+        design.claimantHandle && (
+          <Button variant="outline" render={<Link href={`/creator/${design.claimantHandle}`} />}>
+            View storefront
+          </Button>
+        )
       ) : viewerIsLoggedIn ? (
         <ClaimForm designId={design.id} priceCents={design.priceCents} />
       ) : (
         <div className="glass-surface flex flex-col gap-4 rounded-xl border bg-card p-6 text-card-foreground">
-          <p className="text-body-sm text-muted-foreground">
-            One-of-one. Unclaimed ·{" "}
-            {formatDistanceToNowStrict(new Date(design.createdAt), { addSuffix: true })}.
-          </p>
+          <p className="text-body-sm text-muted-foreground">Sign in to claim this design.</p>
           <Button variant="ember" render={<Link href="/login" />}>
             Log in to claim
           </Button>

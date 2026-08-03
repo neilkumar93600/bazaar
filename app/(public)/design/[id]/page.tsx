@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { getDesignDetail } from "@/lib/data/design";
 import { createClient } from "@/lib/supabase/server";
 import { formatCents } from "@/lib/utils";
-import { DesignDetailContent } from "@/components/design/DesignDetailContent";
+import { DesignDialog } from "@/components/design/DesignDialog";
 
 export async function generateMetadata(
   props: PageProps<"/design/[id]">,
@@ -31,9 +31,5 @@ export default async function DesignDetailPage(props: PageProps<"/design/[id]">)
     data: { user },
   } = await supabase.auth.getUser();
 
-  return (
-    <div className="mx-auto max-w-md px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
-      <DesignDetailContent design={design} viewerIsLoggedIn={Boolean(user)} />
-    </div>
-  );
+  return <DesignDialog design={design} viewerIsLoggedIn={Boolean(user)} />;
 }
