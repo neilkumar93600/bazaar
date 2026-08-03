@@ -17,5 +17,8 @@ jobs:
           cache: npm
 
       - run: npm ci
+      # tsc needs Next's generated route types (PageProps<...>) - typegen
+      # writes those without a full build, which would need Supabase env vars.
+      - run: npx next typegen
       - run: npm run typecheck
       - run: npm run lint
