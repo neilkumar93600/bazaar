@@ -34,6 +34,15 @@ export async function getDesignDetail(id: string): Promise<DesignDetail | null> 
 
   if (!design) return null
 
+  type CreatorJob = {
+    profiles: {
+      handle: string
+      display_name: string | null
+      avatar_url: string | null
+      bio: string | null
+    } | null
+  }
+
   const [{ data: vibe }, { data: claimantProfile }, { data: claimRow }, { data: job }] =
     await Promise.all([
       design.vibe_id
@@ -53,22 +62,19 @@ export async function getDesignDetail(id: string): Promise<DesignDetail | null> 
             .eq("design_id", design.id)
             .maybeSingle()
         : Promise.resolve({ data: null as { claimed_at: string } | null }),
+      // Embeds the creator's profile via the generation_jobs -> profiles FK
+      // in the same request, instead of a second round trip once we know
+      // the job's user_id.
       design.generation_job_id
         ? supabase
             .from("generation_jobs")
-            .select("user_id")
+            .select("profiles(handle, display_name, avatar_url, bio)")
             .eq("id", design.generation_job_id)
-            .maybeSingle()
-        : Promise.resolve({ data: null as { user_id: string } | null }),
+            .maybeSingle<CreatorJob>()
+        : Promise.resolve({ data: null as CreatorJob | null }),
     ])
 
-  const { data: creatorProfile } = job?.user_id
-    ? await supabase
-        .from("profiles")
-        .select("handle, display_name, avatar_url, bio")
-        .eq("id", job.user_id)
-        .maybeSingle()
-    : { data: null }
+  const creatorProfile = job?.profiles ?? null
 
   return {
     id: design.id,
