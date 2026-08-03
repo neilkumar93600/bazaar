@@ -35,7 +35,12 @@ pnpm-debug.log*
 # local agent/skill tooling (machine-specific symlinks, not app code)
 .claude/
 .agents/
+.superpowers/
+.playwright-mcp/
 skills-lock.json
+
+# MCP server config - contains this machine's project refs/endpoints
+.mcp.json
 
 # typescript
 *.tsbuildinfo
