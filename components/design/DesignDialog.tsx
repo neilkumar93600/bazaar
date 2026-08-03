@@ -22,7 +22,7 @@ export function DesignDialog({
         if (!open) router.back()
       }}
     >
-      <DialogContent className="max-h-[calc(100vh-4rem)] overflow-y-auto sm:max-w-xl">
+      <DialogContent className="max-h-[calc(100vh-4rem)] overflow-y-auto sm:max-w-xl md:max-w-3xl">
         <DialogTitle className="sr-only">
           {design.vibeName ?? "Design"} — {design.isClaimed ? "claimed" : "unclaimed"}
         </DialogTitle>
