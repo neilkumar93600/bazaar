@@ -4,19 +4,10 @@ import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
 import { charge } from "@/lib/payments/checkout";
-import { computeTotalCents, type QualityTier, type Size } from "@/lib/pricing";
 
 export type ClaimState = { error?: string };
 
-export async function claimDesign(
-  designId: string,
-  input: {
-    qualityTier: QualityTier;
-    size: Size;
-    placementFront: boolean;
-    placementBack: boolean;
-  }
-): Promise<ClaimState> {
+export async function claimDesign(designId: string): Promise<ClaimState> {
   const supabase = await createClient();
 
   const {
@@ -27,12 +18,7 @@ export async function claimDesign(
     return { error: "Sign in to claim this design." };
   }
 
-  if (!input.placementFront && !input.placementBack) {
-    return { error: "Choose at least one placement." };
-  }
-
-  // Never trust a client-sent price — recompute from the design's current
-  // price_cents, fetched fresh, same as claim_design() re-checks server-side.
+  // Never trust a client-sent price — re-fetch it fresh server-side.
   const { data: design } = await supabase
     .from("designs")
     .select("price_cents")
@@ -44,26 +30,15 @@ export async function claimDesign(
     return { error: "Design not available." };
   }
 
-  const amountCents = computeTotalCents(
-    design.price_cents,
-    input.qualityTier,
-    input.placementFront,
-    input.placementBack
-  );
-
   const { paymentRef } = await charge({
-    amountCents,
+    amountCents: design.price_cents,
     buyerId: user.id,
     designId,
   });
 
   const { data, error } = await supabase.rpc("claim_design", {
     p_design_id: designId,
-    p_quality_tier: input.qualityTier,
-    p_size: input.size,
-    p_placement_front: input.placementFront,
-    p_placement_back: input.placementBack,
-    p_amount_cents: amountCents,
+    p_amount_cents: design.price_cents,
     p_payment_ref: paymentRef,
   });
 

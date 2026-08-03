@@ -4,12 +4,14 @@
 -- storefront. security definer + explicit grant, same pattern as
 -- handle_new_user()/notify_on_*() below it in 20260731000000_init_schema.sql
 -- — this is why claims/orders/storefronts have no client INSERT policy.
+--
+-- Claim is ownership only, at the design's base price — no quality
+-- tier/placement/size here. Those are print-fulfillment choices for
+-- when a Printify (or similar) adapter is wired in later; orders.quality_tier
+-- and orders.size stay null and placement_front/back keep their table
+-- defaults until that exists.
 create function public.claim_design(
   p_design_id uuid,
-  p_quality_tier text,
-  p_size text,
-  p_placement_front boolean,
-  p_placement_back boolean,
   p_amount_cents integer,
   p_payment_ref text
 )
@@ -29,10 +31,6 @@ begin
     raise exception 'Must be signed in to claim a design.';
   end if;
 
-  if not p_placement_front and not p_placement_back then
-    raise exception 'Choose at least one placement.';
-  end if;
-
   -- Row lock: two concurrent claims on the same design must not both pass
   -- this check. claims.design_id being unique is the backstop if they did.
   select is_claimed, moderation_status into v_is_claimed, v_moderation_status
@@ -50,15 +48,8 @@ begin
     raise exception 'Someone just claimed this design.';
   end if;
 
-  insert into public.orders (
-    buyer_id, design_id, quality_tier, size,
-    placement_front, placement_back, amount_cents,
-    stripe_payment_intent_id, status
-  ) values (
-    v_buyer, p_design_id, p_quality_tier, p_size,
-    p_placement_front, p_placement_back, p_amount_cents,
-    p_payment_ref, 'paid'
-  )
+  insert into public.orders (buyer_id, design_id, amount_cents, stripe_payment_intent_id, status)
+  values (v_buyer, p_design_id, p_amount_cents, p_payment_ref, 'paid')
   returning id into v_order_id;
 
   update public.designs
@@ -78,6 +69,4 @@ begin
 end;
 $$;
 
-grant execute on function public.claim_design(
-  uuid, text, text, boolean, boolean, integer, text
-) to authenticated;
+grant execute on function public.claim_design(uuid, integer, text) to authenticated;
