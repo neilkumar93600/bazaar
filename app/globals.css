@@ -2,16 +2,21 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
+/* Dark-only system — docs/DESIGN.md. There is no light theme: `:root` IS the
+   dark theme.
+
+   `dark:` is pinned unconditionally on. Tailwind v4's stock `dark:` follows
+   the OS preference, which would make the shadcn primitives' built-in dark
+   refinements flip with the visitor's system setting on a single-theme app.
+   This keeps those correct without touching every primitive. Do not author
+   new `dark:` classes — they are no-ops by definition here. */
+@custom-variant dark (&);
 
 @theme inline {
-    /* Single family (docs/DESIGN.md substitutes Inter for geomanist) —
-       "display" is the same font, distinguished only by the text-display /
-       text-heading-lg weight+tracking+leading bundles above, not a
-       separate typeface. */
     --font-heading: var(--font-sans);
-    --font-display: var(--font-sans);
     --font-sans: var(--font-sans);
+    --font-mono: var(--font-mono);
+    --font-display: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -51,131 +56,215 @@
     --radius-3xl: calc(var(--radius) * 2.2);
     --radius-4xl: calc(var(--radius) * 2.6);
 
-    /* Ember + Electric Current — the two gradients that carry the entire
-       accent identity (docs/DESIGN.md). Registering them under
-       --background-image-* generates real `bg-ember` / `bg-electric`
-       utilities, so no component ever needs an inline gradient style. */
-    --background-image-ember: linear-gradient(30deg, rgb(253, 137, 37), rgb(255, 12, 0));
-    --background-image-electric: linear-gradient(141deg, rgb(7, 122, 199), rgb(107, 33, 239));
-    --background-image-footer-rose: radial-gradient(
-        circle farthest-side at 100% -80%,
-        rgba(175, 106, 140, 0.46),
-        rgba(98, 65, 83, 0.38) 39%,
-        rgba(0, 0, 0, 0) 55%
-    );
+    /* Neutrals — obsidian ladder (docs/DESIGN.md) */
+    --color-obsidian: #0a0a0b;
+    --color-pitch: #050506;
+    --color-graphite: #121214;
+    --color-slate-ink: #18181b;
+    --color-gunmetal: #1f1f23;
+    --color-hairline: #26262b;
+    --color-steel: #35353c;
+    --color-bone: #fafafa;
+    --color-ash-gray: #a1a1aa;
+    --color-smoke: #71717a;
 
-    /* Pietra storefront tokens (docs/CREATOR_STOREFRONT_DESIGN.md) — scoped
-       to the creator storefront page only, which renders as a light-themed
-       island inside the otherwise all-dark shell (Navbar/Footer unchanged).
-       Additive only: not a site-wide palette migration. */
-    --color-ember-coral: #ff5c3c;
-    --color-cream-paper: #f8f6f2;
-    --color-charcoal: #141414;
-    --color-mid-gray: #6b6b6b;
-    --color-silver: #c4c4c4;
-    --background-image-category-royal: radial-gradient(127.58% 127.5% at 25.04% 20.84%, rgb(83, 90, 255) 0%, rgb(125, 51, 247) 100%);
-    --background-image-category-sky: radial-gradient(208.48% 182.32% at -0.04% -0.23%, rgb(65, 175, 255) 0%, rgb(72, 101, 255) 100%);
-    --background-image-category-verdant: radial-gradient(213.37% 213.37% at 27.54% 0%, rgb(113, 206, 81) 0%, rgb(50, 203, 139) 100%);
-    --background-image-category-magenta: radial-gradient(127.58% 127.5% at 25.04% 20.84%, rgb(200, 83, 255) 0%, rgb(247, 51, 239) 100%);
-    --background-image-category-sunrise: linear-gradient(43deg, rgb(255, 74, 74) 26.92%, rgb(233, 170, 75) 77.91%);
+    /* Orange — the only chroma family in the system */
+    --color-ember-orange: #ff6a1f;
+    --color-molten-amber: #ffa832;
+    --color-deep-ember: #e0400d;
+    --color-gold-leaf: #ffc861;
 
-    /* Type scale (docs/DESIGN.md) — each `text-{name}` utility bundles
-       font-size, line-height, letter-spacing and weight together via
-       Tailwind v4's paired --text-{name}--* theme keys. */
+    /* Status only */
+    --color-success: #3fbf7f;
+    --color-danger: #f0453a;
+
+    /* Gradients → bg-ember-flow, bg-sunset-sweep, ... */
+    --background-image-ember-flow: linear-gradient(100deg, #ff4d0f 0%, #ff6a1f 45%, #ffa832 100%);
+    --background-image-ember-flow-hot: linear-gradient(100deg, #ff6a1f 0%, #ffa832 45%, #ffc861 100%);
+    --background-image-molten-rise: linear-gradient(180deg, #ffa832 0%, #ff6a1f 55%, #e0400d 100%);
+    --background-image-sunset-sweep: linear-gradient(43deg, #e0400d 20%, #ff6a1f 60%, #ffc861 100%);
+    --background-image-forge-glow: radial-gradient(120% 120% at 25% 15%, #ffa832 0%, #ff6a1f 45%, #e0400d 100%);
+    --background-image-ash-ember: linear-gradient(180deg, #1f1f23 0%, #121214 100%);
+    --background-image-hero-atmosphere: radial-gradient(ellipse 90% 60% at 50% 0%, rgba(255, 106, 31, 0.22) 0%, rgba(224, 64, 13, 0.1) 40%, transparent 72%);
+    --background-image-section-fade: linear-gradient(180deg, #050506 0%, #0a0a0b 100%);
+
+    --shadow-hairline: var(--shadow-hairline);
+    --shadow-card: var(--shadow-card);
+    --shadow-card-hover: var(--shadow-card-hover);
+    --shadow-button: var(--shadow-button);
+    --shadow-glow: var(--shadow-glow);
+
     --text-caption: 12px;
-    --text-caption--line-height: 1.5;
+    --text-caption--line-height: 1.2;
+    --text-caption--letter-spacing: -0.12px;
     --text-body-sm: 14px;
     --text-body-sm--line-height: 1.5;
+    --text-body-sm--letter-spacing: -0.14px;
     --text-body: 16px;
     --text-body--line-height: 1.5;
-    --text-body--letter-spacing: -0.29px;
-    --text-subheading: 18px;
-    --text-subheading--line-height: 1.4;
-    --text-heading-sm: 20px;
-    --text-heading-sm--line-height: 1.25;
-    --text-heading: 24px;
-    --text-heading--line-height: 1.2;
-    --text-heading--letter-spacing: -0.17px;
+    --text-body--letter-spacing: -0.16px;
+    --text-subheading: 20px;
+    --text-subheading--line-height: 1.2;
+    --text-subheading--letter-spacing: -0.2px;
+    --text-subheading--font-weight: 500;
+    --text-heading-sm: 24px;
+    --text-heading-sm--line-height: 1.2;
+    --text-heading-sm--letter-spacing: -0.24px;
+    --text-heading-sm--font-weight: 500;
+    --text-heading: 32px;
+    --text-heading--line-height: 1.1;
+    --text-heading--letter-spacing: -0.64px;
     --text-heading--font-weight: 400;
-    --text-heading-lg: 48px;
-    --text-heading-lg--line-height: 0.94;
-    --text-heading-lg--letter-spacing: -0.86px;
-    --text-heading-lg--font-weight: 300;
-    --text-display: 54px;
-    --text-display--line-height: 0.88;
-    --text-display--letter-spacing: -1.08px;
-    --text-display--font-weight: 300;
+    --text-heading-lg: 40px;
+    --text-heading-lg--line-height: 1.1;
+    --text-heading-lg--letter-spacing: -0.52px;
+    --text-heading-lg--font-weight: 400;
+    --text-display: 48px;
+    --text-display--line-height: 1.1;
+    --text-display--letter-spacing: -0.96px;
+    --text-display--font-weight: 700;
+    --animate-marquee: marquee var(--duration) infinite linear;
+    --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
+  @keyframes marquee {
+  from {
+    transform: translateX(0);
+        }
+  to {
+    transform: translateX(calc(-100% - var(--gap)));
+        }
+    }
+  @keyframes marquee-vertical {
+  from {
+    transform: translateY(0);
+        }
+  to {
+    transform: translateY(calc(-100% - var(--gap)));
+        }
+    }
 }
 
-/*
- * Shirt Bazaar's palette is adopted wholesale from docs/DESIGN.md (the n8n
- * reference) — violet-black base, warm-gray body text, pure-white headings,
- * two gradients (Ember for CTAs/claimed-state, Electric Current for
- * links/focus/active) carrying the entire accent identity. Storefront,
- * legal, and dashboard all share this one system — no light theme.
- * :root and .dark are intentionally identical: shadcn primitives key some
- * fine-tuning off `dark:` utilities, so `dark` stays permanently on <html>.
- */
-:root,
-.dark {
-    --background: #0e0918;
-    --foreground: #d1cece;
-    --card: #1a1624;
-    --card-foreground: #d1cece;
-    --popover: #1b1728;
-    --popover-foreground: #d1cece;
-    --primary: #fd8925;
-    --primary-foreground: #ffffff;
-    --secondary: #2c2834;
-    --secondary-foreground: #d1cece;
-    --muted: #1a1624;
-    --muted-foreground: #9d9797;
-    --accent: #2c2834;
-    --accent-foreground: #ffffff;
-    --destructive: #ff492c;
-    --destructive-foreground: #ffffff;
-    --border: #3e3a46;
-    --input: #3e3a46;
-    --ring: #077ac7;
-    --chart-1: #fd8925;
-    --chart-2: #077ac7;
-    --chart-3: #6b21ef;
-    --chart-4: #d1cece;
-    --chart-5: #9d9797;
-    --radius: 0.5rem;
-    --sidebar: #0e0918;
-    --sidebar-foreground: #d1cece;
-    --sidebar-primary: #fd8925;
-    --sidebar-primary-foreground: #ffffff;
-    --sidebar-accent: #2c2834;
-    --sidebar-accent-foreground: #ffffff;
-    --sidebar-border: #3e3a46;
-    --sidebar-ring: #077ac7;
-}
-
-/* Pietra storefront shadows (docs/CREATOR_STOREFRONT_DESIGN.md) — plain
-   custom properties, not registered under Tailwind's --shadow-* theme
-   namespace, so they never override the default shadow scale used
-   elsewhere. Applied via arbitrary-value utilities, e.g.
-   shadow-[var(--shadow-storefront-card)]. */
+/* shadcn semantic layer. Dark values only — do not add a second theme block. */
 :root {
-    --shadow-storefront-card: rgba(239, 227, 225, 0.3) 5px 5px 24px 0px;
-    --shadow-storefront-card-hover: rgba(134, 137, 141, 0.2) 0px 0px 40px 0px;
+    --background: #0a0a0b;
+    --foreground: #fafafa;
+    /* Card and popover are translucent by design: every `bg-card` / `bg-popover`
+       utility in the app becomes a liquid-glass pane without touching a single
+       component. Alpha is tuned so a pane over the bare canvas still lands on
+       Graphite/Slate Ink — the ambient field below is what makes it read. */
+    --card: rgba(18, 18, 20, 0.62);
+    --card-foreground: #fafafa;
+    --popover: rgba(22, 22, 26, 0.74);
+    --popover-foreground: #fafafa;
+    --primary: #ff6a1f;
+    --primary-foreground: #0a0a0b;
+    --secondary: #18181b;
+    --secondary-foreground: #fafafa;
+    --muted: #18181b;
+    --muted-foreground: #a1a1aa;
+    --accent: #1f1f23;
+    --accent-foreground: #fafafa;
+    --destructive: #f0453a;
+    --destructive-foreground: #fafafa;
+    --border: #26262b;
+    --input: #35353c;
+    --ring: #ff6a1f;
+    --chart-1: #ff6a1f;
+    --chart-2: #ffa832;
+    --chart-3: #ffc861;
+    --chart-4: #e0400d;
+    --chart-5: #a1a1aa;
+    --radius: 0.75rem;
+    --sidebar: rgba(18, 18, 20, 0.72);
+    --sidebar-foreground: #fafafa;
+    --sidebar-primary: #ff6a1f;
+    --sidebar-primary-foreground: #0a0a0b;
+    --sidebar-accent: #1f1f23;
+    --sidebar-accent-foreground: #fafafa;
+    --sidebar-border: #26262b;
+    --sidebar-ring: #ff6a1f;
+}
+
+/* Depth in a dark UI comes from a hairline + inner highlight + orange glow.
+   A black drop shadow on a black canvas is invisible. */
+:root {
+    --shadow-hairline: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+    --shadow-card:
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.05),
+        0 8px 32px -12px rgba(0, 0, 0, 0.9);
+    --shadow-card-hover:
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.08),
+        0 0 0 1px rgba(255, 106, 31, 0.28),
+        0 12px 40px -12px rgba(255, 106, 31, 0.22);
+    --shadow-button:
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.18),
+        0 6px 20px -8px rgba(255, 106, 31, 0.55);
+    --shadow-glow: 0 0 48px -8px rgba(255, 106, 31, 0.35);
+    --shadow-storefront-card: var(--shadow-glass);
+    --shadow-storefront-card-hover: var(--shadow-glass-hover);
+
+    /* Liquid glass. One place to retune the whole surface language: `--glass-*`
+       drives .glass-surface, .glass-panel and the .liquid-glass-* layers. */
+    --glass-blur: 20px;
+    --glass-saturate: 145%;
+    --glass-rim: rgba(255, 255, 255, 0.10);
+    --glass-highlight: rgba(255, 255, 255, 0.14);
+    /* Rim is a spread ring rather than a border so a pane needs no border
+       utility to get its edge — these primitives use `ring-*`, not borders. */
+    --shadow-glass:
+        inset 0 1px 0 0 var(--glass-highlight),
+        inset 0 -1px 0 0 rgba(255, 255, 255, 0.04),
+        0 0 0 1px var(--glass-rim),
+        0 16px 48px -20px rgba(0, 0, 0, 0.95);
+    --shadow-glass-hover:
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.20),
+        0 0 0 1px rgba(255, 106, 31, 0.30),
+        0 18px 56px -20px rgba(255, 106, 31, 0.28);
 }
 
 @layer base {
   * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
     @apply border-border outline-ring/50;
-    }
+  }
+  html {
+    color-scheme: dark;
+    @apply font-sans;
+  }
   body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     @apply bg-background text-foreground;
-    }
+    /* Ambient field. Glass over a flat #0a0a0b canvas refracts nothing — it
+       just reads as gray. These fixed ember blooms are the light the panes
+       bend. Painted as body background-image rather than a pseudo-element so
+       it needs no stacking context and no wrapper in any layout. */
+    background-image:
+      radial-gradient(ellipse 70% 50% at 12% 0%, rgba(255, 106, 31, 0.16) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 45% at 92% 22%, rgba(224, 64, 13, 0.12) 0%, transparent 62%),
+      radial-gradient(ellipse 80% 40% at 50% 100%, rgba(255, 168, 50, 0.09) 0%, transparent 68%);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+  }
   button:not(:disabled), [role="button"]:not(:disabled) {
     cursor: pointer;
-    }
-  html {
-    @apply font-sans;
-    }
+  }
+  ::selection {
+    background-color: rgba(255, 106, 31, 0.28);
+    color: var(--foreground);
+  }
+}
+
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes card-rise {
@@ -189,19 +278,64 @@
   }
 }
 
+/* Liquid-glass navbar button — was five inline style blocks + a <style> tag
+   inside Navbar.tsx. Keyframes and layer paint live here now. */
+@keyframes liquid-glass-caustic {
+  0% { transform: translate(-10%, -10%) rotate(0deg) scale(1); }
+  50% { transform: translate(10%, 10%) rotate(180deg) scale(1.15); }
+  100% { transform: translate(-10%, -10%) rotate(360deg) scale(1); }
+}
+
+@keyframes liquid-glass-breathing {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 0.6; }
+}
+
+/* Marquee (components/ui/marquee.tsx) pauses on hover via its own class;
+   keyboard focus has to pause it too or focus walks off a moving target. */
+.animate-marquee:focus-within,
+.animate-marquee-vertical:focus-within {
+  animation-play-state: paused;
+}
+
 .animate-card-rise {
   animation: card-rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+/* Transparency is the whole theme, so honour the opt-out at the token level:
+   the panes go solid and the blur stack drops out everywhere at once. */
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --card: #121214;
+    --popover: #18181b;
+    --sidebar: #121214;
+  }
+
+  .glass-surface,
+  .glass-panel,
+  .liquid-glass-refract {
+    backdrop-filter: none;
+  }
+
+  .glass-panel {
+    background-color: var(--color-gunmetal);
+  }
+
+  body {
+    background-image: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .animate-card-rise {
+  .animate-card-rise,
+  .animate-marquee,
+  .animate-marquee-vertical,
+  .liquid-glass-caustic,
+  .liquid-glass-breath {
     animation: none;
   }
 }
 
-/* Fixed stagger steps for column load-in (app/(marketing)/components/
-   DesignCard.tsx) — a static class per index rather than a JS-computed
-   inline delay, so the whole scale lives in Tailwind/global CSS. */
 @layer components {
   .stagger-0 { animation-delay: 0ms; }
   .stagger-1 { animation-delay: 70ms; }
@@ -219,20 +353,114 @@
   .stagger-13 { animation-delay: 910ms; }
 }
 
-/* Curated, desaturated per-column identity tints (docs/DESIGN_SYSTEM.md) —
-   a fixed palette selected by hue index, not a raw hash-to-hue value, so
-   every tint is hand-picked to sit quietly against the violet-black base.
-   app/(marketing)/components/VibeColumn.tsx picks a class deterministically
-   from the vibe's slug. */
 @layer components {
-  .column-tint-0 { --tint: 345 24% 52%; }
-  .column-tint-1 { --tint: 32 30% 52%; }
-  .column-tint-2 { --tint: 72 20% 45%; }
-  .column-tint-3 { --tint: 178 22% 45%; }
-  .column-tint-4 { --tint: 230 28% 55%; }
-  .column-tint-5 { --tint: 285 22% 50%; }
-  .column-tint-6 { --tint: 205 18% 50%; }
-  .column-tint-7 { --tint: 15 30% 48%; }
+  /* Primary CTA: Ember Flow gradient, dark text (white on orange fails AA). */
+  .btn-ember {
+    background-image: var(--background-image-ember-flow);
+    color: var(--background);
+    box-shadow: var(--shadow-button);
+    transition:
+      background-image 300ms ease,
+      box-shadow 300ms ease,
+      transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .btn-ember:hover {
+    background-image: var(--background-image-ember-flow-hot);
+    box-shadow: var(--shadow-button), var(--shadow-glow);
+  }
+
+  .btn-ember:active {
+    transform: scale(0.98);
+  }
+
+  /* Liquid-glass pane. Deliberately sets no background: the surface colour
+     still comes from a `bg-card` / `bg-popover` utility (both translucent
+     tokens), so this only adds the blur, rim highlight and depth. Pair them —
+     `bg-card glass-surface`. */
+  /* Never hand-write the -webkit- pair here: Lightning CSS merges the two
+     declarations and keeps the last, which drops the standard property and
+     leaves Firefox unblurred. It adds the prefix itself. */
+  .glass-surface {
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    border-color: var(--glass-rim);
+    box-shadow: var(--shadow-glass);
+  }
+
+  .glass-surface-interactive {
+    transition:
+      box-shadow 300ms ease,
+      border-color 300ms ease;
+  }
+
+  .glass-surface-interactive:hover,
+  .glass-surface-interactive:focus-visible,
+  .group\/card:hover .glass-surface-interactive,
+  .group\/card:focus-visible .glass-surface-interactive {
+    box-shadow: var(--shadow-glass-hover);
+    border-color: rgba(255, 106, 31, 0.32);
+  }
+
+  /* Glass chrome floating over imagery (navbar pill, hero secondary button).
+     Lighter and more reflective than .glass-surface — it carries its own
+     white tint because it sits on video and photography, not on the canvas. */
+  .glass-panel {
+    background-color: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    box-shadow:
+      inset 0 1px 0 0 var(--glass-highlight),
+      inset 0 -1px 1px 0 rgba(255, 255, 255, 0.05);
+  }
+
+  .liquid-glass-refract {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(calc(var(--glass-blur) + 4px)) saturate(var(--glass-saturate));
+    /* SVG filter node lives in Navbar.tsx markup */
+    filter: url("#liquid-glass-refraction");
+  }
+
+  .liquid-glass-sheen {
+    opacity: 0.45;
+    background: radial-gradient(
+      120px at 56.15% 92.97%,
+      rgba(255, 255, 255, 0.42) 0%,
+      rgba(255, 255, 255, 0.08) 50%,
+      transparent 100%
+    );
+    mix-blend-mode: overlay;
+  }
+
+  .liquid-glass-caustic {
+    background: radial-gradient(rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0) 70%);
+    animation: liquid-glass-caustic 15s ease-in-out infinite;
+  }
+
+  .liquid-glass-rim {
+    border-color: rgba(255, 255, 255, 0.22);
+    box-shadow:
+      rgba(255, 255, 255, 0.45) 0px 1px 1.5px inset,
+      rgba(255, 255, 255, 0.15) 0px -1px 2px inset,
+      rgba(0, 0, 0, 0.5) 0px 8px 24px;
+  }
+
+  .liquid-glass-breath {
+    opacity: 0.45;
+    animation: liquid-glass-breathing 4s ease-in-out infinite;
+  }
+}
+
+@layer components {
+  /* Feed column tints — orange family only, varied hue/sat so columns still
+     read as distinct without reintroducing a second chroma. */
+  .column-tint-0 { --tint: 18 90% 55%; }
+  .column-tint-1 { --tint: 32 95% 58%; }
+  .column-tint-2 { --tint: 12 85% 50%; }
+  .column-tint-3 { --tint: 40 90% 60%; }
+  .column-tint-4 { --tint: 24 80% 52%; }
+  .column-tint-5 { --tint: 36 70% 55%; }
+  .column-tint-6 { --tint: 8 75% 48%; }
+  .column-tint-7 { --tint: 44 85% 62%; }
 
   .column-tint-0,
   .column-tint-1,
@@ -247,5 +475,14 @@
 
   .column-tint-dot {
     background-color: hsl(var(--tint));
+  }
+
+  /* Softens the clipped top/bottom edge of a scrolling feed column. */
+  .mask-fade-y {
+    mask-image: linear-gradient(180deg, transparent 0%, #000 7%, #000 93%, transparent 100%);
+  }
+
+  .bg-footer-train {
+    background-image: url("/footer-bg.jpg");
   }
 }

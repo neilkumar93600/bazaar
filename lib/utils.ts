@@ -15,3 +15,12 @@ export function hueFromString(value: string) {
   }
   return Math.abs(hash) % 360
 }
+
+const CURRENCY_FORMAT = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+})
+
+export function formatCents(cents: number) {
+  return CURRENCY_FORMAT.format(cents / 100)
+}

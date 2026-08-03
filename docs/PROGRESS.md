@@ -9,6 +9,7 @@ One line per route from `docs/ARCHITECTURE.md`. Check off as each ships (route f
 
 ## Storefront (public)
 - [x] `/` — home / vibe-column feed (code complete; render unverified live — blocked on Supabase OAuth, see Notes)
+- [x] `/shop` — the Bazaar: full catalog, filter rail + design grid (verified live against seed data)
 - [ ] `/design/[id]` — design detail + claim/purchase
 - [ ] `/creator/[handle]` — claimant's personal storefront
 - [ ] `/search` — cross-vibe, cross-creator search
@@ -57,9 +58,35 @@ One line per route from `docs/ARCHITECTURE.md`. Check off as each ships (route f
   Returning login is `signInWithPassword`. This assumes the Supabase
   project's "Confirm signup" email template sends a token/code (not
   just a magic link) — verify that in the dashboard once auth is live.
+- One design card: `components/shared/DesignCard.tsx`, used by the home feed,
+  Trending row, `/shop` grid and creator storefronts. Each data module maps
+  its rows into `DesignCardData` instead of growing a card variant — the
+  three former cards (`home/DesignCard`, `bazaar/BazaarDesignCard`,
+  `storefront/StorefrontDesignCard`) are deleted.
+- `designs.price_cents` added by `20260802000000_add_design_price.sql`
+  (integer cents, default 2900). Before it, price existed only per-order via
+  `orders.amount_cents`, so nothing could show a price before purchase. The
+  card's name slot carries the vibe, the price slot the formatted price, the
+  subtitle claim state. `designs` still has no title column.
+- `/shop` filters are vibe + availability: there is no rating or price-band
+  data to facet on beyond price_cents. Filter state lives entirely in the URL
+  (links, not client state), so the panel ships zero JS and every view is
+  deep-linkable.
+- Seed images are local (`public/t-shirt/tee-01..10.png`), not picsum. They
+  are 1.6-3.8MB PNGs — fine for dev via next/image, but compress to WebP
+  before they go anywhere near production.
+- Loading skeletons are per-route, never route-group-wide. `loading.tsx`
+  wraps its own `page.tsx` *and every nested route*, so the old
+  `app/(public)/loading.tsx` (shaped like the pre-hero feed home) was the
+  fallback for all 14 public routes and matched none of them. Home now lives
+  in an `app/(public)/(home)/` group purely so its skeleton can be scoped to
+  `/` alone. Add a `loading.tsx` next to a page, not above it.
+- `docs/DESIGN_SYSTEM.md` is stale — it describes the old light "Pietra warm
+  cream" system. `docs/DESIGN.md` (dark-only, molten orange on obsidian) is
+  the authority and is what `app/globals.css` implements.
 - `proxy.ts` gates `/dashboard*` and `/onboarding` behind a session,
   and bounces logged-in users away from `/login` and `/signup`.
-- Migration source of truth lives in `supabase/migrations/` (RLS policy per table per `docs/SECURITY.md`, hardened against the supabase-postgres-best-practices skill: `(select auth.uid())`, FK indexes, `security_invoker` view). Seed data (6 vibes + placeholder designs) in `supabase/seed.sql`.
+- Migration source of truth lives in `supabase/migrations/` (RLS policy per table per `docs/SECURITY.md`, hardened against the supabase-postgres-best-practices skill: `(select auth.uid())`, FK indexes, `security_invoker` view). Seed data (6 vibes, 84 designs, 10 fake creators with real `auth.users`/`profiles`/`storefronts`/`claims`/`follows` rows) in `supabase/seed.sql` — dev-only, never point it at a real production project.
 - Blocked on: Supabase MCP OAuth (`claude /mcp` in an interactive terminal, pick `supabase`, authenticate) — needed to (1) apply the migration + seed, (2) pull the project URL/anon key into `.env.local` (see `.env.example`), (3) render/verify `/` against live data.
 - Env vars required by the app: see `.env.example`.
 - Typecheck + lint are clean (`npm run typecheck`, `npm run lint`). Dev server boots and correctly fails only on the missing Supabase env vars — confirms the data-fetch wiring (proxy → server client → `lib/data/feed.ts` → page) is correct end to end.

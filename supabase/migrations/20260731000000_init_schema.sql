@@ -1,4 +1,4 @@
--- Shirt Bazaar — initial schema
+-- Shirt Bazaar — full schema
 -- Source of truth: docs/DATA_MODEL.md (shape) + docs/SECURITY.md (RLS policy per table)
 
 -- ============================================================================
@@ -127,6 +127,32 @@ create table public.messages (
   created_at timestamptz not null default now()
 );
 
+create table public.newsletter_subscribers (
+  id uuid primary key default gen_random_uuid(),
+  email text unique not null,
+  created_at timestamptz not null default now()
+);
+
+create table public.notification_preferences (
+  user_id uuid primary key references public.profiles(id) on delete cascade,
+  notify_claims boolean not null default true,
+  notify_royalties boolean not null default true,
+  notify_messages boolean not null default true,
+  notify_orders boolean not null default true,
+  updated_at timestamptz not null default now()
+);
+
+create table public.notifications (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  type text not null check (type in ('claim', 'royalty', 'message', 'order')),
+  title text not null,
+  body text,
+  link text,
+  read_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
 -- ============================================================================
 -- Indexes
 -- ============================================================================
@@ -150,27 +176,8 @@ create index column_rentals_vibe_id_active_idx on public.column_rentals(vibe_id,
 create index royalty_ledger_order_id_idx on public.royalty_ledger(order_id);
 create index royalty_ledger_design_id_idx on public.royalty_ledger(design_id);
 create index royalty_ledger_original_claimant_id_idx on public.royalty_ledger(original_claimant_id);
-
--- ============================================================================
--- Auto-provision a profile row on signup
--- ============================================================================
-
-create function public.handle_new_user()
-returns trigger
-language plpgsql
-security definer
-set search_path = ''
-as $$
-begin
-  insert into public.profiles (id, handle)
-  values (new.id, 'user_' || substr(new.id::text, 1, 8));
-  return new;
-end;
-$$;
-
-create trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute function public.handle_new_user();
+create index notifications_user_id_created_at_idx on public.notifications(user_id, created_at desc);
+create index notifications_user_id_unread_idx on public.notifications(user_id) where read_at is null;
 
 -- ============================================================================
 -- Row Level Security
@@ -189,10 +196,18 @@ alter table public.orders enable row level security;
 alter table public.pod_provider_mapping enable row level security;
 alter table public.royalty_ledger enable row level security;
 alter table public.messages enable row level security;
+alter table public.newsletter_subscribers enable row level security;
+alter table public.notification_preferences enable row level security;
+alter table public.notifications enable row level security;
 
--- profiles: read own, public fields via view (below); update own only
+-- profiles: read own, public fields via view (below) and via a public select
+-- policy (storefronts/feed need to look up any profile by handle, not just
+-- the logged-in user's own row — none of these columns are sensitive);
+-- update own only
 create policy "profiles_select_own" on public.profiles
   for select to authenticated using ((select auth.uid()) = id);
+create policy "profiles_select_public" on public.profiles
+  for select using (true);
 create policy "profiles_update_own" on public.profiles
   for update to authenticated
   using ((select auth.uid()) = id)
@@ -272,3 +287,173 @@ create policy "messages_select_participant" on public.messages
   using ((select auth.uid()) = sender_id or (select auth.uid()) = recipient_id);
 create policy "messages_insert_as_sender" on public.messages
   for insert to authenticated with check ((select auth.uid()) = sender_id);
+
+-- newsletter_subscribers: public insert-only, no read access for
+-- anon/authenticated (an email address here isn't meant to be listable by
+-- any client, only inserted by the subscriber themselves)
+create policy "newsletter_subscribers_insert_public" on public.newsletter_subscribers
+  for insert to anon, authenticated with check (true);
+
+-- notification_preferences / notifications: owner-only. notifications rows
+-- are only ever written by the security-definer trigger functions below —
+-- never inserted directly by a client — so there is no client insert policy.
+create policy "notification_preferences_select_own" on public.notification_preferences
+  for select to authenticated using ((select auth.uid()) = user_id);
+create policy "notification_preferences_update_own" on public.notification_preferences
+  for update to authenticated
+  using ((select auth.uid()) = user_id)
+  with check ((select auth.uid()) = user_id);
+
+create policy "notifications_select_own" on public.notifications
+  for select to authenticated using ((select auth.uid()) = user_id);
+create policy "notifications_update_own" on public.notifications
+  for update to authenticated
+  using ((select auth.uid()) = user_id)
+  with check ((select auth.uid()) = user_id);
+
+-- ============================================================================
+-- Auto-provision a profile + default notification preferences row on signup
+-- ============================================================================
+
+create function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  insert into public.profiles (id, handle)
+  values (new.id, 'user_' || substr(new.id::text, 1, 8));
+  return new;
+end;
+$$;
+
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
+
+create function public.handle_new_profile()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  insert into public.notification_preferences (user_id) values (new.id);
+  return new;
+end;
+$$;
+
+create trigger on_profile_created
+  after insert on public.profiles
+  for each row execute function public.handle_new_profile();
+
+-- ============================================================================
+-- Notification triggers — one per event the Notifications settings describe
+-- (claims, royalties, messages, orders). Each checks the recipient's
+-- preference before writing a row.
+-- ============================================================================
+
+create function public.notify_on_message()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if exists (
+    select 1 from public.notification_preferences
+    where user_id = new.recipient_id and notify_messages = true
+  ) then
+    insert into public.notifications (user_id, type, title, body, link)
+    select new.recipient_id, 'message', 'New message from @' || p.handle,
+      left(new.body, 140), '/dashboard/messages/' || p.handle
+    from public.profiles p where p.id = new.sender_id;
+  end if;
+  return new;
+end;
+$$;
+
+create trigger on_message_insert
+  after insert on public.messages
+  for each row execute function public.notify_on_message();
+
+create function public.notify_on_claim()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  creator_id uuid;
+begin
+  select gj.user_id into creator_id
+  from public.designs d
+  join public.generation_jobs gj on gj.id = d.generation_job_id
+  where d.id = new.design_id;
+
+  if creator_id is not null and creator_id <> new.claimant_id and exists (
+    select 1 from public.notification_preferences
+    where user_id = creator_id and notify_claims = true
+  ) then
+    insert into public.notifications (user_id, type, title, link)
+    values (creator_id, 'claim', 'Someone claimed a design you created', '/dashboard/designs');
+  end if;
+  return new;
+end;
+$$;
+
+create trigger on_claim_insert
+  after insert on public.claims
+  for each row execute function public.notify_on_claim();
+
+create function public.notify_on_royalty()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if not exists (
+    select 1 from public.notification_preferences
+    where user_id = new.original_claimant_id and notify_royalties = true
+  ) then
+    return new;
+  end if;
+
+  if TG_OP = 'INSERT' then
+    insert into public.notifications (user_id, type, title, link)
+    values (new.original_claimant_id, 'royalty', 'You earned a royalty', '/dashboard/settings');
+  elsif TG_OP = 'UPDATE' and new.paid_at is not null and old.paid_at is null then
+    insert into public.notifications (user_id, type, title, link)
+    values (new.original_claimant_id, 'royalty', 'Royalty paid out', '/dashboard/settings');
+  end if;
+  return new;
+end;
+$$;
+
+create trigger on_royalty_ledger_change
+  after insert or update on public.royalty_ledger
+  for each row execute function public.notify_on_royalty();
+
+create function public.notify_on_order_status_change()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if TG_OP = 'UPDATE' and new.status is distinct from old.status and exists (
+    select 1 from public.notification_preferences
+    where user_id = new.buyer_id and notify_orders = true
+  ) then
+    insert into public.notifications (user_id, type, title, link)
+    values (new.buyer_id, 'order', 'Order ' || new.status, '/dashboard/orders');
+  end if;
+  return new;
+end;
+$$;
+
+create trigger on_order_status_update
+  after update on public.orders
+  for each row execute function public.notify_on_order_status_change();

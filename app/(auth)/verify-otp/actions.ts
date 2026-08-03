@@ -18,7 +18,7 @@ export async function verifyOtp(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.verifyOtp({
+  const { data, error } = await supabase.auth.verifyOtp({
     email,
     token,
     type: "signup",
@@ -26,6 +26,15 @@ export async function verifyOtp(
 
   if (error) {
     return { error: "That code is invalid or has expired." };
+  }
+
+  const username = data.user?.user_metadata?.username;
+  const fullName = data.user?.user_metadata?.full_name;
+  if (username && data.user) {
+    await supabase
+      .from("profiles")
+      .update({ handle: username, display_name: fullName ?? null })
+      .eq("id", data.user.id);
   }
 
   redirect("/onboarding");
