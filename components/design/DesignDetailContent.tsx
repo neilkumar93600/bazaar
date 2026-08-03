@@ -21,7 +21,7 @@ export function DesignDetailContent({
           src={design.imageUrl}
           alt=""
           fill
-          sizes="(min-width: 640px) 448px, 100vw"
+          sizes="(min-width: 640px) 576px, 100vw"
           priority
           className="object-cover"
         />
