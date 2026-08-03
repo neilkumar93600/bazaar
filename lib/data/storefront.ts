@@ -1,45 +1,46 @@
-import { createClient } from "@/lib/supabase/server";
+import { cache } from "react"
+
+import type { DesignCardData } from "@/components/shared/DesignCard"
+import { createClient } from "@/lib/supabase/server"
 
 export type StorefrontProfile = {
-  id: string;
-  handle: string;
-  displayName: string | null;
-  avatarUrl: string | null;
-};
+  id: string
+  handle: string
+  displayName: string | null
+  avatarUrl: string | null
+}
 
-export type StorefrontDesign = {
-  id: string;
-  imageUrl: string;
-  claimedAt: string;
-  vibe: { name: string; slug: string } | null;
-};
+export type StorefrontDesign = DesignCardData & { claimedAt: string }
 
 export type StorefrontData = {
-  profile: StorefrontProfile;
-  followerCount: number;
-  designs: StorefrontDesign[];
-  claimedSince: string | null;
-  isFollowing: boolean;
-  isOwnProfile: boolean;
-  viewerIsLoggedIn: boolean;
-};
+  profile: StorefrontProfile
+  followerCount: number
+  designs: StorefrontDesign[]
+  createdDesigns: DesignCardData[]
+  claimedSince: string | null
+  isFollowing: boolean
+  isOwnProfile: boolean
+  viewerIsLoggedIn: boolean
+}
 
-export async function getStorefrontData(
-  handle: string,
+// Cached per request so generateMetadata and the page body share one round of
+// queries instead of running the whole fan-out twice.
+export const getStorefrontData = cache(async function getStorefrontData(
+  handle: string
 ): Promise<StorefrontData | null> {
-  const supabase = await createClient();
+  const supabase = await createClient()
 
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await supabase.auth.getUser()
 
   const { data: profile } = await supabase
     .from("profiles")
     .select("id, handle, display_name, avatar_url")
     .eq("handle", handle)
-    .maybeSingle();
+    .maybeSingle()
 
-  if (!profile) return null;
+  if (!profile) return null
 
   const followRowPromise =
     user && user.id !== profile.id
@@ -49,7 +50,7 @@ export async function getStorefrontData(
           .eq("follower_id", user.id)
           .eq("followed_id", profile.id)
           .maybeSingle()
-      : Promise.resolve({ data: null as { follower_id: string } | null });
+      : Promise.resolve({ data: null as { follower_id: string } | null })
 
   const [{ count: followerCount }, { data: claims }, { data: followRow }] =
     await Promise.all([
@@ -63,44 +64,108 @@ export async function getStorefrontData(
         .eq("claimant_id", profile.id)
         .order("claimed_at", { ascending: true }),
       followRowPromise,
-    ]);
+    ])
 
-  const claimList = claims ?? [];
-  const designIds = claimList.map((c) => c.design_id);
+  const claimList = claims ?? []
+  const designIds = claimList.map((c) => c.design_id)
 
   const { data: designRows } = designIds.length
     ? await supabase
         .from("designs")
-        .select("id, image_url, vibe_id")
+        .select("id, image_url, vibe_id, price_cents, created_at")
         .in("id", designIds)
         .eq("moderation_status", "approved")
-    : { data: [] };
+    : { data: [] }
 
   const vibeIds = [
     ...new Set(
       (designRows ?? [])
         .map((d) => d.vibe_id)
-        .filter((id): id is string => id !== null),
+        .filter((id): id is string => id !== null)
     ),
-  ];
+  ]
 
   const { data: vibeRows } = vibeIds.length
     ? await supabase.from("vibes").select("id, name, slug").in("id", vibeIds)
-    : { data: [] };
+    : { data: [] }
 
-  const vibeById = new Map((vibeRows ?? []).map((v) => [v.id, v]));
+  const vibeById = new Map((vibeRows ?? []).map((v) => [v.id, v]))
   const claimedAtByDesignId = new Map(
-    claimList.map((c) => [c.design_id, c.claimed_at]),
-  );
+    claimList.map((c) => [c.design_id, c.claimed_at])
+  )
 
   const designs: StorefrontDesign[] = (designRows ?? [])
     .map((d) => ({
       id: d.id,
       imageUrl: d.image_url,
       claimedAt: claimedAtByDesignId.get(d.id)!,
-      vibe: d.vibe_id ? (vibeById.get(d.vibe_id) ?? null) : null,
+      createdAt: d.created_at,
+      priceCents: d.price_cents,
+      vibeName: (d.vibe_id ? vibeById.get(d.vibe_id)?.name : null) ?? null,
+      // Every design on a storefront is claimed, by definition — it got here
+      // through this profile's claims.
+      isClaimed: true,
+      claimantHandle: profile.handle,
     }))
-    .sort((a, b) => (a.claimedAt < b.claimedAt ? 1 : -1));
+    .sort((a, b) => (a.claimedAt < b.claimedAt ? 1 : -1))
+
+  // Designs this profile prompted into existence — independent of who (if
+  // anyone) ended up claiming them, so each one resolves its own claimant.
+  const { data: jobRows } = await supabase
+    .from("generation_jobs")
+    .select("id")
+    .eq("user_id", profile.id)
+
+  const jobIds = (jobRows ?? []).map((j) => j.id)
+
+  const { data: createdRows } = jobIds.length
+    ? await supabase
+        .from("designs")
+        .select("id, image_url, vibe_id, price_cents, created_at, is_claimed, claimed_by")
+        .in("generation_job_id", jobIds)
+        .eq("moderation_status", "approved")
+        .order("created_at", { ascending: false })
+    : { data: [] }
+
+  const createdVibeIds = [
+    ...new Set(
+      (createdRows ?? [])
+        .map((d) => d.vibe_id)
+        .filter((id): id is string => id !== null)
+    ),
+  ]
+  const { data: createdVibeRows } = createdVibeIds.length
+    ? await supabase.from("vibes").select("id, name").in("id", createdVibeIds)
+    : { data: [] }
+  const createdVibeNameById = new Map(
+    (createdVibeRows ?? []).map((v) => [v.id, v.name])
+  )
+
+  const createdClaimantIds = [
+    ...new Set(
+      (createdRows ?? [])
+        .map((d) => d.claimed_by)
+        .filter((id): id is string => id !== null)
+    ),
+  ]
+  const { data: createdClaimantRows } = createdClaimantIds.length
+    ? await supabase.from("profiles").select("id, handle").in("id", createdClaimantIds)
+    : { data: [] }
+  const createdClaimantHandleById = new Map(
+    (createdClaimantRows ?? []).map((p) => [p.id, p.handle])
+  )
+
+  const createdDesigns: DesignCardData[] = (createdRows ?? []).map((d) => ({
+    id: d.id,
+    imageUrl: d.image_url,
+    createdAt: d.created_at,
+    priceCents: d.price_cents,
+    vibeName: (d.vibe_id ? createdVibeNameById.get(d.vibe_id) : null) ?? null,
+    isClaimed: d.is_claimed,
+    claimantHandle: d.claimed_by
+      ? (createdClaimantHandleById.get(d.claimed_by) ?? null)
+      : null,
+  }))
 
   return {
     profile: {
@@ -111,9 +176,10 @@ export async function getStorefrontData(
     },
     followerCount: followerCount ?? 0,
     designs,
+    createdDesigns,
     claimedSince: claimList.length > 0 ? claimList[0].claimed_at : null,
     isFollowing: Boolean(followRow),
     isOwnProfile: user?.id === profile.id,
     viewerIsLoggedIn: Boolean(user),
-  };
-}
+  }
+})
