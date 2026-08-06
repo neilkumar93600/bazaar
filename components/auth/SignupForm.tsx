@@ -10,11 +10,10 @@ import { signInWithOAuth } from "@/lib/supabase/oauth";
 import { Stagger, StaggerItem } from "@/components/ui/motion";
 
 const initialState: SignupState = {};
-const INPUT_FOCUS = { scale: 1.01 };
 const INPUT_TRANSITION = { type: "spring", stiffness: 400, damping: 25 } as const;
 
 function getPasswordStrength(password: string) {
-  if (!password) return { score: 0, label: "", color: "bg-accent" };
+  if (!password) return { score: 0, label: "", color: "bg-muted-gray" };
   let score = 0;
   if (password.length >= 8) score++;
   if (/[A-Z]/.test(password) && /[a-z]/.test(password)) score++;
@@ -25,13 +24,13 @@ function getPasswordStrength(password: string) {
     case 1:
       return { score: 1, label: "Weak", color: "bg-destructive" };
     case 2:
-      return { score: 2, label: "Fair", color: "bg-molten-amber" };
+      return { score: 2, label: "Fair", color: "bg-amber-500" };
     case 3:
-      return { score: 3, label: "Good", color: "bg-primary" };
+      return { score: 3, label: "Good", color: "bg-mint-edge" };
     case 4:
-      return { score: 4, label: "Strong", color: "bg-success" };
+      return { score: 4, label: "Strong", color: "bg-[#a3e635]" };
     default:
-      return { score: 0, label: "", color: "bg-accent" };
+      return { score: 0, label: "", color: "bg-muted-gray" };
   }
 }
 
@@ -45,14 +44,14 @@ export function SignupForm() {
 
   return (
     <Stagger className="flex flex-col gap-5">
-      {/* Social Auth Options */}
+      {/* Social Auth Options — DESIGN.md Outlined Secondary Buttons */}
       <StaggerItem className="flex items-center gap-3">
         <motion.button
           type="button"
           onClick={() => signInWithOAuth("google")}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.97 }}
-          className="flex-1 flex items-center justify-center gap-2.5 py-3 px-4 rounded-xl border border-border bg-secondary hover:bg-accent text-foreground text-sm font-semibold transition-colors shadow-2xs hover:shadow-xs cursor-pointer"
+          whileHover={{ y: -1 }}
+          whileTap={{ x: 2, y: 2 }}
+          className="flex-1 flex items-center justify-center gap-2.5 py-3 px-4 rounded-md border border-ink bg-paper-white hover:bg-cream text-ink text-body-sm font-medium transition-all shadow-[2px_2px_0_0_#262626] active:shadow-none cursor-pointer"
         >
           {/* User provided Google SVG */}
           <svg
@@ -120,14 +119,14 @@ export function SignupForm() {
         <motion.button
           type="button"
           onClick={() => signInWithOAuth("apple")}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.97 }}
-          className="flex-1 flex items-center justify-center gap-2.5 py-3 px-4 rounded-xl border border-border bg-secondary hover:bg-accent text-foreground text-sm font-semibold transition-colors shadow-2xs hover:shadow-xs cursor-pointer"
+          whileHover={{ y: -1 }}
+          whileTap={{ x: 2, y: 2 }}
+          className="flex-1 flex items-center justify-center gap-2.5 py-3 px-4 rounded-md border border-ink bg-paper-white hover:bg-cream text-ink text-body-sm font-medium transition-all shadow-[2px_2px_0_0_#262626] active:shadow-none cursor-pointer"
         >
           {/* User provided Apple SVG */}
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="size-5 shrink-0 fill-current text-foreground"
+            className="size-5 shrink-0 fill-current text-ink"
             viewBox="0 0 256 315"
           >
             <path d="M0 0h256v315H0z" fill="none" />
@@ -140,10 +139,10 @@ export function SignupForm() {
       {/* Divider */}
       <StaggerItem className="relative flex items-center justify-center my-0.5">
         <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-border" />
+          <span className="w-full border-t border-rule" />
         </div>
-        <span className="relative bg-background px-3 text-xs text-muted-foreground font-medium">
-          Or Continue With
+        <span className="relative bg-paper-white px-3 text-caption text-muted-ink font-medium">
+          Or continue with
         </span>
       </StaggerItem>
 
@@ -151,63 +150,57 @@ export function SignupForm() {
         {/* Full Name & Username in 2 Columns */}
         <StaggerItem className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="flex flex-col gap-1">
-            <label htmlFor="fullName" className="text-xs font-semibold text-foreground">
-              Full Name
+            <label htmlFor="fullName" className="text-caption font-medium text-ink">
+              Full name
             </label>
-            <motion.input
+            <input
               id="fullName"
               name="fullName"
               type="text"
               placeholder="John Doe"
               required
-              whileFocus={INPUT_FOCUS}
-              transition={INPUT_TRANSITION}
-              className="w-full bg-secondary border border-border focus:border-input focus:bg-accent text-foreground placeholder:text-muted-foreground rounded-xl px-3.5 py-2.5 text-sm transition-colors outline-none focus:ring-2 focus:ring-ring/40"
+              className="w-full bg-paper-white border border-ink focus:border-ink focus:ring-1 focus:ring-ink text-ink placeholder:text-muted-gray rounded-md px-3.5 py-2.5 text-body-sm transition-all outline-none"
             />
           </div>
 
           <div className="flex flex-col gap-1">
-            <label htmlFor="username" className="text-xs font-semibold text-foreground">
+            <label htmlFor="username" className="text-caption font-medium text-ink">
               Username
             </label>
-            <motion.input
+            <input
               id="username"
               name="username"
               type="text"
               placeholder="johndoe"
               required
-              whileFocus={INPUT_FOCUS}
-              transition={INPUT_TRANSITION}
-              className="w-full bg-secondary border border-border focus:border-input focus:bg-accent text-foreground placeholder:text-muted-foreground rounded-xl px-3.5 py-2.5 text-sm transition-colors outline-none focus:ring-2 focus:ring-ring/40"
+              className="w-full bg-paper-white border border-ink focus:border-ink focus:ring-1 focus:ring-ink text-ink placeholder:text-muted-gray rounded-md px-3.5 py-2.5 text-body-sm transition-all outline-none"
             />
           </div>
         </StaggerItem>
 
         {/* Email Field */}
         <StaggerItem className="flex flex-col gap-1">
-          <label htmlFor="email" className="text-xs font-semibold text-foreground">
-            Email
+          <label htmlFor="email" className="text-caption font-medium text-ink">
+            Email address
           </label>
-          <motion.input
+          <input
             id="email"
             name="email"
             type="email"
             autoComplete="email"
             placeholder="your.email@example.com"
             required
-            whileFocus={INPUT_FOCUS}
-            transition={INPUT_TRANSITION}
-            className="w-full bg-secondary border border-border focus:border-input focus:bg-accent text-foreground placeholder:text-muted-foreground rounded-xl px-3.5 py-2.5 text-sm transition-colors outline-none focus:ring-2 focus:ring-ring/40"
+            className="w-full bg-paper-white border border-ink focus:border-ink focus:ring-1 focus:ring-ink text-ink placeholder:text-muted-gray rounded-md px-3.5 py-2.5 text-body-sm transition-all outline-none"
           />
         </StaggerItem>
 
-        {/* Password Field + Show/Hide Toggle + Password Strength Indicator */}
+        {/* Password Field */}
         <StaggerItem className="flex flex-col gap-1">
-          <label htmlFor="password" className="text-xs font-semibold text-foreground">
+          <label htmlFor="password" className="text-caption font-medium text-ink">
             Password
           </label>
           <div className="relative">
-            <motion.input
+            <input
               id="password"
               name="password"
               type={showPassword ? "text" : "password"}
@@ -217,14 +210,12 @@ export function SignupForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              whileFocus={INPUT_FOCUS}
-              transition={INPUT_TRANSITION}
-              className="w-full bg-secondary border border-border focus:border-input focus:bg-accent text-foreground placeholder:text-muted-foreground rounded-xl px-3.5 py-2.5 pr-10 text-sm transition-colors outline-none focus:ring-2 focus:ring-ring/40"
+              className="w-full bg-paper-white border border-ink focus:border-ink focus:ring-1 focus:ring-ink text-ink placeholder:text-muted-gray rounded-md px-3.5 py-2.5 pr-10 text-body-sm transition-all outline-none"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground transition-colors p-1 cursor-pointer"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-ink hover:text-ink transition-colors p-1 cursor-pointer"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -242,16 +233,16 @@ export function SignupForm() {
                 className="overflow-hidden"
               >
                 <div className="mt-1 flex flex-col gap-1">
-                  <div className="flex items-center justify-between text-[11px] text-muted-foreground font-medium">
+                  <div className="flex items-center justify-between text-caption text-muted-ink font-medium">
                     <span>Strength:</span>
-                    <span className="font-bold text-foreground">{strength.label}</span>
+                    <span className="font-semibold text-ink">{strength.label}</span>
                   </div>
                   <div className="flex gap-1 h-1 w-full">
                     {[1, 2, 3, 4].map((step) => (
                       <div
                         key={step}
                         className={`flex-1 h-full rounded-full transition-all duration-300 ${
-                          step <= strength.score ? strength.color : "bg-accent"
+                          step <= strength.score ? strength.color : "bg-rule"
                         }`}
                       />
                     ))}
@@ -262,13 +253,13 @@ export function SignupForm() {
           </AnimatePresence>
         </StaggerItem>
 
-        {/* Confirm Password Field + Show/Hide Toggle */}
+        {/* Confirm Password Field */}
         <StaggerItem className="flex flex-col gap-1">
-          <label htmlFor="confirmPassword" className="text-xs font-semibold text-foreground">
-            Confirm Password
+          <label htmlFor="confirmPassword" className="text-caption font-medium text-ink">
+            Confirm password
           </label>
           <div className="relative">
-            <motion.input
+            <input
               id="confirmPassword"
               name="confirmPassword"
               type={showConfirmPassword ? "text" : "password"}
@@ -276,14 +267,12 @@ export function SignupForm() {
               placeholder="Repeat password"
               minLength={8}
               required
-              whileFocus={INPUT_FOCUS}
-              transition={INPUT_TRANSITION}
-              className="w-full bg-secondary border border-border focus:border-input focus:bg-accent text-foreground placeholder:text-muted-foreground rounded-xl px-3.5 py-2.5 pr-10 text-sm transition-colors outline-none focus:ring-2 focus:ring-ring/40"
+              className="w-full bg-paper-white border border-ink focus:border-ink focus:ring-1 focus:ring-ink text-ink placeholder:text-muted-gray rounded-md px-3.5 py-2.5 pr-10 text-body-sm transition-all outline-none"
             />
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground transition-colors p-1 cursor-pointer"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-ink hover:text-ink transition-colors p-1 cursor-pointer"
               aria-label={showConfirmPassword ? "Hide password" : "Show password"}
             >
               {showConfirmPassword ? (
@@ -304,21 +293,22 @@ export function SignupForm() {
               transition={{ duration: 0.2 }}
               className="overflow-hidden"
             >
-              <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-xs font-medium border border-destructive/30">
+              <div className="p-3 rounded-md bg-destructive/10 text-destructive text-caption font-medium border border-destructive/30">
                 {state.error}
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
+        {/* Lime Primary Action Button — DESIGN.md Lime Sprint CTA */}
         <StaggerItem>
           <motion.button
             type="submit"
             disabled={isPending}
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={{ y: -1 }}
+            whileTap={{ x: 2, y: 2 }}
             transition={INPUT_TRANSITION}
-            className="w-full mt-1 btn-ember font-bold py-3.5 px-6 rounded-xl transition-colors shadow-sm hover:shadow-md disabled:opacity-50 text-sm tracking-wider uppercase cursor-pointer"
+            className="w-full mt-1 btn-ember bg-[#a3e635] text-ink border border-ink font-medium py-3 px-6 rounded-md transition-all shadow-[2px_2px_0_0_#262626] active:shadow-none disabled:opacity-50 text-body-sm cursor-pointer"
           >
             {isPending ? "CREATING ACCOUNT…" : "SIGN UP"}
           </motion.button>
@@ -327,13 +317,13 @@ export function SignupForm() {
 
       {/* Terms & Privacy Agreement Notice */}
       <StaggerItem>
-        <p className="text-center text-[11px] text-muted-foreground leading-normal px-2">
-          By continuing, you are agreeing to our{" "}
-          <Link href="/terms" className="underline hover:text-muted-foreground">
+        <p className="text-center text-caption text-muted-ink leading-normal px-2">
+          By continuing, you agree to our{" "}
+          <Link href="/terms" className="underline hover:text-ink">
             Terms of Service
           </Link>{" "}
           &amp;{" "}
-          <Link href="/privacy" className="underline hover:text-muted-foreground">
+          <Link href="/privacy" className="underline hover:text-ink">
             Privacy Policy
           </Link>
           .
@@ -341,9 +331,9 @@ export function SignupForm() {
       </StaggerItem>
 
       <StaggerItem>
-        <p className="text-center text-xs text-muted-foreground font-medium">
+        <p className="text-center text-body-sm text-muted-ink font-medium">
           Already have an account?{" "}
-          <Link href="/login" className="text-foreground font-bold hover:underline">
+          <Link href="/login" className="text-ink font-semibold underline underline-offset-4 hover:opacity-75">
             Sign in
           </Link>
         </p>
@@ -351,3 +341,4 @@ export function SignupForm() {
     </Stagger>
   );
 }
+

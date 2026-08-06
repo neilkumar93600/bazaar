@@ -6,7 +6,6 @@ import { resendOtp, verifyOtp, type VerifyOtpState } from "@/app/(auth)/verify-o
 import { Stagger, StaggerItem } from "@/components/ui/motion";
 
 const initialState: VerifyOtpState = {};
-const INPUT_FOCUS = { scale: 1.01 };
 const INPUT_TRANSITION = { type: "spring", stiffness: 400, damping: 25 } as const;
 
 export function VerifyOtpForm({ email }: { email: string }) {
@@ -18,35 +17,31 @@ export function VerifyOtpForm({ email }: { email: string }) {
     <form action={formAction}>
       <Stagger className="flex flex-col gap-4">
       <StaggerItem className="flex flex-col gap-1.5">
-        <label htmlFor="email" className="text-xs font-semibold text-foreground">
+        <label htmlFor="email" className="text-caption font-medium text-ink">
           Email address
         </label>
-        <motion.input
+        <input
           id="email"
           name="email"
           type="email"
           defaultValue={email}
           required
-          whileFocus={INPUT_FOCUS}
-          transition={INPUT_TRANSITION}
-          className="w-full bg-secondary border border-border focus:border-input focus:bg-accent text-foreground placeholder:text-muted-foreground rounded-xl px-4 py-3 text-sm transition-colors outline-none focus:ring-2 focus:ring-ring/40"
+          className="w-full bg-paper-white border border-ink focus:border-ink focus:ring-1 focus:ring-ink text-ink placeholder:text-muted-gray rounded-md px-3.5 py-2.5 text-body-sm transition-all outline-none"
         />
       </StaggerItem>
 
       <StaggerItem className="flex flex-col gap-1.5">
-        <label htmlFor="token" className="text-xs font-semibold text-foreground">
+        <label htmlFor="token" className="text-caption font-medium text-ink">
           Verification code
         </label>
-        <motion.input
+        <input
           id="token"
           name="token"
           inputMode="numeric"
           autoComplete="one-time-code"
           placeholder="123456"
           required
-          whileFocus={INPUT_FOCUS}
-          transition={INPUT_TRANSITION}
-          className="w-full bg-secondary border border-border focus:border-input focus:bg-accent text-foreground placeholder:text-muted-foreground rounded-xl px-4 py-3 text-sm transition-colors outline-none focus:ring-2 focus:ring-ring/40 font-mono tracking-widest text-center"
+          className="w-full bg-paper-white border border-ink focus:border-ink focus:ring-1 focus:ring-ink text-ink placeholder:text-muted-gray rounded-md px-3.5 py-2.5 text-body-sm transition-all outline-none font-mono tracking-widest text-center"
         />
       </StaggerItem>
 
@@ -59,7 +54,7 @@ export function VerifyOtpForm({ email }: { email: string }) {
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-xs font-medium border border-destructive/30">
+            <div className="p-3 rounded-md bg-destructive/10 text-destructive text-caption font-medium border border-destructive/30">
               {state.error}
             </div>
           </motion.div>
@@ -70,10 +65,10 @@ export function VerifyOtpForm({ email }: { email: string }) {
         <motion.button
           type="submit"
           disabled={isPending}
-          whileHover={{ scale: 1.01 }}
-          whileTap={{ scale: 0.98 }}
+          whileHover={{ y: -1 }}
+          whileTap={{ x: 2, y: 2 }}
           transition={INPUT_TRANSITION}
-          className="w-full mt-2 btn-ember font-bold py-3.5 px-6 rounded-xl transition-colors shadow-sm hover:shadow-md disabled:opacity-50 text-sm tracking-wider uppercase cursor-pointer"
+          className="w-full mt-2 btn-ember bg-[#a3e635] text-ink border border-ink font-medium py-3 px-6 rounded-md transition-all shadow-[2px_2px_0_0_#262626] active:shadow-none disabled:opacity-50 text-body-sm cursor-pointer"
         >
           {isPending ? "VERIFYING…" : "VERIFY CODE"}
         </motion.button>
@@ -91,7 +86,7 @@ export function VerifyOtpForm({ email }: { email: string }) {
               setResent(true);
             });
           }}
-          className="text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer mt-2 text-center"
+          className="text-caption font-medium text-muted-ink hover:text-ink transition-colors cursor-pointer mt-2 text-center"
         >
           <AnimatePresence mode="wait" initial={false}>
             <motion.span
@@ -111,3 +106,4 @@ export function VerifyOtpForm({ email }: { email: string }) {
     </form>
   );
 }
+

@@ -7,14 +7,15 @@ export default function SignupPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1.5">
-        <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground font-sans">
-          Create <span className="font-black text-foreground">Your Account!</span>
+        <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-ink font-sans">
+          Claim your <span className="font-serif font-medium italic">vibe</span>
         </h1>
-        <p className="text-sm text-muted-foreground font-medium">
-          Claim designs, build your storefront, and earn royalties.
+        <p className="text-body-sm text-muted-ink font-medium">
+          Create an account to claim 1-of-1 AI shirt designs and earn 10% resale royalties.
         </p>
       </div>
       <SignupForm />
     </div>
   );
 }
+

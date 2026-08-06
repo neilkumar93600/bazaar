@@ -10,7 +10,6 @@ import { signInWithOAuth } from "@/lib/supabase/oauth";
 import { Stagger, StaggerItem } from "@/components/ui/motion";
 
 const initialState: LoginState = {};
-const INPUT_FOCUS = { scale: 1.01 };
 const INPUT_TRANSITION = { type: "spring", stiffness: 400, damping: 25 } as const;
 
 export function LoginForm() {
@@ -19,14 +18,14 @@ export function LoginForm() {
 
   return (
     <Stagger className="flex flex-col gap-6">
-      {/* Social Login Buttons (Google & Apple) */}
+      {/* Social Login Buttons (Google & Apple) — DESIGN.md Outlined Secondary Button */}
       <StaggerItem className="flex items-center gap-3">
         <motion.button
           type="button"
           onClick={() => signInWithOAuth("google")}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.97 }}
-          className="flex-1 flex items-center justify-center gap-2.5 py-3 px-4 rounded-xl border border-border bg-secondary hover:bg-accent text-foreground text-sm font-semibold transition-colors shadow-2xs hover:shadow-xs cursor-pointer"
+          whileHover={{ y: -1 }}
+          whileTap={{ x: 2, y: 2 }}
+          className="flex-1 flex items-center justify-center gap-2.5 py-3 px-4 rounded-md border border-ink bg-paper-white hover:bg-cream text-ink text-body-sm font-medium transition-all shadow-[2px_2px_0_0_#262626] active:shadow-none cursor-pointer"
         >
           {/* User provided Google SVG */}
           <svg
@@ -94,14 +93,14 @@ export function LoginForm() {
         <motion.button
           type="button"
           onClick={() => signInWithOAuth("apple")}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.97 }}
-          className="flex-1 flex items-center justify-center gap-2.5 py-3 px-4 rounded-xl border border-border bg-secondary hover:bg-accent text-foreground text-sm font-semibold transition-colors shadow-2xs hover:shadow-xs cursor-pointer"
+          whileHover={{ y: -1 }}
+          whileTap={{ x: 2, y: 2 }}
+          className="flex-1 flex items-center justify-center gap-2.5 py-3 px-4 rounded-md border border-ink bg-paper-white hover:bg-cream text-ink text-body-sm font-medium transition-all shadow-[2px_2px_0_0_#262626] active:shadow-none cursor-pointer"
         >
           {/* User provided Apple SVG */}
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="size-5 shrink-0 fill-current text-foreground"
+            className="size-5 shrink-0 fill-current text-ink"
             viewBox="0 0 256 315"
           >
             <path d="M0 0h256v315H0z" fill="none" />
@@ -114,10 +113,10 @@ export function LoginForm() {
       {/* Or Continue With Divider */}
       <StaggerItem className="relative flex items-center justify-center my-1">
         <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-border" />
+          <span className="w-full border-t border-rule" />
         </div>
-        <span className="relative bg-background px-3 text-xs text-muted-foreground font-medium">
-          Or Continue With
+        <span className="relative bg-paper-white px-3 text-caption text-muted-ink font-medium">
+          Or continue with
         </span>
       </StaggerItem>
 
@@ -125,52 +124,48 @@ export function LoginForm() {
       <form action={formAction} className="flex flex-col gap-4">
         {/* Email Field */}
         <StaggerItem className="flex flex-col gap-1.5">
-          <label htmlFor="email" className="text-xs font-semibold text-foreground">
-            Email
+          <label htmlFor="email" className="text-caption font-medium text-ink">
+            Email address
           </label>
-          <motion.input
+          <input
             id="email"
             name="email"
             type="email"
             autoComplete="email"
             placeholder="your.email@example.com"
             required
-            whileFocus={INPUT_FOCUS}
-            transition={INPUT_TRANSITION}
-            className="w-full bg-secondary border border-border focus:border-input focus:bg-accent text-foreground placeholder:text-muted-foreground rounded-xl px-4 py-3 text-sm transition-colors outline-none focus:ring-2 focus:ring-ring/40"
+            className="w-full bg-paper-white border border-ink focus:border-ink focus:ring-1 focus:ring-ink text-ink placeholder:text-muted-gray rounded-md px-3.5 py-2.5 text-body-sm transition-all outline-none"
           />
         </StaggerItem>
 
-        {/* Password Field with Parallel "Forgot Password?" Link */}
+        {/* Password Field */}
         <StaggerItem className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between">
-            <label htmlFor="password" className="text-xs font-semibold text-foreground">
+            <label htmlFor="password" className="text-caption font-medium text-ink">
               Password
             </label>
             <Link
               href="/forgot-password"
-              className="text-xs font-bold text-foreground hover:text-primary transition-colors"
+              className="text-caption font-medium text-ink hover:underline transition-all"
             >
-              Forgot Password?
+              Forgot password?
             </Link>
           </div>
 
           <div className="relative">
-            <motion.input
+            <input
               id="password"
               name="password"
               type={showPassword ? "text" : "password"}
               autoComplete="current-password"
               placeholder="Enter your password"
               required
-              whileFocus={INPUT_FOCUS}
-              transition={INPUT_TRANSITION}
-              className="w-full bg-secondary border border-border focus:border-input focus:bg-accent text-foreground placeholder:text-muted-foreground rounded-xl px-4 py-3 pr-11 text-sm transition-colors outline-none focus:ring-2 focus:ring-ring/40"
+              className="w-full bg-paper-white border border-ink focus:border-ink focus:ring-1 focus:ring-ink text-ink placeholder:text-muted-gray rounded-md px-3.5 py-2.5 pr-11 text-body-sm transition-all outline-none"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground transition-colors p-1 cursor-pointer"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-ink hover:text-ink transition-colors p-1 cursor-pointer"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               <AnimatePresence mode="wait" initial={false}>
@@ -198,33 +193,33 @@ export function LoginForm() {
               transition={{ duration: 0.2 }}
               className="overflow-hidden"
             >
-              <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-xs font-medium border border-destructive/30">
+              <div className="p-3 rounded-md bg-destructive/10 text-destructive text-caption font-medium border border-destructive/30">
                 {state.error}
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Submit LOGIN Button */}
+        {/* Lime Primary Action Button — DESIGN.md Lime Sprint CTA */}
         <StaggerItem>
           <motion.button
             type="submit"
             disabled={isPending}
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={{ y: -1 }}
+            whileTap={{ x: 2, y: 2 }}
             transition={INPUT_TRANSITION}
-            className="w-full mt-2 btn-ember font-bold py-3.5 px-6 rounded-xl transition-colors shadow-sm hover:shadow-md disabled:opacity-50 text-sm tracking-wider uppercase cursor-pointer"
+            className="w-full mt-2 btn-ember bg-[#a3e635] text-ink border border-ink font-medium py-3 px-6 rounded-md transition-all shadow-[2px_2px_0_0_#262626] active:shadow-none disabled:opacity-50 text-body-sm cursor-pointer"
           >
-            {isPending ? "SIGNING IN…" : "LOGIN"}
+            {isPending ? "SIGNING IN…" : "SIGN IN"}
           </motion.button>
         </StaggerItem>
       </form>
 
       {/* Footer link */}
       <StaggerItem>
-        <p className="text-center text-xs text-muted-foreground font-medium">
+        <p className="text-center text-body-sm text-muted-ink font-medium">
           Don&apos;t have an account?{" "}
-          <Link href="/signup" className="text-foreground font-bold hover:underline">
+          <Link href="/signup" className="text-ink font-semibold underline underline-offset-4 hover:opacity-75">
             Sign up for free
           </Link>
         </p>
@@ -232,3 +227,4 @@ export function LoginForm() {
     </Stagger>
   );
 }
+

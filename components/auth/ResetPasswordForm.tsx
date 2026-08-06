@@ -7,11 +7,10 @@ import { resetPassword, type ResetPasswordState } from "@/app/(auth)/reset-passw
 import { Stagger, StaggerItem } from "@/components/ui/motion";
 
 const initialState: ResetPasswordState = {};
-const INPUT_FOCUS = { scale: 1.01 };
 const INPUT_TRANSITION = { type: "spring", stiffness: 400, damping: 25 } as const;
 
 function getPasswordStrength(password: string) {
-  if (!password) return { score: 0, label: "", color: "bg-accent" };
+  if (!password) return { score: 0, label: "", color: "bg-muted-gray" };
   let score = 0;
   if (password.length >= 8) score++;
   if (/[A-Z]/.test(password) && /[a-z]/.test(password)) score++;
@@ -22,13 +21,13 @@ function getPasswordStrength(password: string) {
     case 1:
       return { score: 1, label: "Weak", color: "bg-destructive" };
     case 2:
-      return { score: 2, label: "Fair", color: "bg-molten-amber" };
+      return { score: 2, label: "Fair", color: "bg-amber-500" };
     case 3:
-      return { score: 3, label: "Good", color: "bg-primary" };
+      return { score: 3, label: "Good", color: "bg-mint-edge" };
     case 4:
-      return { score: 4, label: "Strong", color: "bg-success" };
+      return { score: 4, label: "Strong", color: "bg-[#a3e635]" };
     default:
-      return { score: 0, label: "", color: "bg-accent" };
+      return { score: 0, label: "", color: "bg-muted-gray" };
   }
 }
 
@@ -47,11 +46,11 @@ export function ResetPasswordForm() {
     <form action={formAction}>
       <Stagger className="flex flex-col gap-4">
       <StaggerItem className="flex flex-col gap-1.5">
-        <label htmlFor="password" className="text-xs font-semibold text-foreground">
+        <label htmlFor="password" className="text-caption font-medium text-ink">
           New password
         </label>
         <div className="relative">
-          <motion.input
+          <input
             id="password"
             name="password"
             type={showPassword ? "text" : "password"}
@@ -61,14 +60,12 @@ export function ResetPasswordForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            whileFocus={INPUT_FOCUS}
-            transition={INPUT_TRANSITION}
-            className="w-full bg-secondary border border-border focus:border-input focus:bg-accent text-foreground placeholder:text-muted-foreground rounded-xl px-4 py-3 pr-11 text-sm transition-colors outline-none focus:ring-2 focus:ring-ring/40"
+            className="w-full bg-paper-white border border-ink focus:border-ink focus:ring-1 focus:ring-ink text-ink placeholder:text-muted-gray rounded-md px-3.5 py-2.5 pr-11 text-body-sm transition-all outline-none"
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground transition-colors p-1 cursor-pointer"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-ink hover:text-ink transition-colors p-1 cursor-pointer"
             aria-label={showPassword ? "Hide password" : "Show password"}
           >
             {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -86,16 +83,16 @@ export function ResetPasswordForm() {
               className="overflow-hidden"
             >
               <div className="mt-1 flex flex-col gap-1">
-                <div className="flex items-center justify-between text-[11px] text-muted-foreground font-medium">
+                <div className="flex items-center justify-between text-caption text-muted-ink font-medium">
                   <span>Strength:</span>
-                  <span className="font-bold text-foreground">{strength.label}</span>
+                  <span className="font-semibold text-ink">{strength.label}</span>
                 </div>
                 <div className="flex gap-1 h-1 w-full">
                   {[1, 2, 3, 4].map((step) => (
                     <div
                       key={step}
                       className={`flex-1 h-full rounded-full transition-all duration-300 ${
-                        step <= strength.score ? strength.color : "bg-accent"
+                        step <= strength.score ? strength.color : "bg-rule"
                       }`}
                     />
                   ))}
@@ -107,11 +104,11 @@ export function ResetPasswordForm() {
       </StaggerItem>
 
       <StaggerItem className="flex flex-col gap-1.5">
-        <label htmlFor="confirmPassword" className="text-xs font-semibold text-foreground">
+        <label htmlFor="confirmPassword" className="text-caption font-medium text-ink">
           Confirm new password
         </label>
         <div className="relative">
-          <motion.input
+          <input
             id="confirmPassword"
             name="confirmPassword"
             type={showConfirmPassword ? "text" : "password"}
@@ -119,14 +116,12 @@ export function ResetPasswordForm() {
             minLength={8}
             placeholder="Repeat new password"
             required
-            whileFocus={INPUT_FOCUS}
-            transition={INPUT_TRANSITION}
-            className="w-full bg-secondary border border-border focus:border-input focus:bg-accent text-foreground placeholder:text-muted-foreground rounded-xl px-4 py-3 pr-11 text-sm transition-colors outline-none focus:ring-2 focus:ring-ring/40"
+            className="w-full bg-paper-white border border-ink focus:border-ink focus:ring-1 focus:ring-ink text-ink placeholder:text-muted-gray rounded-md px-3.5 py-2.5 pr-11 text-body-sm transition-all outline-none"
           />
           <button
             type="button"
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground transition-colors p-1 cursor-pointer"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-ink hover:text-ink transition-colors p-1 cursor-pointer"
             aria-label={showConfirmPassword ? "Hide password" : "Show password"}
           >
             {showConfirmPassword ? (
@@ -147,7 +142,7 @@ export function ResetPasswordForm() {
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-xs font-medium border border-destructive/30">
+            <div className="p-3 rounded-md bg-destructive/10 text-destructive text-caption font-medium border border-destructive/30">
               {state.error}
             </div>
           </motion.div>
@@ -158,10 +153,10 @@ export function ResetPasswordForm() {
         <motion.button
           type="submit"
           disabled={isPending}
-          whileHover={{ scale: 1.01 }}
-          whileTap={{ scale: 0.98 }}
+          whileHover={{ y: -1 }}
+          whileTap={{ x: 2, y: 2 }}
           transition={INPUT_TRANSITION}
-          className="w-full mt-2 btn-ember font-bold py-3.5 px-6 rounded-xl transition-colors shadow-sm hover:shadow-md disabled:opacity-50 text-sm tracking-wider uppercase cursor-pointer"
+          className="w-full mt-2 btn-ember bg-[#a3e635] text-ink border border-ink font-medium py-3 px-6 rounded-md transition-all shadow-[2px_2px_0_0_#262626] active:shadow-none disabled:opacity-50 text-body-sm cursor-pointer"
         >
           {isPending ? "SAVING…" : "RESET PASSWORD"}
         </motion.button>
@@ -170,3 +165,4 @@ export function ResetPasswordForm() {
     </form>
   );
 }
+

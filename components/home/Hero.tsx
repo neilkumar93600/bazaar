@@ -41,13 +41,7 @@ export function Hero({
   /** Designs nobody owns yet. Drives the status pill; zero hides it. */
   unclaimedCount: number
 }) {
-  // The clip is ambiance, not content — the poster carries the same frame, so
-  // phones and reduced-motion users get the still and skip the 1.5MB download
-  // entirely rather than loading a video that's then hidden.
-  //
-  // The server can't know the viewport, so it gets an explicit `false`
-  // snapshot: SSR and the first client pass both render no video, which is
-  // what keeps this from being a hydration mismatch.
+
   const showVideo = useSyncExternalStore(
     subscribe,
     () => window.matchMedia(VIDEO_OK).matches,
@@ -57,20 +51,9 @@ export function Hero({
   const [menuOpen, setMenuOpen] = useState(false)
 
   return (
-    // The frame is inset from the page edge, so the section itself is just the
-    // white margin. `id` stays: Navbar measures this element to decide when the
-    // global bar takes over from the pill inside the card.
-    <section
-      id="auro-header-section"
-      className="w-full p-3 select-none sm:p-4 md:p-6"
-    >
-      {/* `min-h` at every step and never a fixed `h`: the frame clips overflow,
-          so a hard height plus a tall prompt form silently ate the form's bottom
-          180px on a 1024x700 laptop. Filling the viewport is a floor here, not a
-          ceiling — the hero grows when the content needs the room. */}
+
+    <section id="auro-header-section" className="w-full p-3 select-none sm:p-4 md:p-6" >
       <div className="relative min-h-[calc(100dvh-24px)] w-full overflow-hidden rounded-xl sm:min-h-[calc(100dvh-32px)] md:min-h-[calc(100dvh-48px)]">
-        {/* Background: the shirt bazaar itself — poster paints immediately, the
-            clip fades in over it once it can play. */}
         <Image
           src="/bazaar/hero.jpg"
           alt=""
@@ -109,19 +92,9 @@ export function Hero({
         />
 
         <div className="relative z-10 flex min-h-[calc(100dvh-24px)] flex-col gap-4 p-4 sm:gap-6 sm:min-h-[calc(100dvh-32px)] sm:p-6 md:min-h-[calc(100dvh-48px)] md:p-8">
-          {/* Frosted pill nav. The global Navbar renders nothing until the
-              visitor scrolls past this section, so the two never stack. */}
-          {/* `self-start` matters: the parent is a stretch flex column, so
-              `md:w-auto` alone would still stretch the pill edge to edge. */}
           <nav className="flex w-full items-center gap-2 rounded-lg bg-white/60 py-2 pr-2 pl-3 shadow-[var(--shadow-card)] backdrop-blur-md md:w-auto md:gap-6 md:self-start md:pl-4">
-            {/* The wordmark is `whitespace-nowrap` and so is the CTA, so at 360px
-                the pair overflowed the pill by 36px and the frame's
-                `overflow-hidden` ate the right edge of the button. The mark alone
-                carries the brand on the narrowest screens; the wordmark returns
-                at `sm`, and the links wait for `md` where there's room for all
-                three at once. */}
             <Logo
-              textClassName="hidden text-body font-semibold whitespace-nowrap text-foreground sm:inline"
+              textClassName="text-body font-semibold whitespace-nowrap text-foreground"
               className="shrink-0"
             />
 

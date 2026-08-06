@@ -7,21 +7,25 @@ import { LogoIcon } from "@/components/ui/logo";
 
 const CAROUSEL_ITEMS = [
   {
+    image: "/auth1.png",
     quote:
       "EVERY DESIGN IS ONE-OF-ONE. CLAIM IT AND IT'S EXCLUSIVELY YOURS, WITH A ROYALTY ON EVERY RESALE.",
     author: "SHIRT BAZAAR ATELIER",
   },
   {
+    image: "/auth2.png",
     quote:
       "DISCOVER & COLLECT LIMITED EDITION STREETWEAR CREATED BY INDEPENDENT ARTISTS WORLDWIDE.",
     author: "CREATOR COLLECTIVE",
   },
   {
+    image: "/auth3.png",
     quote:
       "REAL-TIME MARKET UPDATES, RESALE ALERTS AND PORTFOLIO TRACKING FOR FASHION CREATORS.",
     author: "INSIGHTS & ANALYTICS",
   },
   {
+    image: "/auth4.png",
     quote:
       "THE FUTURE OF DIGITAL APPAREL OWNERSHIP. CLAIM YOUR VIBE AND OWN YOUR UNIQUE CREATIONS.",
     author: "DIGITAL BAZAAR",
@@ -41,20 +45,30 @@ export function AuthHeroPanel() {
 
   return (
     <div className="relative hidden h-full w-full overflow-hidden bg-pitch lg:block">
-      {/* ponytail: shares the hero's bazaar shot until a dedicated portrait
-          render exists — swap this one src, nothing else changes. */}
-      <Image
-        src="/bazaar/hero.jpg"
-        alt=""
-        fill
-        sizes="50vw"
-        priority
-        className="object-cover object-center"
-      />
+      {/* Dynamic Animated Background Carousel */}
+      <AnimatePresence mode="popLayout">
+        <motion.div
+          key={activeIndex}
+          initial={{ opacity: 0, scale: 1.02 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="absolute inset-0 h-full w-full"
+        >
+          <Image
+            src={CAROUSEL_ITEMS[activeIndex].image}
+            alt={CAROUSEL_ITEMS[activeIndex].author}
+            fill
+            sizes="50vw"
+            priority={activeIndex === 0}
+            className="object-cover object-center"
+          />
+        </motion.div>
+      </AnimatePresence>
 
-      {/* Ambient gradient overlay — light, since the copy over it is ink */}
-      <div className="absolute inset-0 bg-gradient-to-t from-pitch/90 via-pitch/40 to-pitch/50" />
-      <div className="absolute inset-0 bg-hero-atmosphere" />
+      {/* Ambient gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-pitch/90 via-pitch/40 to-pitch/50 pointer-events-none" />
+      <div className="absolute inset-0 bg-hero-atmosphere pointer-events-none" />
 
       {/* Center Floating Glassmorphic Emblem Badge */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -106,9 +120,8 @@ export function AuthHeroPanel() {
               whileTap={{ scale: 0.9 }}
               animate={{ width: idx === activeIndex ? 40 : 24 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
-              className={`h-1 rounded-full ${
-                idx === activeIndex ? "bg-card shadow-xs" : "bg-card/30 hover:bg-card/60"
-              }`}
+              className={`h-1 rounded-full cursor-pointer transition-colors ${idx === activeIndex ? "bg-card shadow-xs" : "bg-card/30 hover:bg-card/60"
+                }`}
             />
           ))}
         </div>
@@ -116,3 +129,4 @@ export function AuthHeroPanel() {
     </div>
   );
 }
+
