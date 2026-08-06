@@ -5,6 +5,7 @@ import { formatDistanceToNowStrict } from "date-fns"
 import type { DesignDetail } from "@/lib/data/design"
 import { formatCents } from "@/lib/utils"
 import { ClaimForm } from "@/components/design/ClaimForm"
+import { ShirtMockup } from "@/components/shared/ShirtMockup"
 import { Button } from "@/components/ui/button"
 
 export function DesignDetailContent({
@@ -16,15 +17,10 @@ export function DesignDetailContent({
 }) {
   return (
     <div className="flex min-w-0 flex-col gap-6 md:flex-row md:items-start">
+      {/* The same garment the card showed — opening a design shouldn't swap the
+          product for its artwork. */}
       <div className="relative aspect-[4/5] w-full shrink-0 overflow-hidden rounded-2xl border border-border bg-card md:w-72">
-        <Image
-          src={design.imageUrl}
-          alt=""
-          fill
-          sizes="(min-width: 768px) 288px, 100vw"
-          priority
-          className="object-cover"
-        />
+        <ShirtMockup imageUrl={design.imageUrl} priority />
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col gap-4">

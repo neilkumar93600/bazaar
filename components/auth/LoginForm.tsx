@@ -25,7 +25,7 @@ export function LoginForm() {
           onClick={() => signInWithOAuth("google")}
           whileHover={{ y: -1 }}
           whileTap={{ x: 2, y: 2 }}
-          className="flex-1 flex items-center justify-center gap-2.5 py-3 px-4 rounded-md border border-ink bg-paper-white hover:bg-cream text-ink text-body-sm font-medium transition-all shadow-[2px_2px_0_0_#262626] active:shadow-none cursor-pointer"
+          className="flex-1 flex items-center justify-center gap-2.5 py-3 px-4 rounded-md border border-ink bg-paper-white hover:bg-cream text-ink text-body-sm font-medium transition-all shadow-glow active:shadow-none cursor-pointer"
         >
           {/* User provided Google SVG */}
           <svg
@@ -95,7 +95,7 @@ export function LoginForm() {
           onClick={() => signInWithOAuth("apple")}
           whileHover={{ y: -1 }}
           whileTap={{ x: 2, y: 2 }}
-          className="flex-1 flex items-center justify-center gap-2.5 py-3 px-4 rounded-md border border-ink bg-paper-white hover:bg-cream text-ink text-body-sm font-medium transition-all shadow-[2px_2px_0_0_#262626] active:shadow-none cursor-pointer"
+          className="flex-1 flex items-center justify-center gap-2.5 py-3 px-4 rounded-md border border-ink bg-paper-white hover:bg-cream text-ink text-body-sm font-medium transition-all shadow-glow active:shadow-none cursor-pointer"
         >
           {/* User provided Apple SVG */}
           <svg
@@ -208,7 +208,7 @@ export function LoginForm() {
             whileHover={{ y: -1 }}
             whileTap={{ x: 2, y: 2 }}
             transition={INPUT_TRANSITION}
-            className="w-full mt-2 btn-ember bg-[#a3e635] text-ink border border-ink font-medium py-3 px-6 rounded-md transition-all shadow-[2px_2px_0_0_#262626] active:shadow-none disabled:opacity-50 text-body-sm cursor-pointer"
+            className="w-full mt-2 btn-ember font-medium py-3 px-6 disabled:opacity-50 text-body-sm cursor-pointer"
           >
             {isPending ? "SIGNING IN…" : "SIGN IN"}
           </motion.button>

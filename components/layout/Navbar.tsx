@@ -1,15 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { LogOut, Search, ShoppingCart } from "lucide-react";
+import { Search, ShoppingCart } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Logo } from "@/components/ui/logo";
-import { ScrollProgress } from "@/components/ui/motion";
 import { cn } from "@/lib/utils";
 import {
   Popover,
@@ -27,71 +26,16 @@ import { NotificationBell } from "@/components/dashboard/NotificationBell";
 import { MenuToggle } from "@/components/layout/MenuToggle";
 import { UserMenu } from "@/components/layout/UserMenu";
 import type { NotificationItem } from "@/lib/data/notifications";
-import { signOut } from "@/app/dashboard/actions";
 
+// Home is the feed now, so it needs no entry of its own beyond the logo — and
+// the old "#vibe-feed" anchor would have pointed at the page you're already on.
 const NAV_LINKS = [
-  { href: "/", label: "Home" },
+  { href: "/", label: "Feed" },
   { href: "/shop", label: "Bazaar" },
   { href: "/auctions", label: "Auctions" },
-  { href: "#vibe-feed", label: "Feed" },
 ];
 
 const EASE = [0.16, 1, 0.3, 1] as const;
-
-/** id of the hero <section> in components/home/Hero.tsx */
-const HERO_ID = "auro-header-section";
-
-/**
- * True whenever the hero is no longer behind the navbar — i.e. on any page that
- * has no hero, and on the homepage once you've scrolled past it. Observing the
- * hero itself means the threshold tracks its real height (100dvh on desktop,
- * min-h-[700px] on short viewports) instead of a magic scroll offset.
- */
-function usePastHero(isHome: boolean) {
-  const [pastHero, setPastHero] = useState(!isHome);
-  const [lastIsHome, setLastIsHome] = useState(isHome);
-
-  // Client-side route change: reset during render rather than in an effect, so
-  // the bar never paints a frame in the outgoing route's state.
-  if (lastIsHome !== isHome) {
-    setLastIsHome(isHome);
-    setPastHero(!isHome);
-  }
-
-  useEffect(() => {
-    if (!isHome) return;
-
-    // The hero can't be observed directly on mount: the layout shell (this bar)
-    // flushes before the streamed page body, so getElementById is still null
-    // here and an effect that bailed on that would never re-run. Measure it
-    // lazily instead, seeded with the viewport height the hero targets anyway
-    // (lg:h-[100dvh]), and re-measure whenever the body resizes — which is
-    // exactly when the streamed content lands.
-    let threshold = window.innerHeight;
-
-    const update = () => setPastHero(window.scrollY >= threshold - 80);
-
-    const measure = () => {
-      // Coupled to Hero's section id. Any route without one keeps the seeded
-      // viewport-height threshold rather than sticking on the expanded bar.
-      const hero = document.getElementById(HERO_ID);
-      if (hero) threshold = hero.offsetTop + hero.offsetHeight;
-      update();
-    };
-
-    measure();
-    const resizeObserver = new ResizeObserver(measure);
-    resizeObserver.observe(document.body);
-    window.addEventListener("scroll", update, { passive: true });
-
-    return () => {
-      resizeObserver.disconnect();
-      window.removeEventListener("scroll", update);
-    };
-  }, [isHome]);
-
-  return pastHero;
-}
 
 type NavbarUser = {
   displayName: string | null;
@@ -99,7 +43,7 @@ type NavbarUser = {
   avatarUrl: string | null;
 };
 
-function SearchPopover({ onHero }: { onHero?: boolean }) {
+function SearchPopover() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -115,7 +59,7 @@ function SearchPopover({ onHero }: { onHero?: boolean }) {
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
         render={
-          <Button variant="ghost" size="icon" className={onHero ? "text-foreground/80 hover:text-foreground hover:bg-foreground/10 rounded-full" : undefined}>
+          <Button variant="ghost" size="icon">
             <Search className="w-5 h-5" />
             <span className="sr-only">Search</span>
           </Button>
@@ -157,18 +101,6 @@ export function Navbar({
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
   const isLoggedIn = Boolean(user);
-  const isHome = pathname === "/";
-  const pastHero = usePastHero(isHome);
-  // Over the hero video the bar is chromeless with light text; everywhere else
-  // it collapses into a solid floating pill with normal foreground text.
-  const onHero = isHome && !pastHero;
-
-  // The home hero carries its own pill nav inside the video card, so the global
-  // bar would double it. It stays out until the visitor scrolls past the hero,
-  // then behaves exactly as it does on every other route. Safe as an early
-  // return: every hook above it, including the hero measurement, has already
-  // run — nothing hooks below this line.
-  if (onHero) return null;
 
   return (
     <motion.header
@@ -176,10 +108,9 @@ export function Navbar({
       // a single line on paper" — over the shared `max-w-page` container so the
       // nav lines up with page content instead of floating at its own width.
       // Opaque, since there's no rule to separate it from what scrolls under.
-      className={cn(
-        "z-50 w-full bg-background",
-        isHome ? "fixed inset-x-0 top-0" : "sticky top-0",
-      )}
+      // Sticky on every route, home included: the feed sizes itself against
+      // this bar's 67px row, so a fixed bar would overlap the first cards.
+      className="sticky top-0 z-50 w-full bg-background"
       initial={shouldReduceMotion ? false : { opacity: 0, y: -12 }}
       animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: EASE }}
@@ -228,6 +159,15 @@ export function Navbar({
                   <ShoppingCart className="w-5 h-5" />
                   <span className="sr-only">Cart</span>
                 </Button>
+                {/* The hero's prompt form used to be the create entry point on
+                    home. With the feed filling the page this bar is the only
+                    one left, so a signed-in visitor gets the CTA too. */}
+                <Link
+                  href="/dashboard/create"
+                  className="btn-ember px-3.5 py-1.5 text-body-sm font-medium whitespace-nowrap"
+                >
+                  Start creating
+                </Link>
                 <UserMenu
                   displayName={user!.displayName}
                   handle={user!.handle}

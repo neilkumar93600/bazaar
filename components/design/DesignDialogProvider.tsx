@@ -15,12 +15,13 @@ type DesignDialogContextValue = {
 
 const DesignDialogContext = createContext<DesignDialogContextValue | null>(null)
 
+/** Null outside a provider rather than a thrown error. Every caller opens the
+ *  dialog as an enhancement over a real link to /design/[id], so the absence of
+ *  a provider is a reason to navigate — not to take the page down. It also
+ *  stops Fast Refresh from blanking the screen when this module reloads and a
+ *  card still holds the previous context identity. */
 export function useDesignDialog() {
-  const ctx = useContext(DesignDialogContext)
-  if (!ctx) {
-    throw new Error("useDesignDialog must be used within DesignDialogProvider")
-  }
-  return ctx
+  return useContext(DesignDialogContext)
 }
 
 export function DesignDialogProvider({ children }: { children: ReactNode }) {

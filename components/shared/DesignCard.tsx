@@ -1,11 +1,11 @@
 "use client"
 
-import Image from "next/image"
 import Link from "next/link"
 import { formatDistanceToNowStrict } from "date-fns"
 
 import { cn } from "@/lib/utils"
 import { useDesignDialog } from "@/components/design/DesignDialogProvider"
+import { ShirtMockup } from "@/components/shared/ShirtMockup"
 
 /** The one design card. Home feed, /shop and creator storefronts all render
  *  this — each data module maps its rows into this shape rather than growing
@@ -52,7 +52,7 @@ export function DesignCard({
    *  to land here or they'd outline the text too. */
   frameClassName?: string
 }) {
-  const { openDesign } = useDesignDialog()
+  const dialog = useDesignDialog()
 
   return (
     <Link
@@ -60,10 +60,12 @@ export function DesignCard({
       onClick={(e) => {
         // Plain left-click opens the dialog in place, no URL change. Any
         // modified click (new tab, new window, save-as, etc.) falls through
-        // to the real link so /design/[id] still works for those.
+        // to the real link so /design/[id] still works for those — as does a
+        // card rendered outside the provider, which has no dialog to open.
+        if (!dialog) return
         if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
         e.preventDefault()
-        openDesign(design.id)
+        dialog.openDesign(design.id)
       }}
       className={cn(
         "group/card block outline-none",
@@ -81,14 +83,9 @@ export function DesignCard({
           frameClassName
         )}
       >
-        <Image
-          src={design.imageUrl}
-          alt=""
-          fill
-          sizes="(min-width: 1280px) 280px, (min-width: 768px) 30vw, 45vw"
-          priority={priority}
-          className="object-cover"
-        />
+        {/* The card sells a shirt, so it shows a shirt. The flat artwork is
+            still one click away in the design dialog. */}
+        <ShirtMockup imageUrl={design.imageUrl} priority={priority} />
 
         {design.isClaimed ? (
           // Status Pill Badge — mint wash inside a mint edge, ink label. The

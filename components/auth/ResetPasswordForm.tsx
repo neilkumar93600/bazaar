@@ -156,7 +156,7 @@ export function ResetPasswordForm() {
           whileHover={{ y: -1 }}
           whileTap={{ x: 2, y: 2 }}
           transition={INPUT_TRANSITION}
-          className="w-full mt-2 btn-ember bg-[#a3e635] text-ink border border-ink font-medium py-3 px-6 rounded-md transition-all shadow-[2px_2px_0_0_#262626] active:shadow-none disabled:opacity-50 text-body-sm cursor-pointer"
+          className="w-full mt-2 btn-ember font-medium py-3 px-6 disabled:opacity-50 text-body-sm cursor-pointer"
         >
           {isPending ? "SAVING…" : "RESET PASSWORD"}
         </motion.button>
