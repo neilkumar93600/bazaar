@@ -6,6 +6,7 @@ import { NotificationBell } from "@/components/dashboard/NotificationBell";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { PageTransition } from "@/components/ui/motion";
 import { getNotifications } from "@/lib/data/notifications";
+import { countRecentGenerations, DAILY_CAP } from "@/lib/generation/quota";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
@@ -18,9 +19,10 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     redirect("/login");
   }
 
-  const [notifications, { data: profile }] = await Promise.all([
+  const [notifications, { data: profile }, generationsUsed] = await Promise.all([
     getNotifications(),
     supabase.from("profiles").select("handle, display_name, avatar_url").eq("id", user.id).single(),
+    countRecentGenerations(supabase, user.id),
   ]);
 
   return (
@@ -30,8 +32,8 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         handle={profile?.handle ?? ""}
         displayName={profile?.display_name ?? null}
         avatarUrl={profile?.avatar_url ?? null}
-        creditsUsed={3}
-        creditsTotal={10}
+        creditsUsed={generationsUsed ?? 0}
+        creditsTotal={DAILY_CAP}
       />
       <SidebarInset>
         <header className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border px-4">

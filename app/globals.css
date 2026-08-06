@@ -2,8 +2,10 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-/* Dark-only system — docs/DESIGN.md. There is no light theme: `:root` IS the
-   dark theme.
+/* Light-only system — Brainfish style reference (lime-marker editorial
+   broadsheet: paper-white canvas, ink text and ink borders, cream as the only
+   lifted surface, 2px hard offset shadows instead of blur, and one rationed
+   highlighter lime for action). `:root` IS the theme; there is no dark variant.
 
    `dark:` is pinned unconditionally on. Tailwind v4's stock `dark:` follows
    the OS preference, which would make the shadcn primitives' built-in dark
@@ -13,10 +15,24 @@
 @custom-variant dark (&);
 
 @theme inline {
+    /* Geist carries navigation, buttons, body and every headline. `font-serif`
+       is Fraunces, and Brainfish rations it hard: one italic emphasis word
+       inside a Geist headline, never body, buttons or a whole heading. That one
+       italic word is the system's typographic signature — the equivalent of the
+       lime accent. `font-display` stays on Geist. */
     --font-heading: var(--font-sans);
     --font-sans: var(--font-sans);
     --font-mono: var(--font-mono);
-    --font-display: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+    --font-serif: var(--font-serif), ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+    --font-display: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+
+    /* The system tops out at 600 — weight 600 is display-only, 500 carries
+       sub-headings and button labels, 300 the low-emphasis links. Capping the
+       namespace here holds that line across ~40 existing `font-bold` /
+       `font-black` call sites without a rename pass. */
+    --font-weight-bold: 600;
+    --font-weight-extrabold: 600;
+    --font-weight-black: 600;
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -48,45 +64,80 @@
     --color-card: var(--card);
     --color-foreground: var(--foreground);
     --color-background: var(--background);
-    --radius-sm: calc(var(--radius) * 0.6);
-    --radius-md: calc(var(--radius) * 0.8);
+
+    /* The page's content width, in one place. The Brainfish reference specifies
+       1200px; this site runs wider. Every container reads `max-w-page` so the
+       nav, the full-bleed bands and the main column can't drift apart again. */
+    --container-page: 1440px;
+
+    /* Brainfish splits the scale in two: buttons and inputs at 4px, cards at
+       8px, and the 9999px pill reserved for tags and status indicators only —
+       "the button radii are 4px or 0px, never pill-shaped on the main UI".
+       `rounded-lg` is the button/input step; `rounded-xl` and up are cards. */
+    --radius-sm: 2px;
+    --radius-md: 4px;
     --radius-lg: var(--radius);
-    --radius-xl: calc(var(--radius) * 1.4);
-    --radius-2xl: calc(var(--radius) * 1.8);
-    --radius-3xl: calc(var(--radius) * 2.2);
-    --radius-4xl: calc(var(--radius) * 2.6);
+    --radius-xl: 8px;
+    --radius-2xl: 8px;
+    --radius-3xl: 8px;
+    --radius-4xl: 8px;
 
-    /* Neutrals — obsidian ladder (docs/DESIGN.md) */
-    --color-obsidian: #0a0a0b;
-    --color-pitch: #050506;
-    --color-graphite: #121214;
-    --color-slate-ink: #18181b;
-    --color-gunmetal: #1f1f23;
-    --color-hairline: #26262b;
-    --color-steel: #35353c;
-    --color-bone: #fafafa;
-    --color-ash-gray: #a1a1aa;
-    --color-smoke: #71717a;
+    /* Neutrals. The token *names* are legacy (they date from a dark theme);
+       the values are Brainfish's — Paper White through Ink. Read them as slots,
+       not as literal colours: `bone` is the primary text, `obsidian` and
+       `pitch` are the paper canvas, `graphite` is the cream lift. */
+    --color-obsidian: #ffffff;
+    --color-pitch: #ffffff;
+    --color-graphite: #fcfff7;
+    --color-gunmetal: #f2f2ee;
+    --color-hairline: #e5e5e5;
+    --color-steel: #262626;
+    --color-bone: #262626;
+    --color-ash-gray: #525252;
+    --color-smoke: #737373;
 
-    /* Orange — the only chroma family in the system */
-    --color-ember-orange: #ff6a1f;
-    --color-molten-amber: #ffa832;
-    --color-deep-ember: #e0400d;
-    --color-gold-leaf: #ffc861;
+    /* Brainfish's own names, for code written against the style reference
+       rather than against the legacy slots above. Reach for these in new work;
+       the legacy names stay only because ~60 call sites already use them. */
+    --color-lime-sprint: #a3e635;
+    --color-paper-white: #ffffff;
+    --color-cream: #fcfff7;
+    --color-ink: #262626;
+    --color-black-ink: #000000;
+    --color-depth: #303030;
+    --color-rule: #e5e5e5;
+    --color-muted-ink: #525252;
+    --color-muted-gray: #737373;
+    --color-mint-edge: #7ee2b8;
+    --color-mint-wash: #dcfff1;
+
+    /* The closed accent vocabulary. Lime is action-only — Brainfish: "never as
+       a text color, icon fill, or decorative background" — so the slots that
+       used to carry a data/price hue now resolve to ink. The system is
+       monochrome with exactly two colour moments: lime for action, mint for
+       live status. */
+    --color-ember-orange: #a3e635;
+    --color-molten-amber: #262626;
+    --color-deep-ember: #e5e5e5;
+    --color-gold-leaf: #262626;
 
     /* Status only */
-    --color-success: #3fbf7f;
-    --color-danger: #f0453a;
+    --color-success: #7ee2b8;
+    --color-danger: #d93a3a;
 
-    /* Gradients → bg-ember-flow, bg-sunset-sweep, ... */
-    --background-image-ember-flow: linear-gradient(100deg, #ff4d0f 0%, #ff6a1f 45%, #ffa832 100%);
-    --background-image-ember-flow-hot: linear-gradient(100deg, #ff6a1f 0%, #ffa832 45%, #ffc861 100%);
-    --background-image-molten-rise: linear-gradient(180deg, #ffa832 0%, #ff6a1f 55%, #e0400d 100%);
-    --background-image-sunset-sweep: linear-gradient(43deg, #e0400d 20%, #ff6a1f 60%, #ffc861 100%);
-    --background-image-forge-glow: radial-gradient(120% 120% at 25% 15%, #ffa832 0%, #ff6a1f 45%, #e0400d 100%);
-    --background-image-ash-ember: linear-gradient(180deg, #1f1f23 0%, #121214 100%);
-    --background-image-hero-atmosphere: radial-gradient(ellipse 90% 60% at 50% 0%, rgba(255, 106, 31, 0.22) 0%, rgba(224, 64, 13, 0.1) 40%, transparent 72%);
-    --background-image-section-fade: linear-gradient(180deg, #050506 0%, #0a0a0b 100%);
+    /* Gradients → bg-ember-flow, bg-sunset-sweep, ... Brainfish bans gradients
+       on body backgrounds and card surfaces: "the only gradient in the system
+       is the soft lime radial halo in the hero". So every one of these except
+       hero-atmosphere is deliberately single-stop — a flat fill wearing a
+       gradient's token name. */
+    --background-image-ember-flow: linear-gradient(180deg, #a3e635 0%, #a3e635 100%);
+    --background-image-ember-flow-hot: linear-gradient(180deg, #b2ec4b 0%, #b2ec4b 100%);
+    --background-image-molten-rise: linear-gradient(180deg, #303030 0%, #303030 100%);
+    --background-image-sunset-sweep: linear-gradient(180deg, #303030 0%, #303030 100%);
+    --background-image-forge-glow: linear-gradient(180deg, #262626 0%, #262626 100%);
+    --background-image-ash-ember: linear-gradient(180deg, #fcfff7 0%, #fcfff7 100%);
+    --background-image-hero-atmosphere: radial-gradient(52% 52% at 84% 16%, rgba(163, 230, 53, 0.2) 0%, rgba(163, 230, 53, 0.06) 45%, rgba(163, 230, 53, 0) 72%);
+    --background-image-section-fade: linear-gradient(180deg, #ffffff 0%, #ffffff 100%);
 
     --shadow-hairline: var(--shadow-hairline);
     --shadow-card: var(--shadow-card);
@@ -94,35 +145,34 @@
     --shadow-button: var(--shadow-button);
     --shadow-glow: var(--shadow-glow);
 
-    --text-caption: 12px;
-    --text-caption--line-height: 1.2;
-    --text-caption--letter-spacing: -0.12px;
-    --text-body-sm: 14px;
-    --text-body-sm--line-height: 1.5;
-    --text-body-sm--letter-spacing: -0.14px;
-    --text-body: 16px;
-    --text-body--line-height: 1.5;
-    --text-body--letter-spacing: -0.16px;
+    /* Brainfish's scale: 14 / 16 / 18 / 20 / 28 / 36 / 48 / 56, with the
+       negative tracking that gives display sizes their editorial density.
+       Weight 600 carries display and headings, 400 carries body — note body
+       climbs to 18px here, so `text-body-sm` (16px) is the new UI default. */
+    --text-caption: 14px;
+    --text-caption--line-height: 1.14;
+    --text-body-sm: 16px;
+    --text-body-sm--line-height: 1.25;
+    --text-body: 18px;
+    --text-body--line-height: 1.55;
     --text-subheading: 20px;
-    --text-subheading--line-height: 1.2;
-    --text-subheading--letter-spacing: -0.2px;
-    --text-subheading--font-weight: 500;
-    --text-heading-sm: 24px;
-    --text-heading-sm--line-height: 1.2;
-    --text-heading-sm--letter-spacing: -0.24px;
-    --text-heading-sm--font-weight: 500;
-    --text-heading: 32px;
-    --text-heading--line-height: 1.1;
-    --text-heading--letter-spacing: -0.64px;
-    --text-heading--font-weight: 400;
-    --text-heading-lg: 40px;
-    --text-heading-lg--line-height: 1.1;
-    --text-heading-lg--letter-spacing: -0.52px;
-    --text-heading-lg--font-weight: 400;
-    --text-display: 48px;
-    --text-display--line-height: 1.1;
-    --text-display--letter-spacing: -0.96px;
-    --text-display--font-weight: 700;
+    --text-subheading--line-height: 1.5;
+    --text-heading-sm: 28px;
+    --text-heading-sm--line-height: 1.14;
+    --text-heading-sm--letter-spacing: -0.56px;
+    --text-heading-sm--font-weight: 600;
+    --text-heading: 36px;
+    --text-heading--line-height: 1.14;
+    --text-heading--letter-spacing: -0.18px;
+    --text-heading--font-weight: 600;
+    --text-heading-lg: 48px;
+    --text-heading-lg--line-height: 1.08;
+    --text-heading-lg--letter-spacing: -0.96px;
+    --text-heading-lg--font-weight: 600;
+    --text-display: 56px;
+    --text-display--line-height: 1.16;
+    --text-display--letter-spacing: -0.28px;
+    --text-display--font-weight: 600;
     --animate-marquee: marquee var(--duration) infinite linear;
     --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
   @keyframes marquee {
@@ -143,82 +193,88 @@
     }
 }
 
-/* shadcn semantic layer. Dark values only — do not add a second theme block. */
+/* shadcn semantic layer. Light values only — do not add a second theme block. */
 :root {
-    --background: #0a0a0b;
-    --foreground: #fafafa;
-    /* Card and popover are translucent by design: every `bg-card` / `bg-popover`
-       utility in the app becomes a liquid-glass pane without touching a single
-       component. Alpha is tuned so a pane over the bare canvas still lands on
-       Graphite/Slate Ink — the ambient field below is what makes it read. */
-    --card: rgba(18, 18, 20, 0.62);
-    --card-foreground: #fafafa;
-    --popover: rgba(22, 22, 26, 0.74);
-    --popover-foreground: #fafafa;
-    --primary: #ff6a1f;
-    --primary-foreground: #0a0a0b;
-    --secondary: #18181b;
-    --secondary-foreground: #fafafa;
-    --muted: #18181b;
-    --muted-foreground: #a1a1aa;
-    --accent: #1f1f23;
-    --accent-foreground: #fafafa;
-    --destructive: #f0453a;
-    --destructive-foreground: #fafafa;
-    --border: #26262b;
-    --input: #35353c;
-    --ring: #ff6a1f;
-    --chart-1: #ff6a1f;
-    --chart-2: #ffa832;
-    --chart-3: #ffc861;
-    --chart-4: #e0400d;
-    --chart-5: #a1a1aa;
-    --radius: 0.75rem;
-    --sidebar: rgba(18, 18, 20, 0.72);
-    --sidebar-foreground: #fafafa;
-    --sidebar-primary: #ff6a1f;
-    --sidebar-primary-foreground: #0a0a0b;
-    --sidebar-accent: #1f1f23;
-    --sidebar-accent-foreground: #fafafa;
-    --sidebar-border: #26262b;
-    --sidebar-ring: #ff6a1f;
+    --background: #ffffff;
+    --foreground: #262626;
+    /* Cards are Cream, not white — Brainfish's only lift above the paper, a
+       barely-there yellow-green tint that reads as a different sheet rather
+       than a new colour. */
+    --card: #fcfff7;
+    --card-foreground: #262626;
+    --popover: #ffffff;
+    --popover-foreground: #262626;
+    /* Ink, not lime. `--primary` backs both filled blocks (`bg-primary`, which
+       becomes Brainfish's Dark Block Button) and accent text/borders
+       (`text-primary`, `border-primary`) — and lime is forbidden on text and
+       icons. The lime lives in `--color-ember-orange` / `bg-ember-flow`, which
+       only ever paint a filled CTA. */
+    --primary: #262626;
+    --primary-foreground: #ffffff;
+    /* Quiet surface (badges, section bands, form field rows, ~25 call sites) —
+       the same Cream as cards, since the palette has no third neutral. */
+    --secondary: #fcfff7;
+    --secondary-foreground: #262626;
+    --muted: #fcfff7;
+    --muted-foreground: #737373;
+    --accent: #f2f2ee;
+    --accent-foreground: #262626;
+    --destructive: #d93a3a;
+    --destructive-foreground: #ffffff;
+    /* Rule — the hairline. Structural borders that need to read as drawn lines
+       use ink (#262626) directly at the call site. */
+    --border: #e5e5e5;
+    /* Shadcn primitives paint this as a translucent fill (`bg-input/50`), not a
+       border, so it stays paper. */
+    --input: #ffffff;
+    --ring: #262626;
+    /* Monochrome plus the two sanctioned colour moments. */
+    --chart-1: #262626;
+    --chart-2: #525252;
+    --chart-3: #737373;
+    --chart-4: #7ee2b8;
+    --chart-5: #a3e635;
+    --radius: 4px;
+    --sidebar: #ffffff;
+    --sidebar-foreground: #262626;
+    --sidebar-primary: #262626;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #f2f2ee;
+    --sidebar-accent-foreground: #262626;
+    --sidebar-border: #e5e5e5;
+    --sidebar-ring: #262626;
 }
 
-/* Depth in a dark UI comes from a hairline + inner highlight + orange glow.
-   A black drop shadow on a black canvas is invisible. */
+/* Brainfish has no blur. "Every shadow in the system is a 2px solid offset in
+   #262626 ink, or it doesn't exist" — so resting surfaces are defined by a 1px
+   line and interaction is a hard offset that reads like a printed block
+   shifting on paper. */
 :root {
-    --shadow-hairline: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
-    --shadow-card:
-        inset 0 1px 0 0 rgba(255, 255, 255, 0.05),
-        0 8px 32px -12px rgba(0, 0, 0, 0.9);
-    --shadow-card-hover:
-        inset 0 1px 0 0 rgba(255, 255, 255, 0.08),
-        0 0 0 1px rgba(255, 106, 31, 0.28),
-        0 12px 40px -12px rgba(255, 106, 31, 0.22);
-    --shadow-button:
-        inset 0 1px 0 0 rgba(255, 255, 255, 0.18),
-        0 6px 20px -8px rgba(255, 106, 31, 0.55);
-    --shadow-glow: 0 0 48px -8px rgba(255, 106, 31, 0.35);
-    --shadow-storefront-card: var(--shadow-glass);
-    --shadow-storefront-card-hover: var(--shadow-glass-hover);
+    --shadow-hairline: inset 0 -1px 0 0 rgba(38, 38, 38, 0.08);
+    /* Resting card: the hairline itself, drawn as a ring so it composes with a
+       real border where one is also set. */
+    --shadow-card: rgb(229, 229, 229) 0px 0px 0px 1px;
+    --shadow-card-hover: rgb(38, 38, 38) 2px 2px 0px 0px;
+    /* The fully-pressed state — the block has moved into its own shadow. */
+    --shadow-button: 0 0 #0000;
+    --shadow-glow: rgb(38, 38, 38) 2px 2px 0px 0px;
+    /* Half-offset: the button on its way into the page. */
+    --shadow-hard-half: rgb(38, 38, 38) 1px 1px 0px 0px;
+    /* Floating product/feature cards: 1px ink line plus the hard offset. This
+       is the "Feature Mockup Card" treatment, and the hero form card uses it. */
+    --shadow-xl-2: rgb(38, 38, 38) 2px 2px 0px 0px, rgb(38, 38, 38) 0px 0px 0px 1px;
+    --shadow-storefront-card: rgb(229, 229, 229) 0px 0px 0px 1px;
+    --shadow-storefront-card-hover: rgb(38, 38, 38) 2px 2px 0px 0px;
 
-    /* Liquid glass. One place to retune the whole surface language: `--glass-*`
-       drives .glass-surface, .glass-panel and the .liquid-glass-* layers. */
-    --glass-blur: 20px;
-    --glass-saturate: 145%;
-    --glass-rim: rgba(255, 255, 255, 0.10);
-    --glass-highlight: rgba(255, 255, 255, 0.14);
-    /* Rim is a spread ring rather than a border so a pane needs no border
-       utility to get its edge — these primitives use `ring-*`, not borders. */
-    --shadow-glass:
-        inset 0 1px 0 0 var(--glass-highlight),
-        inset 0 -1px 0 0 rgba(255, 255, 255, 0.04),
-        0 0 0 1px var(--glass-rim),
-        0 16px 48px -20px rgba(0, 0, 0, 0.95);
-    --shadow-glass-hover:
-        inset 0 1px 0 0 rgba(255, 255, 255, 0.20),
-        0 0 0 1px rgba(255, 106, 31, 0.30),
-        0 18px 56px -20px rgba(255, 106, 31, 0.28);
+    /* Cards are flat (no blur/saturate) — .glass-surface/.glass-panel keep
+       their names since ~30 components already reference them, but they resolve
+       to plain ruled paper. One place to retune. */
+    --glass-blur: 0px;
+    --glass-saturate: 100%;
+    --glass-rim: #e5e5e5;
+    --glass-highlight: rgba(38, 38, 38, 0);
+    --shadow-glass: var(--shadow-card);
+    --shadow-glass-hover: var(--shadow-card-hover);
 }
 
 @layer base {
@@ -229,29 +285,19 @@
     @apply border-border outline-ring/50;
   }
   html {
-    color-scheme: dark;
+    color-scheme: light;
     @apply font-sans;
   }
   body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     @apply bg-background text-foreground;
-    /* Ambient field. Glass over a flat #0a0a0b canvas refracts nothing — it
-       just reads as gray. These fixed ember blooms are the light the panes
-       bend. Painted as body background-image rather than a pseudo-element so
-       it needs no stacking context and no wrapper in any layout. */
-    background-image:
-      radial-gradient(ellipse 70% 50% at 12% 0%, rgba(255, 106, 31, 0.16) 0%, transparent 60%),
-      radial-gradient(ellipse 60% 45% at 92% 22%, rgba(224, 64, 13, 0.12) 0%, transparent 62%),
-      radial-gradient(ellipse 80% 40% at 50% 100%, rgba(255, 168, 50, 0.09) 0%, transparent 68%);
-    background-attachment: fixed;
-    background-repeat: no-repeat;
   }
   button:not(:disabled), [role="button"]:not(:disabled) {
     cursor: pointer;
   }
   ::selection {
-    background-color: rgba(255, 106, 31, 0.28);
+    background-color: rgba(17, 26, 74, 0.14);
     color: var(--foreground);
   }
 }
@@ -278,19 +324,6 @@
   }
 }
 
-/* Liquid-glass navbar button — was five inline style blocks + a <style> tag
-   inside Navbar.tsx. Keyframes and layer paint live here now. */
-@keyframes liquid-glass-caustic {
-  0% { transform: translate(-10%, -10%) rotate(0deg) scale(1); }
-  50% { transform: translate(10%, 10%) rotate(180deg) scale(1.15); }
-  100% { transform: translate(-10%, -10%) rotate(360deg) scale(1); }
-}
-
-@keyframes liquid-glass-breathing {
-  0%, 100% { opacity: 0.45; }
-  50% { opacity: 0.6; }
-}
-
 /* Marquee (components/ui/marquee.tsx) pauses on hover via its own class;
    keyboard focus has to pause it too or focus walks off a moving target. */
 .animate-marquee:focus-within,
@@ -302,30 +335,6 @@
   animation: card-rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* Transparency is the whole theme, so honour the opt-out at the token level:
-   the panes go solid and the blur stack drops out everywhere at once. */
-@media (prefers-reduced-transparency: reduce) {
-  :root {
-    --card: #121214;
-    --popover: #18181b;
-    --sidebar: #121214;
-  }
-
-  .glass-surface,
-  .glass-panel,
-  .liquid-glass-refract {
-    backdrop-filter: none;
-  }
-
-  .glass-panel {
-    background-color: var(--color-gunmetal);
-  }
-
-  body {
-    background-image: none;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .animate-card-rise,
   .animate-marquee,
@@ -334,6 +343,15 @@
   .liquid-glass-breath {
     animation: none;
   }
+}
+
+/* Unlayered on purpose. Brainfish is explicit — "the button radii are 4px or
+   0px, never pill-shaped on the main UI" — but a dozen CTA call sites still
+   carry `rounded-full` from an older theme. Unlayered rules outrank every
+   @layer, including Tailwind's utilities, so this holds the 4px line from one
+   place instead of a twelve-file rename. */
+.btn-ember {
+  border-radius: var(--radius);
 }
 
 @layer components {
@@ -354,35 +372,55 @@
 }
 
 @layer components {
-  /* Primary CTA: Ember Flow gradient, dark text (white on orange fails AA). */
+  /* Primary CTA: Brainfish's Lime Primary Button — lime fill, ink label, 1px
+     ink border, 4px corners, and a 2px hard offset that appears on hover so the
+     block reads as shifting on paper. Ink text, never white: lime is bright
+     enough that white on it fails contrast outright. */
+  /* The press-in interaction, defined once for everything that behaves like a
+     stamped block: buttons and carousel cards.
+     
+     Raised at rest — a block already sits above the paper, so the interaction
+     pushes it in rather than conjuring elevation on approach. Hover moves it a
+     pixel into its own shadow and active closes the gap; the offset shrinks by
+     exactly what the block travels, so the shadow's outer edge stays put and
+     only the block appears to move. */
+  .btn-ember,
+  .press-block {
+    box-shadow: var(--shadow-glow);
+    transition:
+      background-image 150ms ease,
+      box-shadow 150ms ease,
+      transform 150ms ease;
+  }
+
+  .btn-ember:hover,
+  .press-block:hover,
+  .group\/card:hover .press-block {
+    box-shadow: var(--shadow-hard-half);
+    transform: translate(1px, 1px);
+  }
+
+  .btn-ember:active,
+  .press-block:active,
+  .group\/card:active .press-block {
+    box-shadow: var(--shadow-button);
+    transform: translate(2px, 2px);
+  }
+
   .btn-ember {
     background-image: var(--background-image-ember-flow);
-    color: var(--background);
-    box-shadow: var(--shadow-button);
-    transition:
-      background-image 300ms ease,
-      box-shadow 300ms ease,
-      transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
+    color: var(--color-ink);
+    border: 1px solid var(--color-ink);
   }
 
   .btn-ember:hover {
     background-image: var(--background-image-ember-flow-hot);
-    box-shadow: var(--shadow-button), var(--shadow-glow);
   }
 
-  .btn-ember:active {
-    transform: scale(0.98);
-  }
-
-  /* Liquid-glass pane. Deliberately sets no background: the surface colour
-     still comes from a `bg-card` / `bg-popover` utility (both translucent
-     tokens), so this only adds the blur, rim highlight and depth. Pair them —
-     `bg-card glass-surface`. */
-  /* Never hand-write the -webkit- pair here: Lightning CSS merges the two
-     declarations and keeps the last, which drops the standard property and
-     leaves Firefox unblurred. It adds the prefix itself. */
+  /* Ruled content card. Deliberately sets no background: the surface colour
+     still comes from a `bg-card` / `bg-popover` utility, this only draws the
+     rule. Pair them — `bg-card glass-surface`. */
   .glass-surface {
-    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
     border-color: var(--glass-rim);
     box-shadow: var(--shadow-glass);
   }
@@ -398,69 +436,61 @@
   .group\/card:hover .glass-surface-interactive,
   .group\/card:focus-visible .glass-surface-interactive {
     box-shadow: var(--shadow-glass-hover);
-    border-color: rgba(255, 106, 31, 0.32);
+    border-color: var(--color-ink);
   }
 
-  /* Glass chrome floating over imagery (navbar pill, hero secondary button).
-     Lighter and more reflective than .glass-surface — it carries its own
-     white tint because it sits on video and photography, not on the canvas. */
+  /* Chrome floating over imagery (hero nav pill, hero secondary button). The
+     one place a blur survives, because this sits on video rather than paper —
+     but it wears an ink rule so it still reads as printed. */
   .glass-panel {
-    background-color: rgba(255, 255, 255, 0.07);
-    border-color: rgba(255, 255, 255, 0.14);
-    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-    box-shadow:
-      inset 0 1px 0 0 var(--glass-highlight),
-      inset 0 -1px 1px 0 rgba(255, 255, 255, 0.05);
+    background-color: rgba(255, 255, 255, 0.88);
+    border-color: var(--color-ink);
+    backdrop-filter: blur(8px);
+    box-shadow: none;
   }
 
+  /* The turbulence/displacement "liquid glass" effect was tuned for a dark
+     gradient button; Brainfish's CTA is a flat lime block whose only ornament
+     is a hard offset, so these layers are neutralized rather than ripped out of
+     Navbar.tsx. */
   .liquid-glass-refract {
-    background: rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(calc(var(--glass-blur) + 4px)) saturate(var(--glass-saturate));
-    /* SVG filter node lives in Navbar.tsx markup */
-    filter: url("#liquid-glass-refraction");
+    background: transparent;
+    backdrop-filter: none;
+    filter: none;
   }
 
   .liquid-glass-sheen {
-    opacity: 0.45;
-    background: radial-gradient(
-      120px at 56.15% 92.97%,
-      rgba(255, 255, 255, 0.42) 0%,
-      rgba(255, 255, 255, 0.08) 50%,
-      transparent 100%
-    );
-    mix-blend-mode: overlay;
+    opacity: 0;
   }
 
   .liquid-glass-caustic {
-    background: radial-gradient(rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0) 70%);
-    animation: liquid-glass-caustic 15s ease-in-out infinite;
+    opacity: 0;
+    animation: none;
   }
 
   .liquid-glass-rim {
-    border-color: rgba(255, 255, 255, 0.22);
-    box-shadow:
-      rgba(255, 255, 255, 0.45) 0px 1px 1.5px inset,
-      rgba(255, 255, 255, 0.15) 0px -1px 2px inset,
-      rgba(0, 0, 0, 0.5) 0px 8px 24px;
+    border-color: transparent;
+    box-shadow: none;
   }
 
   .liquid-glass-breath {
-    opacity: 0.45;
-    animation: liquid-glass-breathing 4s ease-in-out infinite;
+    opacity: 0;
+    animation: none;
   }
 }
 
 @layer components {
-  /* Feed column tints — orange family only, varied hue/sat so columns still
-     read as distinct without reintroducing a second chroma. */
-  .column-tint-0 { --tint: 18 90% 55%; }
-  .column-tint-1 { --tint: 32 95% 58%; }
-  .column-tint-2 { --tint: 12 85% 50%; }
-  .column-tint-3 { --tint: 40 90% 60%; }
-  .column-tint-4 { --tint: 24 80% 52%; }
-  .column-tint-5 { --tint: 36 70% 55%; }
-  .column-tint-6 { --tint: 8 75% 48%; }
-  .column-tint-7 { --tint: 44 85% 62%; }
+  /* Feed column tints. Brainfish allows exactly three marks — ink, mint and
+     lime — so the eight columns cycle those rather than inventing five more
+     hues. Used at 10% for the wash and solid for the category dot. */
+  .column-tint-0 { --tint: 0 0% 15%; }    /* Ink */
+  .column-tint-1 { --tint: 158 63% 69%; } /* Mint Edge */
+  .column-tint-2 { --tint: 82 78% 55%; }  /* Lime Sprint */
+  .column-tint-3 { --tint: 0 0% 15%; }
+  .column-tint-4 { --tint: 158 63% 69%; }
+  .column-tint-5 { --tint: 82 78% 55%; }
+  .column-tint-6 { --tint: 0 0% 15%; }
+  .column-tint-7 { --tint: 158 63% 69%; }
 
   .column-tint-0,
   .column-tint-1,
@@ -470,11 +500,14 @@
   .column-tint-5,
   .column-tint-6,
   .column-tint-7 {
-    background: linear-gradient(180deg, hsl(var(--tint) / 12%), transparent 55%);
+    background: linear-gradient(180deg, hsl(var(--tint) / 10%), transparent 55%);
   }
 
+  /* Wears a `.column-tint-N` class purely to inherit `--tint`, so it has to
+     cancel the wash gradient those classes paint. */
   .column-tint-dot {
     background-color: hsl(var(--tint));
+    background-image: none;
   }
 
   /* Softens the clipped top/bottom edge of a scrolling feed column. */
@@ -482,7 +515,29 @@
     mask-image: linear-gradient(180deg, transparent 0%, #000 7%, #000 93%, transparent 100%);
   }
 
-  .bg-footer-train {
-    background-image: url("/footer-bg.jpg");
+  /* Concentrates the hero's contrast veil where the headline/copy actually
+     sit, instead of a flat wash over the whole section — lets the market
+     footage stay visible at the edges instead of fogging out everywhere. */
+  .hero-text-veil {
+    background: radial-gradient(
+      ellipse 72% 62% at 50% 44%,
+      color-mix(in oklab, var(--color-pitch) 84%, transparent) 0%,
+      color-mix(in oklab, var(--color-pitch) 46%, transparent) 58%,
+      transparent 82%
+    );
+  }
+
+  /* The copy block wraps to twice the height on a phone, so the desktop
+     ellipse leaves the last lines sitting on bare market. Wider and taller
+     here, not stronger — the centre stays the same density. */
+  @media (max-width: 640px) {
+    .hero-text-veil {
+      background: radial-gradient(
+        ellipse 135% 58% at 50% 40%,
+        color-mix(in oklab, var(--color-pitch) 86%, transparent) 0%,
+        color-mix(in oklab, var(--color-pitch) 58%, transparent) 62%,
+        transparent 88%
+      );
+    }
   }
 }

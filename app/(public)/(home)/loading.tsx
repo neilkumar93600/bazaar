@@ -9,30 +9,29 @@ import { Skeleton } from "@/components/ui/skeleton"
  *  queries before rendering anything. */
 export default function Loading() {
   return (
-    <div className="flex flex-col gap-12 pb-10 sm:pb-14">
-      <section className="relative flex min-h-[700px] w-full flex-col items-center justify-center overflow-hidden bg-pitch px-6 lg:h-[100dvh] lg:min-h-[850px]">
-        <div aria-hidden className="absolute inset-0 bg-hero-atmosphere" />
+    <div className="flex flex-col gap-20 pb-20">
+      {/* Same frame as Hero: inset video card, nav pill top, headline and form
+          card along the bottom. */}
+      <section className="w-full p-3 sm:p-4 md:p-6">
+        <div className="relative flex min-h-[calc(100dvh-24px)] flex-col gap-6 overflow-hidden rounded-xl bg-pitch p-4 sm:min-h-[calc(100dvh-32px)] sm:p-6 md:min-h-[calc(100dvh-48px)] md:p-8">
+          <div aria-hidden className="absolute inset-0 bg-hero-atmosphere" />
 
-        <div className="relative flex w-full max-w-[920px] flex-col items-center gap-4">
-          <Skeleton className="h-5 w-56" />
-          <Skeleton className="h-[52px] w-full max-w-[840px] sm:h-[64px] md:h-[80px] lg:h-[96px]" />
-          <Skeleton className="h-[52px] w-full max-w-[620px] sm:h-[64px] md:h-[80px] lg:h-[96px]" />
+          <Skeleton className="relative h-[52px] w-full rounded-lg sm:w-[420px]" />
 
-          <div className="mt-2 flex w-full max-w-[720px] flex-col items-center gap-2">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-4/5" />
-          </div>
+          <div className="min-h-[2rem] flex-1" />
 
-          <div className="mt-4 flex flex-col items-center gap-3.5 sm:flex-row">
-            <Skeleton className="h-[46px] w-[210px] rounded-full md:h-[50px]" />
-            <Skeleton className="h-[46px] w-[190px] rounded-full md:h-[50px]" />
+          <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div className="flex flex-col gap-3 lg:max-w-lg xl:max-w-2xl">
+              <Skeleton className="h-9 w-[320px] sm:h-11 xl:h-12" />
+              <Skeleton className="h-9 w-[220px] sm:h-11 xl:h-12" />
+            </div>
+
+            <Skeleton className="h-[420px] w-full shrink-0 rounded-xl lg:w-[min(480px,45%)]" />
           </div>
         </div>
-
-        <Skeleton className="absolute bottom-8 h-4 w-72" />
       </section>
 
-      <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-12 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-page flex-col gap-20 px-6 md:px-16">
         <Skeleton className="h-6 w-40" />
         <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
           {Array.from({ length: 4 }, (_, i) => (

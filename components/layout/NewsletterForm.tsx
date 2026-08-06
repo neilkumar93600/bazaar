@@ -36,7 +36,7 @@ export function NewsletterForm() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="flex h-12 w-full items-center overflow-hidden rounded-full glass-panel border p-1 transition-all focus-within:border-ember-orange focus-within:ring-2 focus-within:ring-ring/30"
+            className="flex h-12 w-full items-center overflow-hidden rounded-lg glass-panel border p-1 transition-all focus-within:border-foreground focus-within:ring-2 focus-within:ring-ring/30"
           >
             <input
               type="email"

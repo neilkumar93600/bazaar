@@ -100,7 +100,7 @@ export function BazaarFilterPanel({
                 href={bazaarHref(query, { availability: option.value })}
                 aria-current={active ? "true" : undefined}
                 className={cn(
-                  "inline-flex min-h-9 items-center rounded-full border px-3.5 text-body-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+                  "inline-flex min-h-9 items-center rounded-lg border px-3.5 text-body-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
                   active
                     ? "border-transparent bg-sunset-sweep font-medium text-background"
                     : "border-border bg-card backdrop-blur-md text-muted-foreground hover:border-steel hover:text-foreground"
@@ -125,7 +125,9 @@ export function BazaarFilterPanel({
           className="relative size-5 text-molten-amber"
           strokeWidth={1.5}
         />
-        <span className="relative mt-3 font-serif text-heading-sm text-foreground italic">
+        {/* Inter, not the display serif — 20px is well under the serif's 44px
+            floor (docs/DESIGN.md "Do's and Don'ts"). */}
+        <span className="relative mt-3 text-heading-sm text-foreground">
           Make your own
         </span>
         <span className="relative mt-1 text-body-sm text-muted-foreground">

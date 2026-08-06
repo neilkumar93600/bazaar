@@ -36,12 +36,21 @@ export function DesignCard({
   index,
   priority = false,
   className,
+  aspectClassName = "aspect-[4/5]",
+  frameClassName,
 }: {
   design: DesignCardData
   /** Drives the entrance stagger in grids. Omit inside marquees. */
   index?: number
   priority?: boolean
   className?: string
+  /** Overridable so an editorial grid can mix portrait, square and landscape
+   *  crops instead of tiling one ratio. Strips and marquees keep the default. */
+  aspectClassName?: string
+  /** Extra classes for the framed image itself, not the whole card. The caption
+   *  sits outside the frame, so interaction treatments like `press-block` have
+   *  to land here or they'd outline the text too. */
+  frameClassName?: string
 }) {
   const { openDesign } = useDesignDialog()
 
@@ -65,7 +74,13 @@ export function DesignCard({
         className
       )}
     >
-      <div className="glass-surface glass-surface-interactive relative aspect-[4/5] w-full overflow-hidden rounded-2xl border border-border bg-card">
+      <div
+        className={cn(
+          "glass-surface glass-surface-interactive relative w-full overflow-hidden rounded-2xl border border-border bg-card",
+          aspectClassName,
+          frameClassName
+        )}
+      >
         <Image
           src={design.imageUrl}
           alt=""
@@ -76,7 +91,10 @@ export function DesignCard({
         />
 
         {design.isClaimed ? (
-          <span className="glass-panel absolute top-3 left-3 rounded-full border px-2.5 py-1 text-caption font-medium text-success">
+          // Status Pill Badge — mint wash inside a mint edge, ink label. The
+          // only place the mint pair appears, and the label stays ink because
+          // mint on white doesn't clear contrast.
+          <span className="absolute top-3 left-3 rounded-full border border-success bg-mint-wash px-2.5 py-0.5 text-caption font-medium text-foreground">
             Claimed
           </span>
         ) : (
@@ -92,9 +110,10 @@ export function DesignCard({
         <span className="pointer-events-none absolute inset-0 flex items-end justify-center p-3 opacity-0 transition-opacity duration-200 group-hover/card:opacity-100 group-focus-visible/card:opacity-100">
           <span
             className={
+              // Buttons stay at 8px — the pill radius is badges only.
               design.isClaimed
-                ? "glass-panel rounded-full border px-4 py-2 text-body-sm font-medium text-foreground"
-                : "btn-ember rounded-full px-4 py-2 text-body-sm font-medium"
+                ? "glass-panel rounded-lg border px-4 py-2 text-body-sm font-medium text-foreground"
+                : "btn-ember px-4 py-2 text-body-sm font-medium"
             }
           >
             {design.isClaimed ? "View design" : "Claim it"}

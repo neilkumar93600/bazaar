@@ -1,4 +1,3 @@
-import type { DesignCardData } from "@/components/shared/DesignCard"
 import { createClient } from "@/lib/supabase/server"
 
 export type VibeTile = { id: string; name: string; slug: string }
@@ -11,69 +10,6 @@ export async function getVibeTiles(): Promise<VibeTile[]> {
     .order("created_at", { ascending: true })
     .limit(8)
   return data ?? []
-}
-
-export type TrendingDesign = DesignCardData
-
-const TRENDING_LIMIT = 12
-
-export async function getTrendingDesigns(): Promise<TrendingDesign[]> {
-  const supabase = await createClient()
-
-  const { data: claims } = await supabase
-    .from("claims")
-    .select("design_id, claimed_at, claimant_id")
-    .order("claimed_at", { ascending: false })
-    .limit(TRENDING_LIMIT)
-
-  const claimList = claims ?? []
-  const designIds = claimList.map((c) => c.design_id)
-  if (designIds.length === 0) return []
-
-  const claimantIds = [
-    ...new Set(
-      claimList
-        .map((c) => c.claimant_id)
-        .filter((id): id is string => id !== null)
-    ),
-  ]
-
-  const [{ data: designs }, { data: vibeRows }, { data: profileRows }] =
-    await Promise.all([
-      supabase
-        .from("designs")
-        .select("id, image_url, price_cents, created_at, vibe_id")
-        .in("id", designIds)
-        .eq("moderation_status", "approved"),
-      supabase.from("vibes").select("id, name"),
-      claimantIds.length
-        ? supabase.from("profiles").select("id, handle").in("id", claimantIds)
-        : Promise.resolve({ data: [] as { id: string; handle: string }[] }),
-    ])
-
-  const designById = new Map((designs ?? []).map((d) => [d.id, d]))
-  const vibeNameById = new Map((vibeRows ?? []).map((v) => [v.id, v.name]))
-  const handleById = new Map((profileRows ?? []).map((p) => [p.id, p.handle]))
-
-  // Trending is built from the claims table, so every row here is claimed.
-  return claimList
-    .map((claim) => {
-      const design = designById.get(claim.design_id)
-      if (!design) return null
-      return {
-        id: design.id,
-        imageUrl: design.image_url,
-        isClaimed: true,
-        priceCents: design.price_cents,
-        createdAt: design.created_at,
-        vibeName:
-          (design.vibe_id ? vibeNameById.get(design.vibe_id) : null) ?? null,
-        claimantHandle: claim.claimant_id
-          ? (handleById.get(claim.claimant_id) ?? null)
-          : null,
-      }
-    })
-    .filter((d): d is TrendingDesign => d !== null)
 }
 
 export type TopCreator = {
@@ -124,6 +60,11 @@ export async function getTopCreators(): Promise<TopCreator[]> {
 }
 
 export type HomeStats = {
+  /** Every design in the catalogue. True and non-zero from the first seed, so
+   *  it carries the stats row before there is any traction to report. */
+  designsLive: number
+  /** Designs nobody owns yet — the number that actually invites a claim. */
+  designsUnclaimed: number
   designsClaimed: number
   creatorCount: number
   royaltiesPaidCents: number
@@ -132,19 +73,28 @@ export type HomeStats = {
 export async function getHomeStats(): Promise<HomeStats> {
   const supabase = await createClient()
 
-  const [claimsCount, storefrontsCount, royaltyRows] = await Promise.all([
-    supabase.from("claims").select("*", { count: "exact", head: true }),
-    supabase.from("storefronts").select("*", { count: "exact", head: true }),
-    // ponytail: sums every paid royalty row in JS — fine at current scale,
-    // move to a SQL sum/RPC if royalty_ledger grows large enough to matter.
-    supabase
-      .from("royalty_ledger")
-      .select("amount_cents")
-      .not("paid_at", "is", null),
-  ])
+  const [designsCount, claimsCount, storefrontsCount, royaltyRows] =
+    await Promise.all([
+      supabase.from("designs").select("*", { count: "exact", head: true }),
+      supabase.from("claims").select("*", { count: "exact", head: true }),
+      supabase.from("storefronts").select("*", { count: "exact", head: true }),
+      // ponytail: sums every paid royalty row in JS — fine at current scale,
+      // move to a SQL sum/RPC if royalty_ledger grows large enough to matter.
+      supabase
+        .from("royalty_ledger")
+        .select("amount_cents")
+        .not("paid_at", "is", null),
+    ])
+
+  const designsLive = designsCount.count ?? 0
+  const designsClaimed = claimsCount.count ?? 0
 
   return {
-    designsClaimed: claimsCount.count ?? 0,
+    designsLive,
+    // Clamped: a claim whose design row is gone would otherwise drive this
+    // negative and render "-3 unclaimed" on the front page.
+    designsUnclaimed: Math.max(0, designsLive - designsClaimed),
+    designsClaimed,
     creatorCount: storefrontsCount.count ?? 0,
     royaltiesPaidCents: (royaltyRows.data ?? []).reduce(
       (sum, r) => sum + r.amount_cents,

@@ -1,4 +1,5 @@
 import type { FeedColumn } from "@/lib/data/feed"
+import { SectionTag } from "@/components/home/SectionTag"
 import { Marquee } from "@/components/ui/marquee"
 import { cn } from "@/lib/utils"
 import { DesignCard } from "@/components/shared/DesignCard"
@@ -32,15 +33,19 @@ export function Feed({ columns }: { columns: FeedColumn[] }) {
 
   return (
     <section id="vibe-feed" className="flex scroll-mt-24 flex-col gap-6">
-      <div className="flex flex-col gap-2">
-        <h2 className="text-heading-lg text-foreground">New drops</h2>
+      <div className="flex flex-col gap-3">
+        <SectionTag>Live catalog</SectionTag>
+        <h2 className="text-heading text-foreground">New drops</h2>
         <p className="text-body-sm text-muted-foreground">
-          Live 1-of-1 designs. Hover a column to hold it still.
+          Unclaimed until someone takes them. Hover a column to hold it still.
         </p>
       </div>
 
+      {/* `dvh`, not `vh`, on the track grid: the marquee needs a definite height
+          to mask against, and `h-screen` re-measures as mobile Safari's toolbar
+          collapses, which jumps the whole column mid-scroll. */}
       {designs.length > 0 ? (
-        <div className="mask-fade-y grid h-screen grid-cols-2 gap-4 overflow-hidden md:grid-cols-3 lg:grid-cols-5">
+        <div className="mask-fade-y grid h-[100dvh] grid-cols-2 gap-4 overflow-hidden md:grid-cols-3 lg:grid-cols-5">
           {tracks.map((track, index) => (
             <Marquee
               key={index}

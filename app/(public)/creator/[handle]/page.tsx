@@ -53,7 +53,7 @@ export default async function CreatorStorefrontPage(
 
   return (
     <div className="bg-background">
-      <div className="mx-auto flex max-w-[1200px] flex-col gap-8 px-4 py-8 sm:px-6 lg:flex-row lg:items-start lg:px-8 lg:py-12">
+      <div className="mx-auto flex max-w-page flex-col gap-8 px-4 py-8 sm:px-6 lg:flex-row lg:items-start lg:px-8 lg:py-12">
         <StorefrontHeader data={data} />
         <StorefrontGrid data={data} />
       </div>

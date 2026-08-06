@@ -41,17 +41,18 @@ export function AuthHeroPanel() {
 
   return (
     <div className="relative hidden h-full w-full overflow-hidden bg-pitch lg:block">
-      {/* Background Image with Warm/Sage Editorial Overlay */}
+      {/* ponytail: shares the hero's bazaar shot until a dedicated portrait
+          render exists — swap this one src, nothing else changes. */}
       <Image
-        src="https://picsum.photos/seed/dusk-atelier-3/1200/1500"
-        alt="Shirt Bazaar Fashion Atelier"
+        src="/bazaar/hero.jpg"
+        alt=""
         fill
         sizes="50vw"
         priority
-        className="object-cover object-center filter contrast-[1.05] brightness-[0.85] saturate-[0.85]"
+        className="object-cover object-center"
       />
 
-      {/* Dark Ambient Gradient Overlay matching Image 1 */}
+      {/* Ambient gradient overlay — light, since the copy over it is ink */}
       <div className="absolute inset-0 bg-gradient-to-t from-pitch/90 via-pitch/40 to-pitch/50" />
       <div className="absolute inset-0 bg-hero-atmosphere" />
 

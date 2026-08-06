@@ -39,7 +39,7 @@ export default async function ShopPage(props: PageProps<"/shop">) {
 
   return (
     <div className="bg-background">
-      <div className="mx-auto max-w-[1400px] px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+      <div className="mx-auto max-w-page px-6 py-10 md:px-16 lg:py-14">
         <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:gap-12">
           <aside className="hidden w-60 shrink-0 lg:sticky lg:top-24 lg:block">
             {filters}
@@ -48,7 +48,8 @@ export default async function ShopPage(props: PageProps<"/shop">) {
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
-                <h1 className="font-serif text-heading text-foreground italic lg:text-heading-lg">
+                {/* Inter — 22/24px is under the display serif's 44px floor. */}
+                <h1 className="text-heading text-foreground lg:text-heading-lg">
                   The Bazaar
                 </h1>
                 <p className="mt-2 text-caption tracking-[0.14em] text-muted-foreground uppercase">

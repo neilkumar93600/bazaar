@@ -1,41 +1,60 @@
 import type { Metadata } from "next"
-import { Geist_Mono, Inter } from "next/font/google"
+import { Fraunces, Geist, Geist_Mono } from "next/font/google"
 
 import "./globals.css"
 import { cn } from "@/lib/utils";
 import { siteName, siteUrl } from "@/lib/site";
 
-// 300/400 for headline+body copy (docs/DESIGN_SYSTEM.md); 500 stays loaded
-// only so reused shadcn primitives (buttons, badges, labels) keep rendering
-// their stock `font-medium` chrome instead of a synthesized fake-bold.
-const inter = Inter({ subsets: ["latin"], weight: ["300", "400", "500", "700"], variable: "--font-sans" })
+// The interface face — navigation, buttons, body and every headline
+// (docs/DESIGN.md). Variable axis, no `weight` list: the system uses 400/500/600
+// and one file serves all three. 700+ is deliberately unreachable, capped at 600
+// in globals.css.
+const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
 
+// Technical labels, tabular meta and inline data. Brainfish keeps mono
+// achromatic like everything else — it earns its distinction from the form.
 const fontMono = Geist_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
+})
+
+// The editorial signature: Fraunces italic on one emphasis word inside a Geist
+// headline, and nowhere else — never body, never buttons, never a whole heading.
+// Only the italic is ever set; the upright loads because next/font needs a base
+// style. Variable axis, so 500 and 600 both come from one file.
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+  variable: "--font-serif",
 })
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   alternates: { canonical: "/" },
   title: {
-    default: "Shirt Bazaar | AI 1-of-1 Apparel & Storefronts",
+    // Primary keyword in the first three words; 53 characters, inside the
+    // 60-char SERP limit.
+    default: "1-of-1 AI Shirts, Claimed by One Owner | Shirt Bazaar",
     template: "%s — Shirt Bazaar",
   },
+  // 151 characters: keyword in the first half, ends on a CTA verb, and no
+  // audience or volume claim this site can't back yet.
   description:
-    "Turn one prompt into 1-of-1 AI apparel only you own. Claim your design, launch an instant storefront, and earn royalties on every resale. Start free.",
+    "1-of-1 AI shirt designs, claimed by exactly one owner. Every claim is permanent, comes with your own storefront, and pays 10% of every resale. Claim one.",
   openGraph: {
-    title: "Shirt Bazaar — One Prompt. One Shirt. One Owner.",
+    title: "One prompt in. One shirt out. One owner.",
+    // Deliberately not the meta description reworded — social gets the
+    // conversational cut.
     description:
-      "One prompt in, one shirt out, one owner — you. Claim AI-generated designs, run your own storefront, and get paid when they resell.",
+      "Nobody else can wear the design you claim. Every shirt on Shirt Bazaar exists exactly once, and the claim is permanent.",
     siteName: "Shirt Bazaar",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Shirt Bazaar — One Prompt. One Shirt. One Owner.",
+    title: "AI shirts that exist exactly once",
     description:
-      "Claim AI-generated 1-of-1 apparel nobody else can wear, and earn a royalty every time your design resells.",
+      "Claim a design and it's off the market for good — yours alone, with a storefront and 10% of every resale that follows.",
   },
 }
 
@@ -51,7 +70,8 @@ export default function RootLayout({
         "antialiased",
         fontMono.variable,
         "font-sans",
-        inter.variable,
+        geist.variable,
+        fraunces.variable,
       )}
     >
       <body>

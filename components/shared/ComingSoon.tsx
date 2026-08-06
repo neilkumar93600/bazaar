@@ -8,7 +8,7 @@ export function ComingSoon({
   description?: string;
 }) {
   return (
-    <div className="mx-auto flex max-w-[1400px] flex-col gap-3 px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
+    <div className="mx-auto flex max-w-page flex-col gap-3 px-6 py-16 md:px-16 sm:py-24">
       <FadeIn>
         <h1 className="text-heading-lg text-foreground">{title}</h1>
       </FadeIn>

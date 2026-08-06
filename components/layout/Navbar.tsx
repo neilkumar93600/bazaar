@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { LogOut, Menu, Search, ShoppingCart } from "lucide-react";
+import { LogOut, Search, ShoppingCart } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
+import { MenuToggle } from "@/components/layout/MenuToggle";
 import { UserMenu } from "@/components/layout/UserMenu";
 import type { NotificationItem } from "@/lib/data/notifications";
 import { signOut } from "@/app/dashboard/actions";
@@ -98,40 +99,6 @@ type NavbarUser = {
   avatarUrl: string | null;
 };
 
-function LiquidGlassButton({ href, label }: { href: string; label: string }) {
-  return (
-    <Link
-      href={href}
-      className="btn-ember group relative overflow-hidden outline-none transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.03] active:scale-[0.98] flex p-[10px_22px] justify-center items-center cursor-pointer rounded-full"
-    >
-      {/* Filter node only — its paint lives in .liquid-glass-refract. */}
-      <svg className="absolute w-0 h-0 pointer-events-none" aria-hidden="true">
-        <defs>
-          <filter id="liquid-glass-refraction" x="-20%" y="-20%" width="140%" height="140%">
-            <feTurbulence type="fractalNoise" baseFrequency="0.015" numOctaves={3} result="noise" seed={5} />
-            <feDisplacementMap in="SourceGraphic" in2="noise" scale={7} xChannelSelector="R" yChannelSelector="G" />
-          </filter>
-        </defs>
-      </svg>
-      <div className="liquid-glass-refract absolute inset-0 rounded-full transition-all duration-500 ease-out pointer-events-none" />
-      <div className="liquid-glass-sheen absolute inset-0 rounded-full transition-opacity duration-300 pointer-events-none" />
-      <div className="liquid-glass-caustic absolute inset-[-40%] rounded-full opacity-20 pointer-events-none mix-blend-overlay" />
-      <div className="liquid-glass-rim absolute inset-0 rounded-full border pointer-events-none transition-all duration-500" />
-      <div className="liquid-glass-breath absolute inset-0 rounded-full bg-gradient-to-b from-white/[0.06] via-transparent to-black/[0.04] pointer-events-none transition-all duration-500" />
-      <div className="relative z-10 flex items-center justify-center w-full h-full">
-        <span className="relative block overflow-hidden h-[25px] leading-[25px] text-center text-[18px] font-medium tracking-[-0.4px]">
-          <span className="block transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:-translate-y-full">
-            {label}
-          </span>
-          <span className="absolute top-full left-0 block transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:-translate-y-full whitespace-nowrap">
-            {label}
-          </span>
-        </span>
-      </div>
-    </Link>
-  );
-}
-
 function SearchPopover({ onHero }: { onHero?: boolean }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -187,6 +154,7 @@ export function Navbar({
   notifications?: { items: NotificationItem[]; unreadCount: number } | null;
 }) {
   const shouldReduceMotion = useReducedMotion();
+  const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
   const isLoggedIn = Boolean(user);
   const isHome = pathname === "/";
@@ -195,61 +163,36 @@ export function Navbar({
   // it collapses into a solid floating pill with normal foreground text.
   const onHero = isHome && !pastHero;
 
+  // The home hero carries its own pill nav inside the video card, so the global
+  // bar would double it. It stays out until the visitor scrolls past the hero,
+  // then behaves exactly as it does on every other route. Safe as an early
+  // return: every hook above it, including the hero measurement, has already
+  // run — nothing hooks below this line.
+  if (onHero) return null;
+
   return (
     <motion.header
+      // Brainfish's top bar: 67px of paper, no border and no shadow — "reads as
+      // a single line on paper" — over the shared `max-w-page` container so the
+      // nav lines up with page content instead of floating at its own width.
+      // Opaque, since there's no rule to separate it from what scrolls under.
       className={cn(
-        "z-50 w-full px-4 sm:px-6 lg:px-8",
+        "z-50 w-full bg-background",
         isHome ? "fixed inset-x-0 top-0" : "sticky top-0",
       )}
       initial={shouldReduceMotion ? false : { opacity: 0, y: -12 }}
       animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: EASE }}
     >
-      <motion.div
-        className="relative mx-auto w-full"
-        animate={{
-          maxWidth: onHero ? 1720 : 1040,
-          marginTop: onHero ? 22 : 12,
-          marginBottom: onHero ? 0 : 12,
-          paddingLeft: onHero ? 8 : 20,
-          paddingRight: onHero ? 8 : 20,
-          paddingTop: onHero ? 0 : 8,
-          paddingBottom: onHero ? 0 : 8,
-        }}
-        transition={
-          shouldReduceMotion
-            ? { duration: 0 }
-            : { duration: 0.45, ease: EASE }
-        }
-      >
-        {/* Pill chrome. Faded rather than class-toggled so the border, blur and
-            shadow cross-dissolve instead of popping at the threshold. */}
-        <motion.div
-          aria-hidden
-          className="glass-surface pointer-events-none absolute inset-0 rounded-full border bg-card"
-          animate={{ opacity: onHero ? 0 : 1 }}
-          transition={
-            shouldReduceMotion
-              ? { duration: 0 }
-              : { duration: 0.45, ease: EASE }
-          }
-        />
-
-        <nav className="relative z-10 flex w-full items-center justify-between gap-4">
+      <div className="mx-auto w-full max-w-page px-6 md:px-16">
+        <nav className="relative z-10 flex h-[67px] w-full items-center justify-between gap-4">
           {/* Logo */}
           <div className="flex items-center">
-            <Logo textClassName={onHero ? "text-foreground font-semibold text-xl" : undefined} />
+            <Logo />
           </div>
 
-          {/* Center Floating Navigation Pill */}
-          <div
-            className={cn(
-              "hidden lg:flex p-[10px_16px] items-center gap-[24px] rounded-full transition-colors duration-500",
-              // Inside the collapsed pill this second pill would read as a
-              // double border, so it drops its own background.
-              onHero ? "glass-panel" : "bg-transparent",
-            )}
-          >
+          {/* Centre nav — Ghost Text Links, weight 500, ink. */}
+          <div className="hidden items-center gap-6 lg:flex">
             {NAV_LINKS.map((link) => {
               const isActive = pathname === link.href;
               return (
@@ -257,33 +200,31 @@ export function Navbar({
                   key={link.href}
                   href={link.href}
                   className={cn(
-                    "relative cursor-pointer text-center text-[18px] tracking-[-0.2px] transition-all duration-300 font-sans",
-                    isActive && "font-semibold",
-                    onHero
-                      ? isActive
-                        ? "text-foreground"
-                        : "text-foreground/80 font-normal hover:text-foreground"
-                      : isActive
-                        ? "text-foreground"
-                        : "text-foreground/80 font-normal hover:text-foreground"
+                    "cursor-pointer text-body-sm font-medium transition-colors",
+                    isActive
+                      ? "text-foreground"
+                      // `text-muted-ink`, not `text-muted` — the shadcn layer
+                      // owns `--muted` as a cream *surface*, so `text-muted`
+                      // would paint these links cream on white.
+                      : "text-muted-ink hover:text-foreground",
                   )}
                 >
                   {link.label}
                 </Link>
               );
             })}
-            <SearchPopover onHero={onHero} />
+            <SearchPopover />
           </div>
 
-          {/* Action Controls & Liquid Glass Button */}
-          <div className="hidden lg:flex items-center gap-3">
+          {/* Right side: a text link plus the page's one lime button. */}
+          <div className="hidden lg:flex items-center gap-4">
             {isLoggedIn ? (
               <>
                 <NotificationBell
                   items={notifications?.items ?? []}
                   unreadCount={notifications?.unreadCount ?? 0}
                 />
-                <Button variant="ghost" size="icon" render={<Link href="/cart" />} className={onHero ? "text-foreground/80 hover:text-foreground hover:bg-foreground/10 rounded-full" : undefined}>
+                <Button variant="ghost" size="icon" render={<Link href="/cart" />}>
                   <ShoppingCart className="w-5 h-5" />
                   <span className="sr-only">Cart</span>
                 </Button>
@@ -294,26 +235,37 @@ export function Navbar({
                 />
               </>
             ) : (
-              <LiquidGlassButton href="/signup" label="Get Started" />
+              <>
+                <Link
+                  href="/login"
+                  className="text-body-sm font-medium text-foreground transition-opacity hover:opacity-60"
+                >
+                  Sign in
+                </Link>
+                <Link
+                  href="/signup"
+                  className="btn-ember px-3.5 py-1.5 text-body-sm font-medium"
+                >
+                  Get started
+                </Link>
+              </>
             )}
           </div>
 
           {/* Mobile Toggle */}
           <div className="flex lg:hidden items-center gap-2">
-            <SearchPopover onHero={onHero} />
-            <Sheet>
+            <SearchPopover />
+            {/* Controlled, so the trigger can animate to a close mark while
+                the panel is open rather than sitting on a static icon. */}
+            <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
               <SheetTrigger
                 render={
                   <button
-                    className={cn(
-                      "flex lg:hidden p-2 rounded-full border backdrop-blur-md transition-colors duration-500",
-                      onHero
-                        ? "glass-panel text-foreground"
-                        : "bg-transparent text-foreground border-border/60",
-                    )}
+                    aria-label={menuOpen ? "Close menu" : "Open menu"}
+                    aria-expanded={menuOpen}
+                    className="flex items-center justify-center rounded-md border border-border p-2.5 text-foreground transition-colors hover:bg-accent lg:hidden"
                   >
-                    <Menu className="w-5 h-5" />
-                    <span className="sr-only">Open menu</span>
+                    <MenuToggle open={menuOpen} />
                   </button>
                 }
               />
@@ -328,6 +280,7 @@ export function Navbar({
                     <Link
                       key={link.href}
                       href={link.href}
+                      onClick={() => setMenuOpen(false)}
                       className="rounded-md px-3 py-2.5 text-muted-foreground hover:text-foreground hover:bg-accent"
                     >
                       {link.label}
@@ -336,16 +289,41 @@ export function Navbar({
                 </nav>
                 <div className="mt-auto flex flex-col gap-2 border-t border-border p-4">
                   {isLoggedIn ? (
-                    <Link href="/dashboard" className="rounded-md px-3 py-2.5 text-muted-foreground hover:text-foreground">
-                      Dashboard
-                    </Link>
+                    <>
+                      <Link
+                        href="/dashboard"
+                        onClick={() => setMenuOpen(false)}
+                        className="rounded-md px-3 py-2.5 text-muted-foreground hover:text-foreground"
+                      >
+                        Dashboard
+                      </Link>
+                      {/* A signed-in visitor on a phone had no create action in
+                          here at all — the desktop bar's CTA is hidden at this
+                          width. */}
+                      <Button
+                        render={<Link href="/dashboard/create" />}
+                        onClick={() => setMenuOpen(false)}
+                        className="btn-ember"
+                      >
+                        Start creating
+                      </Button>
+                    </>
                   ) : (
                     <>
-                      <Button variant="ghost" render={<Link href="/login" />} className="text-foreground hover:bg-accent">
+                      <Button
+                        variant="ghost"
+                        render={<Link href="/login" />}
+                        onClick={() => setMenuOpen(false)}
+                        className="text-foreground hover:bg-accent"
+                      >
                         Sign in
                       </Button>
-                      <Button render={<Link href="/signup" />} className="btn-ember rounded-full">
-                        Get Started
+                      <Button
+                        render={<Link href="/signup" />}
+                        onClick={() => setMenuOpen(false)}
+                        className="btn-ember"
+                      >
+                        Get started
                       </Button>
                     </>
                   )}
@@ -354,7 +332,7 @@ export function Navbar({
             </Sheet>
           </div>
         </nav>
-      </motion.div>
+      </div>
     </motion.header>
   );
 }

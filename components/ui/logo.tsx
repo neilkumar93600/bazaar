@@ -46,7 +46,7 @@ export function Logo({
 }: LogoProps) {
   const content = (
     <div className={cn("inline-flex items-center gap-2.5 select-none", className)}>
-      <LogoIcon className={cn("text-ember-orange", iconClassName)} />
+      <LogoIcon className={cn("text-foreground", iconClassName)} />
       {showText && (
         <span
           className={cn(

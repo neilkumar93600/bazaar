@@ -8,7 +8,7 @@ const PLACEHOLDER_CARDS = Math.min(BAZAAR_PAGE_SIZE, 9)
 export default function Loading() {
   return (
     <div className="bg-background">
-      <div className="mx-auto max-w-[1400px] px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+      <div className="mx-auto max-w-page px-6 py-10 md:px-16 lg:py-14">
         <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:gap-12">
           <aside className="hidden w-60 shrink-0 flex-col gap-8 lg:flex">
             <div className="flex flex-col gap-4">
