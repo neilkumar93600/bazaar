@@ -330,6 +330,12 @@ const PLAN: Concept[] = [
     idea: "a hooded elder weighing two planets on a golden scale",
   },
   {
+    style: "neo-traditional",
+    colour: "Black",
+    placement: "front",
+    idea: "a clever red fox head framed by chrysanthemum, peony and bluebells, small sparks and decorative leaves",
+  },
+  {
     style: "folk-woodblock",
     colour: "Red",
     placement: "front",
