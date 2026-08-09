@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import type { Placement } from "@/lib/printify/print-areas"
 
 export type MakerDesign = {
   id: string
@@ -8,6 +9,12 @@ export type MakerDesign = {
   /** Null means listed free, or never priced. */
   priceCents: number | null
   listedAt: string | null
+  /** Once a Printify product exists the garment cannot change — re-minting
+   *  would orphan it — so the listing form renders that section read-only. */
+  hasProduct: boolean
+  garmentSlug: string | null
+  featuredVariantId: number | null
+  placement: Placement | null
 }
 
 export type AdoptedDesign = MakerDesign & {
@@ -36,7 +43,9 @@ export async function getMyDesigns(): Promise<MyDesigns | null> {
 
   const { data: rows } = await supabase
     .from("designs")
-    .select("id, image_url, vibe_id, created_at, price_cents, listed_at, claimed_by")
+    .select(
+      "id, image_url, vibe_id, created_at, price_cents, listed_at, claimed_by, printify_product_id, garment_slug, featured_variant_id, placement"
+    )
     .eq("creator_id", user.id)
     .order("created_at", { ascending: false })
 
@@ -87,6 +96,10 @@ export async function getMyDesigns(): Promise<MyDesigns | null> {
     createdAt: d.created_at,
     priceCents: d.price_cents,
     listedAt: d.listed_at,
+    hasProduct: d.printify_product_id !== null,
+    garmentSlug: d.garment_slug,
+    featuredVariantId: d.featured_variant_id,
+    placement: (d.placement as Placement | null) ?? null,
   })
 
   // The three filters are mutually exclusive and exhaustive: a row is adopted,

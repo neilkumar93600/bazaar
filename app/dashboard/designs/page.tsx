@@ -5,6 +5,7 @@ import { ShirtIcon } from "lucide-react";
 import { formatDistanceToNowStrict } from "date-fns";
 
 import { getMyDesigns, type MakerDesign } from "@/lib/data/my-designs";
+import { getGarmentOptions } from "@/app/dashboard/designs/garment-options";
 import { formatCents, formatListingPrice } from "@/lib/utils";
 import { ListingForm } from "@/components/dashboard/ListingForm";
 import { Button } from "@/components/ui/button";
@@ -45,7 +46,12 @@ function DesignFrame({ design }: { design: MakerDesign }) {
 }
 
 export default async function DesignsPage() {
-  const groups = await getMyDesigns();
+  // Fetched once for the whole page: Printify's catalogue is per garment, not
+  // per design, and it is cached for the process lifetime anyway.
+  const [groups, garmentOptions] = await Promise.all([
+    getMyDesigns(),
+    getGarmentOptions(),
+  ]);
 
   if (!groups) return null;
 
@@ -94,8 +100,16 @@ export default async function DesignsPage() {
                     <DesignFrame design={design} />
                     <ListingForm
                       designId={design.id}
+                      imageUrl={design.imageUrl}
                       isListed={false}
                       priceCents={design.priceCents}
+                      garmentOptions={garmentOptions}
+                      frozen={design.hasProduct}
+                      initialConfig={{
+                        garmentSlug: design.garmentSlug,
+                        variantId: design.featuredVariantId,
+                        placement: design.placement,
+                      }}
                     />
                   </div>
                 ))}
@@ -120,8 +134,16 @@ export default async function DesignsPage() {
                     </span>
                     <ListingForm
                       designId={design.id}
+                      imageUrl={design.imageUrl}
                       isListed
                       priceCents={design.priceCents}
+                      garmentOptions={garmentOptions}
+                      frozen={design.hasProduct}
+                      initialConfig={{
+                        garmentSlug: design.garmentSlug,
+                        variantId: design.featuredVariantId,
+                        placement: design.placement,
+                      }}
                     />
                   </div>
                 ))}

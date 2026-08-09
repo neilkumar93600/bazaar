@@ -14,6 +14,7 @@ import {
 import type { AspectRatio, Quality } from "@/lib/generation/adapter"
 import { clearHeroDraft, readHeroDraft } from "@/lib/hero-draft"
 import { cn } from "@/lib/utils"
+import type { GarmentOption } from "@/app/dashboard/designs/garment-options"
 import { ListingForm } from "@/components/dashboard/ListingForm"
 import { StylePicker } from "@/components/create/StylePicker"
 import { Button } from "@/components/ui/button"
@@ -94,6 +95,7 @@ export function CreateForm({
   initialStyleSlug = null,
   imagesPerJob,
   dailyImageCap,
+  garmentOptions,
 }: {
   /** From `?prompt=` — the home hero's handoff for a signed-in visitor. */
   initialPrompt?: string | null
@@ -104,6 +106,9 @@ export function CreateForm({
    *  server-only env var, and a client bundle would silently see the default. */
   imagesPerJob: number
   dailyImageCap: number
+  /** Passed straight through to the listing panel. Read server-side because
+   *  Printify's catalogue needs the API token. */
+  garmentOptions: GarmentOption[]
 }) {
   const [prompt, setPrompt] = useState(
     () => initialPrompt?.slice(0, MAX_PROMPT_LENGTH) ?? "",
@@ -274,6 +279,9 @@ export function CreateForm({
 
   const wordCount = text.trim() === "" ? 0 : text.trim().split(/\s+/).length
 
+  // The listing panel needs the artwork for its preview, not just the id.
+  const pickedDesign = landed.find((design) => design.id === picked) ?? null
+
   return (
     <div className="flex flex-col gap-8 lg:flex-row lg:gap-12">
       <form onSubmit={onSubmit} className="flex w-full flex-col gap-6 lg:max-w-md">
@@ -433,12 +441,26 @@ export function CreateForm({
           </p>
         )}
 
-        {picked && (
+        {pickedDesign && (
           <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4">
             <p className="text-body-sm text-muted-foreground">
-              List it in the bazaar, or leave it and decide later.
+              Pick what it prints on, then list it — or leave it and decide
+              later.
             </p>
-            <ListingForm designId={picked} isListed={false} priceCents={null} />
+            <ListingForm
+              designId={pickedDesign.id}
+              imageUrl={pickedDesign.imageUrl}
+              isListed={false}
+              priceCents={null}
+              garmentOptions={garmentOptions}
+              // Freshly generated: nothing has been minted for it yet.
+              frozen={false}
+              initialConfig={{
+                garmentSlug: null,
+                variantId: null,
+                placement: null,
+              }}
+            />
           </div>
         )}
       </div>

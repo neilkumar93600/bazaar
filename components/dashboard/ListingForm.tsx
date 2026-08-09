@@ -2,40 +2,215 @@
 
 import { useState, useTransition } from "react"
 
-import { listDesign, delistDesign } from "@/app/dashboard/designs/actions"
+import {
+  listDesign,
+  delistDesign,
+  type GarmentConfig,
+} from "@/app/dashboard/designs/actions"
+import type { GarmentOption } from "@/app/dashboard/designs/garment-options"
+import {
+  PLACEMENTS,
+  PLACEMENT_LABELS,
+  type Placement,
+} from "@/lib/printify/print-areas"
+import { toneForColourName } from "@/lib/printify/tones"
+import { cn } from "@/lib/utils"
+import { ShirtMockup } from "@/components/shared/ShirtMockup"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
-/** List / relist / delist for one design.
+/** List / relist / delist for one design, plus the garment it gets printed on.
  *
  *  Validation runs server-side in `listDesign` and the error comes back as a
  *  string — the client does not re-implement the rule, so there is only one
  *  copy of it to be wrong. */
 export function ListingForm({
   designId,
+  imageUrl,
   isListed,
   priceCents,
+  garmentOptions,
+  frozen,
+  initialConfig,
 }: {
   designId: string
+  /** The artwork, for the live preview. */
+  imageUrl: string
   isListed: boolean
   /** Pre-fills the box on a relist: the maker confirms the old number rather
    *  than silently inheriting one they set weeks ago. */
   priceCents: number | null
+  /** Empty when Printify isn't configured — the garment section is then hidden
+   *  rather than offering choices that could never be minted. */
+  garmentOptions: GarmentOption[]
+  /** True once a Printify product exists. Re-minting would orphan it, so the
+   *  garment section renders read-only and the action is sent a null config. */
+  frozen: boolean
+  initialConfig: {
+    garmentSlug: string | null
+    variantId: number | null
+    placement: Placement | null
+  }
 }) {
   const [free, setFree] = useState(priceCents === null && isListed)
   const [dollars, setDollars] = useState(
     priceCents === null ? "" : (priceCents / 100).toString()
   )
+
+  const [garmentSlug, setGarmentSlug] = useState(
+    () => initialConfig.garmentSlug ?? garmentOptions[0]?.slug ?? ""
+  )
+  const [placement, setPlacement] = useState<Placement>(
+    () => initialConfig.placement ?? "front"
+  )
+
+  const garment = garmentOptions.find((option) => option.slug === garmentSlug)
+
+  const [variantId, setVariantId] = useState<number | null>(
+    () => initialConfig.variantId ?? garmentOptions[0]?.colours[0]?.variantId ?? null
+  )
+
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+
+  const colour =
+    garment?.colours.find((option) => option.variantId === variantId)?.colour ??
+    null
+  const tone = colour ? toneForColourName(colour) : null
 
   const priceFieldId = `price-${designId}`
   const freeFieldId = `free-${designId}`
 
+  const showGarment = garmentOptions.length > 0
+
+  function config(): GarmentConfig | null {
+    // A minted product's garment cannot change, so there is nothing to send.
+    if (frozen || !garment || variantId === null) return null
+    return { garmentSlug: garment.slug, variantId, placement }
+  }
+
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-4">
+      {showGarment && (
+        <div className="flex gap-4">
+          <div className="flex min-w-0 flex-1 flex-col gap-3">
+            {frozen ? (
+              <div className="flex flex-col gap-1">
+                <span className="text-caption font-medium text-foreground">
+                  {garment?.label ?? "Garment"}
+                  {colour ? ` · ${colour}` : ""} ·{" "}
+                  {PLACEMENT_LABELS[placement]}
+                </span>
+                <span className="text-caption text-muted-foreground">
+                  Fixed — the product is already made.
+                </span>
+              </div>
+            ) : (
+              <>
+                {garmentOptions.length > 1 && (
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-caption">Garment</Label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {garmentOptions.map((option) => (
+                        <button
+                          key={option.slug}
+                          type="button"
+                          aria-pressed={option.slug === garmentSlug}
+                          disabled={isPending}
+                          onClick={() => {
+                            setGarmentSlug(option.slug)
+                            setVariantId(option.colours[0]?.variantId ?? null)
+                          }}
+                          className={cn(
+                            "rounded-full border border-ink px-3 py-1 text-caption font-medium transition-colors disabled:opacity-50",
+                            option.slug === garmentSlug
+                              ? "bg-ink text-white"
+                              : "bg-transparent text-ink hover:bg-secondary"
+                          )}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {garment && garment.colours.length > 0 && (
+                  <div className="flex flex-col gap-1.5">
+                    <Label className="text-caption">
+                      Colour{colour ? ` · ${colour}` : ""}
+                    </Label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {garment.colours.map((option) => {
+                        const swatch = toneForColourName(option.colour)
+                        const active = option.variantId === variantId
+                        return (
+                          <button
+                            key={option.variantId}
+                            type="button"
+                            aria-label={option.colour}
+                            aria-pressed={active}
+                            title={option.colour}
+                            disabled={isPending}
+                            onClick={() => setVariantId(option.variantId)}
+                            style={
+                              swatch ? { backgroundColor: swatch.body } : undefined
+                            }
+                            className={cn(
+                              "size-6 rounded-full border transition disabled:opacity-50",
+                              active
+                                ? "border-primary ring-2 ring-primary"
+                                : "border-border hover:border-primary/60",
+                              // An unmapped colour has no swatch to paint, so it
+                              // shows its initial rather than a blank hole.
+                              !swatch &&
+                                "bg-secondary text-caption text-muted-foreground"
+                            )}
+                          >
+                            {swatch ? "" : option.colour.slice(0, 1)}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-caption">Print</Label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {PLACEMENTS.map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        aria-pressed={option === placement}
+                        disabled={isPending}
+                        onClick={() => setPlacement(option)}
+                        className={cn(
+                          "rounded-full border border-ink px-3 py-1 text-caption font-medium transition-colors disabled:opacity-50",
+                          option === placement
+                            ? "bg-ink text-white"
+                            : "bg-transparent text-ink hover:bg-secondary"
+                        )}
+                      >
+                        {PLACEMENT_LABELS[option]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Drawn, not a Printify render: the real product photo only exists
+              after minting, and minting only happens at listing. */}
+          <div className="w-24 shrink-0">
+            <ShirtMockup imageUrl={imageUrl} tone={tone ?? undefined} />
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center gap-2">
         <Checkbox
           id={freeFieldId}
@@ -74,7 +249,7 @@ export function ListingForm({
           onClick={() => {
             setError(null)
             startTransition(async () => {
-              const result = await listDesign(designId, free, dollars)
+              const result = await listDesign(designId, config(), free, dollars)
               if (result.error) setError(result.error)
             })
           }}
