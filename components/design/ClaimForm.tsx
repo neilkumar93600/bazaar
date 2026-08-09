@@ -32,7 +32,7 @@ export function ClaimForm({
         onClick={() => {
           setError(null)
           startTransition(async () => {
-            const result = await claimDesign(designId)
+            const result = await claimDesign(designId, priceCents)
             if (result?.error) setError(result.error)
           })
         }}
