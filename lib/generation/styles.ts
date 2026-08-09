@@ -68,6 +68,15 @@ export function requiredColourFor(style: StylePreset): string | null {
   return style.fullBleed ? REQUIRED_GARMENT_COLOUR[style.cutField] : null
 }
 
+/** The style a maker gets before they choose one.
+ *
+ *  Neo-traditional tattoo flash: the most forgiving preset in the library. It
+ *  takes almost any subject, it is built from bold outlines and flat fills that
+ *  survive both background removal and a screen print, and it is the single
+ *  most tee-native thing in the reference gallery. A default has to be the
+ *  style least likely to disappoint someone who never touched the picker. */
+export const DEFAULT_STYLE_SLUG = "neo-traditional"
+
 export const MAX_TEXT_WORDS = 7
 export const MAX_TEXT_CHARS = 40
 
@@ -289,6 +298,80 @@ export const STYLE_PRESETS: StylePreset[] = [
       "hard rim lighting from coloured practicals, wet reflective surfaces, atmospheric haze",
     palette: ["neon magenta", "cyan glow", "amber signage", "deep indigo"],
     cutField: "black",
+  },
+
+
+  // --- Drawn from the gpt-image Reference Gallery ---------------------------
+  // Tattoo Design and More Illustration Styles are the two most tee-native
+  // categories in that gallery, and the house library had one preset between
+  // them. Language lifted from the actual prompts, including the constraint
+  // that matters most here: "tattooable" and no gradients that would not
+  // tattoo well — screen printing has the same physical limit.
+  {
+    slug: "neo-traditional",
+    label: "Neo-Traditional",
+    family: "pictorial",
+    vibeSlug: "riot",
+    aesthetic: "colour neo-traditional tattoo flash",
+    linework:
+      "bold clean outlines, saturated but tasteful colour fills, a symmetrical badge-like composition, visible paper grain, tattooable with no gradients that would not tattoo well, no cartoon mascot feel and no clutter",
+    palette: ["vermilion", "teal", "golden ochre", "deep navy"],
+    cutField: "black",
+  },
+  {
+    slug: "irezumi",
+    label: "Irezumi",
+    family: "pictorial",
+    vibeSlug: "untamed-worldwide",
+    aesthetic: "Japanese traditional irezumi tattoo flash",
+    linework:
+      "bold black linework with strong flat colour blocks, stylised waves, wind bars and storm clouds, rhythmic negative space, balanced and dramatic in classic irezumi design language, tattooable, never anime and never cyberpunk",
+    palette: ["deep indigo", "vermilion", "emerald", "heavy ink outline"],
+    cutField: "white",
+  },
+  {
+    slug: "chibi-kawaii",
+    label: "Chibi Kawaii",
+    family: "pictorial",
+    vibeSlug: "late-bloomer",
+    aesthetic: "hyper-cute chibi illustration made for a sticker set",
+    linework:
+      "oversized heads, large twinkling eyes and tiny limbs, soft rounded line art in dark chocolate brown rather than black, warm sparkly lighting with small twinkle effects and soft glows",
+    palette: ["mint", "strawberry pink", "lavender", "lemon"],
+    cutField: "black",
+  },
+  {
+    slug: "low-poly",
+    label: "Low Poly",
+    family: "pictorial",
+    vibeSlug: "compound",
+    aesthetic: "flat-shaded low-poly geometric illustration",
+    linework:
+      "every surface a triangle or quadrilateral with no curves and no gradients, lighting calculated by the angle of the polygons into distinct facets of light and shadow, early-3D aesthetic at a modern high-resolution finish",
+    palette: ["deep indigo", "fiery crimson", "gold", "forest green"],
+    cutField: "black",
+  },
+  {
+    slug: "sticker-sheet",
+    label: "Sticker Sheet",
+    family: "pictorial",
+    vibeSlug: "insatiable",
+    aesthetic: "die-cut sticker sheet, neo-traditional sticker style",
+    linework:
+      "a small collection of die-cut stickers arranged as one group, each with a thick white border and a subtle drop shadow so it reads as peeling off the surface, bright specular highlights, vibrant and glossy",
+    palette: ["electric purple", "cyan", "neon yellow", "hot magenta"],
+    cutField: "black",
+  },
+  {
+    slug: "ink-wash",
+    label: "Ink Wash",
+    family: "pictorial",
+    vibeSlug: "dusk-atelier",
+    aesthetic: "Chinese ink-wash painting",
+    linework:
+      "loaded brush strokes with graded washes and dry-brush texture, large areas of deliberate empty space, the subject suggested in as few strokes as possible rather than fully described",
+    palette: ["pine soot ink", "pale wash grey", "faint sepia"],
+    cutField: "white",
   },
 
   // --- Typographic --------------------------------------------------------

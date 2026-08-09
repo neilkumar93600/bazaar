@@ -13,6 +13,7 @@ import {
   MAX_TEXT_WORDS,
   MAX_TITLE_CHARS,
   MAX_QUOTE_CHARS,
+  DEFAULT_STYLE_SLUG,
 } from "@/lib/generation/styles"
 import type { AspectRatio, Quality } from "@/lib/generation/adapter"
 import { clearHeroDraft, readHeroDraft } from "@/lib/hero-draft"
@@ -31,8 +32,6 @@ const POLL_INTERVAL_MS = 2000
 /** Give up rather than spin forever. The platform can kill the background work
  *  mid-flight, which leaves the row on `generating` with nothing coming. */
 const POLL_CEILING_MS = 240_000
-
-const DEFAULT_STYLE = "woodcut-flash"
 
 const ASPECT_OPTIONS: { value: AspectRatio; label: string }[] = [
   { value: "1:1", label: "Square" },
@@ -119,7 +118,7 @@ export function CreateForm({
   const [styleSlug, setStyleSlug] = useState(() =>
     initialStyleSlug && findStyle(initialStyleSlug)
       ? initialStyleSlug
-      : DEFAULT_STYLE,
+      : DEFAULT_STYLE_SLUG,
   )
   const [text, setText] = useState("")
   const [quote, setQuote] = useState("")
