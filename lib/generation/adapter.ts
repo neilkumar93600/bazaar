@@ -44,6 +44,13 @@ export async function generate(input: {
   /** Which flat field the prompt keyed the artwork against. The remover needs
    *  to know what it is cutting, so this is not purely a prompt concern. */
   cutField: "black" | "white"
+  /** Skip background removal and keep the artwork exactly as generated.
+   *
+   *  Set for full-bleed plates. `ai-background-remover` isolates a *subject*,
+   *  and a poster has no single subject — asked to cut one, it keeps the
+   *  character and deletes the title, the line and the scenery. The plate has
+   *  to survive whole, and the garment matches its ground instead. */
+  keepBackground?: boolean
 }): Promise<GeneratedImage> {
   if (input.references.length > 0) {
     throw new Error("Reference images are not supported yet")
@@ -57,7 +64,9 @@ export async function generate(input: {
   })
 
   return {
-    bytes: await fetchOutput(await cutBackground(generated)),
+    bytes: await fetchOutput(
+      input.keepBackground ? generated : await cutBackground(generated)
+    ),
     contentType: "image/png",
   }
 }

@@ -144,7 +144,7 @@ const PLAN: Concept[] = [
   // Anime posters.
   {
     style: "anime-poster",
-    colour: "Navy",
+    colour: "Black",
     placement: "back",
     title: "RONIN",
     quote: "NO MASTER NO MAP",
@@ -152,7 +152,7 @@ const PLAN: Concept[] = [
   },
   {
     style: "anime-poster",
-    colour: "Light Blue",
+    colour: "Black",
     placement: "front",
     title: "SUNBREAK",
     quote: "MORNING FINDS EVERYBODY",
@@ -174,7 +174,7 @@ const PLAN: Concept[] = [
   },
   {
     style: "anime-villain",
-    colour: "Maroon",
+    colour: "Black",
     placement: "back",
     title: "SILENCE",
     quote: "YOU TALK THE WAY THE STRONG DO",
@@ -182,7 +182,7 @@ const PLAN: Concept[] = [
   },
   {
     style: "anime-villain",
-    colour: "Navy",
+    colour: "Black",
     placement: "both",
     title: "THE NINTH",
     quote: "COUNT AGAIN I AM STILL HERE",
@@ -190,7 +190,7 @@ const PLAN: Concept[] = [
   },
   {
     style: "anime-villain",
-    colour: "Forest",
+    colour: "Black",
     placement: "front",
     title: "ASHFALL",
     quote: "I ONLY BURN WHAT ASKED TO BE WARM",
@@ -206,7 +206,7 @@ const PLAN: Concept[] = [
   },
   {
     style: "anime-poster",
-    colour: "Red",
+    colour: "Black",
     placement: "back",
     title: "STORMCALLER",
     quote: "THE SKY OWES ME NOTHING",
@@ -238,7 +238,7 @@ const PLAN: Concept[] = [
   },
   {
     style: "anime-villain",
-    colour: "Navy",
+    colour: "Black",
     placement: "back",
     title: "THE LAST GATE",
     quote: "EVERYTHING I KILLED STILL WALKS",
@@ -246,7 +246,7 @@ const PLAN: Concept[] = [
   },
   {
     style: "anime-villain",
-    colour: "Maroon",
+    colour: "Black",
     placement: "both",
     title: "DOMAIN",
     quote: "STEP INSIDE AND THE RULES ARE MINE",
@@ -262,7 +262,7 @@ const PLAN: Concept[] = [
   },
   {
     style: "anime-poster",
-    colour: "Forest",
+    colour: "Black",
     placement: "front",
     title: "SIX SEALS",
     quote: "THEY BOUND ME FOR A REASON",
@@ -272,7 +272,7 @@ const PLAN: Concept[] = [
   // Varsity lockups — the tee3 shape.
   {
     style: "varsity-lockup",
-    colour: "Gold",
+    colour: "Black",
     placement: "front",
     title: "MENTAL TOUGHNESS",
     quote: "CLUB EST TODAY",
@@ -280,7 +280,7 @@ const PLAN: Concept[] = [
   },
   {
     style: "varsity-lockup",
-    colour: "Forest",
+    colour: "Black",
     placement: "front",
     title: "NIGHT SHIFT",
     quote: "ATHLETIC DEPT NO REST",
@@ -617,6 +617,7 @@ for (const [i, concept] of plan.entries()) {
       aspectRatio: "3:4",
       quality: "medium",
       cutField: style.cutField,
+      keepBackground: style.fullBleed === true,
     })
     const imageUrl = await db.upload(`${job.id}.png`, image.bytes)
 

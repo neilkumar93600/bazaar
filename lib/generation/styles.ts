@@ -39,15 +39,20 @@ export type StylePreset = {
   palette: string[]
   cutField: "black" | "white"
   /** True when the artwork is a full-bleed plate rather than an isolated
-   *  subject — a bordered broadside, say.
+   *  subject — a poster with a title and a line, or a bordered broadside.
    *
-   *  Measured, not guessed: background removal leaves an isolated subject
-   *  52-70% transparent, but a bordered plate only ~4%, because the border makes
-   *  the whole thing read as one object. So the ground survives and *becomes*
-   *  part of the print, which means the garment has to match it. A full-bleed
-   *  black plate on a maroon shirt is a black rectangle.
+   *  Two consequences, both load-bearing:
    *
-   *  Enforced by REQUIRED_GARMENT_COLOUR below. */
+   *  1. **Background removal is skipped.** `ai-background-remover` isolates a
+   *     *subject*, and on a poster it decides the subject is the character —
+   *     so it deletes the title, the line and the scenery. Observed on LAST
+   *     TRAIN: the finished PNG was the boy alone, with "LAST TRAIN" and
+   *     "I MISSED IT ON PURPOSE" cut away. A plate has to survive whole.
+   *
+   *  2. **The garment must match the plate's ground**, because that ground now
+   *     prints. A black plate on a maroon shirt is a black rectangle.
+   *
+   *  Enforced by REQUIRED_GARMENT_COLOUR and by the adapter's keepBackground. */
   fullBleed?: boolean
 }
 
@@ -384,7 +389,8 @@ export const STYLE_PRESETS: StylePreset[] = [
       "cel-shaded character rendered large and centred with hard two-tone shadows and speed lines, bold display title arched above, a single kanji-style rule and a short line beneath",
     palette: ["sky cyan", "sunset coral", "warm sand", "deep violet"],
     cutField: "black",
-    },
+    fullBleed: true,
+  },
   {
     slug: "anime-villain",
     label: "Anime Villain",
@@ -397,6 +403,7 @@ export const STYLE_PRESETS: StylePreset[] = [
     // a villain never come out looking like the same shirt.
     palette: ["blood crimson", "bruised violet", "sulphur yellow", "cold steel"],
     cutField: "black",
+    fullBleed: true,
   },
   {
     slug: "varsity-lockup",
@@ -408,7 +415,8 @@ export const STYLE_PRESETS: StylePreset[] = [
       "heavy block collegiate letterforms with a contrasting outline, the first line arched over a much larger second line, a small star and a horizontal rule beneath, tight and symmetrical",
     palette: ["team navy", "cream", "signal gold"],
     cutField: "black",
-    },
+    fullBleed: true,
+  },
   {
     slug: "kinetic-type-grid",
     label: "Kinetic Type Grid",
@@ -419,6 +427,7 @@ export const STYLE_PRESETS: StylePreset[] = [
       "the words repeated and warped across a strict modular grid, letters treated as pure shape",
     palette: ["signal yellow", "deep violet", "bone white"],
     cutField: "black",
+    fullBleed: true,
   },
 ]
 

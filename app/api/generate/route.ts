@@ -262,6 +262,7 @@ async function generateOne(
     aspectRatio,
     quality,
     cutField: style.cutField,
+    keepBackground: style.fullBleed === true,
   })
 
   // Indexed: four images share one job, and `upsert: true` would silently
