@@ -43,7 +43,7 @@ One line per route from `docs/ARCHITECTURE.md`. Check off as each ships (route f
 - [x] `/dashboard/designs` — designs this user *made*, split Unlisted / Listed / Adopted, with list & delist
 - [ ] `/dashboard/messages` — inbox
 - [ ] `/dashboard/settings` — Account / Notifications / Twin (placeholder) / AI / Payouts tabs
-- [ ] `/dashboard/orders` — purchase history
+- [x] `/dashboard/orders` — claims and garment orders, with Printify status refresh
 
 ## Notes
 - **Garment orders / E1 (2026-08-09).** A claimed design can be bought as a
@@ -70,8 +70,9 @@ One line per route from `docs/ARCHITECTURE.md`. Check off as each ships (route f
 - **Garment config (2026-08-09).** The maker picks garment, colour and
   placement in the listing panel before going live. Their colour is
   *presentation* — it selects the hero mockup out of the ~66 renders Printify
-  produces. The product carries **every** variant, because the buyer picks
-  colour and size at checkout, so `PRINTIFY_VARIANT_IDS` is gone. `placement:
+  produces. The product carries every variant in the garment's **curated colour
+  list** — `PRINTIFY_VARIANT_IDS` is gone, but "all 995" is not an option
+  either; see the variant-ceiling section below. `placement:
   'both'` means a **small chest mark plus a full back print**, in that
   direction; `lib/printify/print-areas.test.ts` pins it because reversing it is
   a plausible one-line diff with an expensive physical consequence. Config
