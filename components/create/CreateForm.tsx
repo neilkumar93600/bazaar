@@ -8,6 +8,7 @@ import { ArrowRight } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { MAX_PROMPT_LENGTH, MIN_PROMPT_LENGTH } from "@/lib/generation/prompt"
 import { clearHeroDraft, readHeroDraft } from "@/lib/hero-draft"
+import { ListingForm } from "@/components/dashboard/ListingForm"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { NativeSelect } from "@/components/ui/native-select"
@@ -204,8 +205,8 @@ export function CreateForm({
         )}
 
         <p className="text-caption text-muted-foreground">
-          Generated designs land in the bazaar unclaimed — anyone can claim them,
-          including you.
+          Designs are private to you until you list them. Once someone claims
+          one, it&apos;s theirs — you can&apos;t relist or resell it.
         </p>
       </form>
 
@@ -230,11 +231,17 @@ export function CreateForm({
                 className="object-cover"
               />
             </div>
+            <p className="text-body-sm text-muted-foreground">
+              Yours, and private. List it to put it in the bazaar — or leave it
+              and decide later from your designs.
+            </p>
+            <ListingForm designId={phase.designId} isListed={false} priceCents={null} />
             <Button
-              render={<Link href={`/design/${phase.designId}`} />}
-              className="btn-ember w-fit rounded-full"
+              variant="outline"
+              render={<Link href="/dashboard/designs" />}
+              className="w-fit rounded-full"
             >
-              Claim it <ArrowRight className="h-4 w-4" />
+              My designs <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
         )}
