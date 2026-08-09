@@ -163,7 +163,7 @@ export function Navbar({
                     home. With the feed filling the page this bar is the only
                     one left, so a signed-in visitor gets the CTA too. */}
                 <Link
-                  href="/dashboard/create"
+                  href="/create"
                   className="btn-ember px-3.5 py-1.5 text-body-sm font-medium whitespace-nowrap"
                 >
                   Start creating
@@ -241,7 +241,7 @@ export function Navbar({
                           here at all — the desktop bar's CTA is hidden at this
                           width. */}
                       <Button
-                        render={<Link href="/dashboard/create" />}
+                        render={<Link href="/create" />}
                         onClick={() => setMenuOpen(false)}
                         className="btn-ember"
                       >

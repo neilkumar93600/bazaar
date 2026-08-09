@@ -38,11 +38,14 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user && isAuthRoute) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    // The feed, not the dashboard: the product's front door is the bazaar.
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   return supabaseResponse;
 }
 
-const PROTECTED_ROUTES = ["/dashboard", "/onboarding"];
+// `/create` sits in the (public) route group for its chrome, not because it is
+// public — generation needs an account, so it is gated here like any other.
+const PROTECTED_ROUTES = ["/dashboard", "/onboarding", "/create"];
 const AUTH_ROUTES = ["/login", "/signup"];

@@ -116,7 +116,7 @@ export function BazaarFilterPanel({
       {/* Reference layout puts a promo tile at the foot of the rail; here it's
           the one conversion slot on an otherwise read-only page. */}
       <Link
-        href="/dashboard/create"
+        href="/create"
         className="group/promo glass-surface glass-surface-interactive relative flex min-h-44 flex-col justify-end overflow-hidden rounded-2xl border bg-card p-5 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
       >
         <span aria-hidden className="absolute inset-0 bg-hero-atmosphere" />

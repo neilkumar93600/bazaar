@@ -44,7 +44,7 @@ import {
 
 const MENU_ITEMS = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
-  { href: "/dashboard/create", label: "Create", icon: Sparkles },
+  { href: "/create", label: "Create", icon: Sparkles },
   { href: "/dashboard/designs", label: "My designs", icon: Shirt },
   { href: "/dashboard/orders", label: "Orders", icon: Receipt },
 ];

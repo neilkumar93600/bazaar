@@ -25,5 +25,6 @@ export async function login(
     return { error: "Incorrect email or password." };
   }
 
-  redirect("/dashboard");
+  // The feed, not the dashboard: the product's front door is the bazaar.
+  redirect("/");
 }

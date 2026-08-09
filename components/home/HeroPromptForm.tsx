@@ -59,7 +59,7 @@ export function HeroPromptForm({ vibes }: { vibes: VibeTile[] }) {
 
     const params = new URLSearchParams({ prompt: prompt.trim() })
     if (vibeId) params.set("vibe", vibeId)
-    router.push(`/dashboard/create?${params.toString()}`)
+    router.push(`/create?${params.toString()}`)
   }
 
   return (
@@ -172,8 +172,8 @@ export function HeroPromptForm({ vibes }: { vibes: VibeTile[] }) {
           </button>
 
           <p className="line-clamp-2 text-caption text-muted-foreground sm:line-clamp-none">
-            New designs land in the bazaar unclaimed. Anyone can claim one,
-            including you — so claim yours before someone else does.
+            Your design is private until you list it. Once someone claims one,
+            it&apos;s theirs for good.
           </p>
 
           {/* Mobile only: the sign-in row above is hidden at this width, and the

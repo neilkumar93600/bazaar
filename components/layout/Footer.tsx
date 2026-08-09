@@ -21,7 +21,7 @@ export function Footer({ className = "" }: FooterProps) {
         {/* ponytail: shares the hero's bazaar shot until a dedicated footer
             render exists — swap this one src, nothing else changes. */}
         <Image
-          src="/bazaar/hero.jpg"
+          src="/bazaar/footer.jpg"
           alt=""
           fill
           sizes="100vw"
@@ -93,7 +93,7 @@ export function Footer({ className = "" }: FooterProps) {
               </h4>
               <ul className="space-y-2.5">
                 {[
-                  { label: "Design generator", href: "/dashboard/create" },
+                  { label: "Design generator", href: "/create" },
                   { label: "Style library", href: "/blog" },
                   { label: "Browse the bazaar", href: "/shop" },
                 ].map((link) => (

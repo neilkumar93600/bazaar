@@ -56,7 +56,7 @@ export default async function DesignsPage() {
     <div className="mx-auto flex max-w-5xl flex-col gap-10 px-4 py-8 sm:px-6 lg:px-8">
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-heading-lg text-foreground">My designs</h1>
-        <Button render={<Link href="/dashboard/create" />}>
+        <Button render={<Link href="/create" />}>
           Create a design
         </Button>
       </div>
@@ -73,7 +73,7 @@ export default async function DesignsPage() {
             </EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
-            <Button variant="outline" render={<Link href="/dashboard/create" />}>
+            <Button variant="outline" render={<Link href="/create" />}>
               Create a design
             </Button>
           </EmptyContent>

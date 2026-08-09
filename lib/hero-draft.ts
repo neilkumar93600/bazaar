@@ -1,4 +1,4 @@
-/** The home hero's prompt survives the trip to /dashboard/create.
+/** The home hero's prompt survives the trip to /create.
  *
  *  Signed-in visitors get the draft through the URL. Signed-out ones are bounced
  *  to /login by the dashboard gate, which drops the query string — so the draft

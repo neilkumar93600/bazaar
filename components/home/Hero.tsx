@@ -111,7 +111,7 @@ export function Hero({
             </div>
 
             <Link
-              href="/dashboard/create"
+              href="/create"
               className="btn-ember ml-auto hidden px-3.5 py-1.5 text-body-sm font-medium whitespace-nowrap md:inline-flex md:px-5"
             >
               Start creating
@@ -164,7 +164,7 @@ export function Hero({
                     Sign in
                   </Link>
                   <Link
-                    href="/dashboard/create"
+                    href="/create"
                     onClick={() => setMenuOpen(false)}
                     className="btn-ember px-4 py-2.5 text-center text-body-sm font-medium"
                   >
