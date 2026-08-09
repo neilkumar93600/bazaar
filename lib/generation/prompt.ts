@@ -51,10 +51,21 @@ const MERGE_WARNING = {
 export function buildPrompt(input: {
   idea: string
   style: StylePreset
-  /** Typographic styles only. Null for pictorial. */
+  /** The words. Null for pictorial; the whole artwork for typographic; the
+   *  arched title for illustrated. */
   text: string | null
+  /** The line under the illustration. Illustrated styles only. */
+  quote?: string | null
 }): string {
-  const { idea, style, text } = input
+  const { idea, style, text, quote = null } = input
+
+  // An illustrated design is a lockup: title, picture, line. It gets its own
+  // branch rather than being squeezed into either of the other two, because
+  // pictorial forbids the text and typographic forbids the picture.
+  if (style.family === "illustrated") {
+    return buildIllustratedPrompt({ idea, style, title: text ?? "", quote: quote ?? "" })
+  }
+
   const isTypographic = style.family === "typographic"
 
   const letterformRules = isTypographic
@@ -98,6 +109,59 @@ export function buildPrompt(input: {
     ...letterformRules,
     "photographic realism or a mockup of a physical shirt",
     "any halo, vignette, gradient, panel or frame behind the subject",
+    MERGE_WARNING[style.cutField],
+  ])}
+}`
+}
+
+/** A broadside: arched title, hero illustration, line underneath, all one
+ *  lockup on a flat field.
+ *
+ *  Two text slots rather than one, and both are pinned verbatim. The model is
+ *  told exactly what may appear and forbidden everything else — the same guard
+ *  the typographic branch uses, widened only to two strings.
+ *
+ *  Composition is spelled out slot by slot because "title, picture, quote" is a
+ *  layout, not a subject, and describing it loosely produces a picture with
+ *  words floating over it instead of a designed plate. */
+function buildIllustratedPrompt(input: {
+  idea: string
+  style: StylePreset
+  title: string
+  quote: string
+}): string {
+  const { idea, style, title, quote } = input
+
+  return `/* SHIRT_PRINT_CONFIG: 1-of-1 Design
+   VERSION: 2.1.0
+   STYLE: ${style.slug} (illustrated broadside) */
+{
+  "GLOBAL_SETTINGS": {
+    "artifact": "flat screen-print artwork for the front of a t-shirt, not a photograph of a shirt",
+    "aesthetic": ${JSON.stringify(style.aesthetic)},
+    "style": ${JSON.stringify(style.linework)}
+  },
+  "LAYOUT": {
+    "top": "the TITLE, set large in display capitals on a gentle upward arch, spanning the full width",
+    "middle": "the SUBJECT, rendered as the hero illustration, centred and dominant",
+    "bottom": "the LINE, set in two balanced rows of smaller capitals, centred"
+  },
+  "TITLE": ${JSON.stringify(title)},
+  "SUBJECT": ${JSON.stringify(idea.trim())},
+  "LINE": ${JSON.stringify(quote)},
+  "COMPOSITION": {
+    "framing": "one symmetrical vertical plate, title and line locked to the illustration as a single designed unit, generous margin on all four sides",
+    "background": ${JSON.stringify(
+      `${FIELD_PHRASE[style.cutField]}, no glow, no gradient, no scenery`,
+    )}
+  },
+  "PALETTE": ${JSON.stringify(style.palette)},
+  "RENDER_FLAGS": ["high_contrast", "crisp_linework", "print_ready", "no_CGI_tell"],
+  "AVOID": ${JSON.stringify([
+    "any word, letter or numeral that is not part of TITLE or LINE",
+    "misspelling, duplicating or reordering the words in TITLE or LINE",
+    "letting the illustration overlap or obscure the TITLE or the LINE",
+    "photographic realism or a mockup of a physical shirt",
     MERGE_WARNING[style.cutField],
   ])}
 }`

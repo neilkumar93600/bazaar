@@ -21,7 +21,13 @@ import { readFileSync } from "node:fs"
 
 import { generate } from "../lib/generation/adapter.ts"
 import { buildPrompt, MAX_PROMPT_LENGTH } from "../lib/generation/prompt.ts"
-import { stylesForVibeSlug } from "../lib/generation/styles.ts"
+import { findStyle } from "../lib/generation/styles.ts"
+import {
+  coloursFrom,
+  defaultGarment,
+  sellableVariants,
+} from "../lib/printify/garments.ts"
+import { catalogVariants } from "../lib/printify/products.ts"
 import { syncDesignProduct } from "../lib/printify/sync.ts"
 
 // ---------------------------------------------------------------------------
@@ -67,6 +73,158 @@ const SERVICE_KEY = required("SUPABASE_SERVICE_ROLE_KEY")
 // user. These are written the way a person types into the create box: an image,
 // not a specification.
 // ---------------------------------------------------------------------------
+
+
+// ---------------------------------------------------------------------------
+// The house plan
+//
+// Curated, not random. House stock is the shop window, so every entry names its
+// own style, garment colour and print placement — the earlier round-robin put
+// every design on a white tee with a front print, which is exactly what a
+// storefront should not look like.
+//
+// `title` and `quote` are only for `illustrated` styles: those are broadsides
+// (arched title, hero illustration, line underneath) and both strings are
+// pinned verbatim in the prompt.
+// ---------------------------------------------------------------------------
+
+type Concept = {
+  idea: string
+  style: string
+  colour: string
+  placement: "front" | "back" | "both"
+  title?: string
+  quote?: string
+}
+
+const PLAN: Concept[] = [
+  // Broadsides — the Prometheus/Janus shape.
+  {
+    style: "mythic-broadside",
+    colour: "Black",
+    placement: "back",
+    title: "PROMETHEUS",
+    quote: "THEY CHAINED THE BODY THE FIRE SPREAD",
+    idea: "a chained titan wrenching one arm free, an open palm holding fire, a rayed halo behind him",
+  },
+  {
+    style: "mythic-broadside",
+    colour: "Maroon",
+    placement: "back",
+    title: "ICARUS",
+    quote: "HE WAS WARNED HE WENT ANYWAY",
+    idea: "a winged figure ascending into a blinding sun, feathers loosening and falling away",
+  },
+  {
+    style: "mythic-broadside",
+    colour: "Navy",
+    placement: "both",
+    title: "ATLAS",
+    quote: "NOBODY ASKED IF IT WAS HEAVY",
+    idea: "a kneeling giant with a star-map sphere balanced across his shoulders",
+  },
+  {
+    style: "occult-almanac",
+    colour: "Black",
+    placement: "back",
+    title: "THE HOURS",
+    quote: "EVERY CLOCK IS A SLOW ALARM",
+    idea: "an alchemical emblem of a moth on an hourglass, ringed by zodiac marginalia",
+  },
+  {
+    style: "occult-almanac",
+    colour: "Forest",
+    placement: "front",
+    title: "ROOTWORK",
+    quote: "WHAT GROWS DOWN HOLDS UP",
+    idea: "a tree whose roots form a human ribcage, drawn as a botanical plate",
+  },
+
+  // Anime posters.
+  {
+    style: "anime-poster",
+    colour: "Navy",
+    placement: "back",
+    title: "RONIN",
+    quote: "NO MASTER NO MAP",
+    idea: "a lone swordswoman in a torn coat, wind tearing at her, city lights behind",
+  },
+  {
+    style: "anime-poster",
+    colour: "Light Blue",
+    placement: "front",
+    title: "SUNBREAK",
+    quote: "MORNING FINDS EVERYBODY",
+    idea: "a girl on a rooftop at dawn holding a paper lantern, hair lifting in the wind",
+  },
+
+  // Varsity lockups — the tee3 shape.
+  {
+    style: "varsity-lockup",
+    colour: "Gold",
+    placement: "front",
+    title: "MENTAL TOUGHNESS",
+    quote: "CLUB EST TODAY",
+    idea: "a collegiate athletic crest, star and rule beneath the wordmark",
+  },
+  {
+    style: "varsity-lockup",
+    colour: "Forest",
+    placement: "front",
+    title: "NIGHT SHIFT",
+    quote: "ATHLETIC DEPT NO REST",
+    idea: "a collegiate department lockup with a crescent moon in place of the star",
+  },
+
+  // Typographic.
+  {
+    style: "slab-statement",
+    colour: "Black",
+    placement: "front",
+    title: "STAY FERAL",
+    idea: "heavy stacked slab capitals, tight and shouting",
+  },
+  {
+    style: "blackletter",
+    colour: "White",
+    placement: "back",
+    title: "NO GODS",
+    idea: "dense fraktur capitals with hairline flourishes",
+  },
+  {
+    style: "script-signature",
+    colour: "Maroon",
+    placement: "front",
+    title: "keep going",
+    idea: "a flowing brush signature with a long entry flourish",
+  },
+
+  // Pictorial — wordless, and deliberately on darker garments.
+  {
+    style: "blackwork-tattoo",
+    colour: "White",
+    placement: "back",
+    idea: "a stag skull crowned with thistles, solid blackwork with fine dotwork shading",
+  },
+  {
+    style: "manga-ink",
+    colour: "White",
+    placement: "front",
+    idea: "a cat curled asleep inside a cracked teacup, screentone shadows",
+  },
+  {
+    style: "woodcut-flash",
+    colour: "Black",
+    placement: "both",
+    idea: "a hooded elder weighing two planets on a golden scale",
+  },
+  {
+    style: "folk-woodblock",
+    colour: "Red",
+    placement: "front",
+    idea: "a great wave curling over a small boat, ukiyo-e keyblock and bokashi sky",
+  },
+]
 
 const IDEAS = [
   "a moth with cathedral windows for wings, wings spread wide",
@@ -236,24 +394,49 @@ console.log()
 
 let created = 0
 
-for (let i = 0; i < count; i++) {
-  // Round-robin the vibes and walk the idea bank so a run never generates the
-  // same image twice in the same vibe.
-  const vibe = targets[i % targets.length]
-  const idea = IDEAS[i % IDEAS.length]
-  const label = `[${String(i + 1).padStart(2, "0")}/${count}] ${vibe.slug}`
+// Colour names come from the plan; Printify wants a variant id. Resolved once,
+// against the same sellable set the product will actually enable.
+const garment = defaultGarment()
+if (!garment) {
+  console.error("Printify is not configured — designs would have no product.")
+  process.exit(1)
+}
+const variantIdByColour = new Map(
+  coloursFrom(sellableVariants(garment, await catalogVariants(garment))).map(
+    (option) => [option.colour, option.variantId]
+  )
+)
 
-  if (dryRun) {
-    console.log(`${label}  ${idea}`)
+const plan = PLAN.slice(0, count)
+
+for (const [i, concept] of plan.entries()) {
+  const style = findStyle(concept.style)
+  const label = `[${String(i + 1).padStart(2, "0")}/${plan.length}] ${concept.style}`
+
+  if (!style) {
+    console.error(`${label}  FAILED  no such style preset`)
     continue
   }
 
-  // House stock uses the first preset filed under this vibe, so a seeded design
-  // looks like something the create flow could actually have produced. Single
-  // image, not a four-up grid — nobody is choosing between these.
-  const style = stylesForVibeSlug(vibe.slug)[0]
-  if (!style) {
-    console.error(`${label}  FAILED  no style preset files under vibe ${vibe.slug}`)
+  const vibe = vibes.find((v) => v.slug === style.vibeSlug)
+  if (!vibe) {
+    console.error(`${label}  FAILED  style files under unknown vibe ${style.vibeSlug}`)
+    continue
+  }
+  if (vibeSlug && vibe.slug !== vibeSlug) continue
+
+  const featuredVariantId = variantIdByColour.get(concept.colour)
+  if (!featuredVariantId) {
+    console.error(`${label}  FAILED  ${concept.colour} is not a sellable colour`)
+    continue
+  }
+
+  const idea = concept.idea
+
+  if (dryRun) {
+    console.log(
+      `${label}  ${concept.colour}/${concept.placement}  ${concept.title ? `"${concept.title}" — ` : ""}${idea.slice(0, 60)}`
+    )
     continue
   }
 
@@ -263,6 +446,7 @@ for (let i = 0; i < count; i++) {
       vibe_id: vibe.id,
       quality_tier: "medium",
       style_slug: style.slug,
+      text_content: concept.title ?? null,
       status: "generating",
     })
 
@@ -270,7 +454,12 @@ for (let i = 0; i < count; i++) {
     // same background cut, so a seeded design is byte-for-byte the kind of thing
     // the create flow produces.
     const image = await generate({
-      prompt: buildPrompt({ idea, style, text: null }),
+      prompt: buildPrompt({
+        idea,
+        style,
+        text: concept.title ?? null,
+        quote: concept.quote ?? null,
+      }),
       references: [],
       aspectRatio: "3:4",
       quality: "medium",
@@ -285,6 +474,11 @@ for (let i = 0; i < count; i++) {
       image_url: imageUrl,
       prompt: idea,
       price_cents: priceCents,
+      // The garment config the earlier round-robin never set, which is why every
+      // seeded design came out as a white tee with a front print.
+      garment_slug: garment.slug,
+      featured_variant_id: featuredVariantId,
+      placement: concept.placement,
       // House stock is generated *in order to* be listed — unlike the create
       // flow, where the maker decides afterwards. Straight to live.
       listed_at: new Date().toISOString(),

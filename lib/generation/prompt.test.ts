@@ -50,6 +50,37 @@ for (const style of STYLE_PRESETS.filter((s) => s.family === "typographic")) {
   assert.match(out, /"ART_DIRECTION": "chunky and stacked"/)
 }
 
+// Illustrated styles are a lockup: title AND picture AND line. Both strings are
+// pinned, and the blanket ban must not survive (it would forbid the title).
+for (const style of STYLE_PRESETS.filter((s) => s.family === "illustrated")) {
+  const out = buildPrompt({
+    idea: "a chained titan holding fire",
+    style,
+    text: "PROMETHEUS",
+    quote: "THEY CHAINED THE BODY THE FIRE STILL SPREAD",
+  })
+  assert.match(out, /"TITLE": "PROMETHEUS"/, `${style.slug}: title must be pinned`)
+  assert.match(
+    out,
+    /"LINE": "THEY CHAINED THE BODY THE FIRE STILL SPREAD"/,
+    `${style.slug}: the line must be pinned`,
+  )
+  assert.match(
+    out,
+    /"SUBJECT": "a chained titan holding fire"/,
+    `${style.slug}: the illustration must survive alongside the text`,
+  )
+  assert.doesNotMatch(
+    out,
+    /any words, letters, numerals or letterforms anywhere in the image/,
+    `${style.slug}: the blanket ban would forbid the title`,
+  )
+  assert.match(out, /misspelling/, `${style.slug}: spelling must be constrained`)
+  // The layout is the point — without it the model paints words over a picture
+  // rather than designing a plate.
+  assert.match(out, /"LAYOUT"/, `${style.slug}: layout slots must be spelled out`)
+}
+
 // The keying field follows the preset, both ways round. Getting this wrong
 // returns an empty PNG: the artwork is cut away with the background.
 {

@@ -17,7 +17,13 @@
  *  the system is allowed to weaken it.
  */
 
-export type StyleFamily = "pictorial" | "typographic"
+/** `pictorial`   — a drawn subject, no letterforms anywhere.
+ *  `typographic` — the words ARE the artwork, no illustration.
+ *  `illustrated` — both: an arched title, a hero illustration and a quote,
+ *                  locked up as one broadside. This is the shape of a real
+ *                  band/mythology tee, and neither of the other two can make
+ *                  one: pictorial bans the text, typographic bans the picture. */
+export type StyleFamily = "pictorial" | "typographic" | "illustrated"
 
 export type StylePreset = {
   slug: string
@@ -36,6 +42,15 @@ export type StylePreset = {
 
 export const MAX_TEXT_WORDS = 7
 export const MAX_TEXT_CHARS = 40
+
+/** An `illustrated` design carries two strings, not one: a short arched title
+ *  and a longer line underneath. Kept tighter than the typographic limits for
+ *  the title and looser for the quote, because that is the proportion the
+ *  layout wants — one word shouting, one sentence answering. */
+export const MAX_TITLE_WORDS = 3
+export const MAX_TITLE_CHARS = 22
+export const MAX_QUOTE_WORDS = 10
+export const MAX_QUOTE_CHARS = 60
 
 export const STYLE_PRESETS: StylePreset[] = [
   // --- Riot ---------------------------------------------------------------
@@ -304,6 +319,55 @@ export const STYLE_PRESETS: StylePreset[] = [
     palette: ["marker charcoal", "spray silver"],
     cutField: "white",
   },
+  // --- Illustrated: title + picture + quote, one lockup ---------------------
+  {
+    slug: "mythic-broadside",
+    label: "Mythic Broadside",
+    family: "illustrated",
+    vibeSlug: "dusk-atelier",
+    aesthetic:
+      "aged mythological broadside poster, printed on dark stock, heavy paper grain and foxing",
+    linework:
+      "dense copperplate engraving and cross-hatching, a single heroic figure centred inside a rayed halo, thin ornamental rule framing the whole plate, arched title above and a two-line inscription below",
+    // Keyed against black, and the dark ground in a broadside like this IS the
+    // shirt — only the gold and bone ink actually prints. That is why these
+    // belong on a dark garment.
+    palette: ["antique gold", "aged parchment", "oxblood", "ember orange"],
+    cutField: "black",
+  },
+  {
+    slug: "occult-almanac",
+    label: "Occult Almanac",
+    family: "illustrated",
+    vibeSlug: "insatiable",
+    aesthetic: "esoteric almanac plate, alchemical frontispiece",
+    linework:
+      "fine engraved linework with astrological marginalia, a central emblem ringed by symbols, arched title above and an inscription below, hairline border",
+    palette: ["tarnished gold", "deep indigo", "verdigris", "dried rose"],
+    cutField: "black",
+  },
+  {
+    slug: "anime-poster",
+    label: "Anime Poster",
+    family: "illustrated",
+    vibeSlug: "late-bloomer",
+    aesthetic: "1990s anime key visual poster",
+    linework:
+      "cel-shaded character rendered large and centred with hard two-tone shadows and speed lines, bold display title arched above, a single kanji-style rule and a short line beneath",
+    palette: ["sky cyan", "sunset coral", "warm sand", "deep violet"],
+    cutField: "black",
+  },
+  {
+    slug: "varsity-lockup",
+    label: "Varsity Lockup",
+    family: "illustrated",
+    vibeSlug: "compound",
+    aesthetic: "collegiate athletic department lockup",
+    linework:
+      "heavy block collegiate letterforms with a contrasting outline, the first line arched over a much larger second line, a small star and a horizontal rule beneath, tight and symmetrical",
+    palette: ["team navy", "cream", "signal gold"],
+    cutField: "black",
+  },
   {
     slug: "kinetic-type-grid",
     label: "Kinetic Type Grid",
@@ -339,6 +403,21 @@ export function validateStyleText(
 ): TextValidation {
   const trimmed = text.trim()
 
+  // An illustrated style uses `text` as its title. The quote is validated
+  // separately by validateQuote — two strings, two rules.
+  if (style.family === "illustrated") {
+    if (trimmed === "") {
+      return { ok: false, error: "Give it a title — one or two words." }
+    }
+    if (trimmed.length > MAX_TITLE_CHARS) {
+      return { ok: false, error: `Titles are ${MAX_TITLE_CHARS} characters or fewer.` }
+    }
+    if (trimmed.split(/\s+/).length > MAX_TITLE_WORDS) {
+      return { ok: false, error: `Titles are ${MAX_TITLE_WORDS} words or fewer.` }
+    }
+    return { ok: true, text: trimmed }
+  }
+
   if (style.family === "pictorial") {
     if (trimmed !== "") {
       return {
@@ -357,6 +436,38 @@ export function validateStyleText(
   }
   if (trimmed.split(/\s+/).length > MAX_TEXT_WORDS) {
     return { ok: false, error: `Keep it to ${MAX_TEXT_WORDS} words or fewer.` }
+  }
+
+  return { ok: true, text: trimmed }
+}
+
+/** The line under the illustration. Only `illustrated` styles have one; every
+ *  other family must be given an empty string, and is told so rather than
+ *  having it silently dropped. */
+export function validateQuote(
+  style: StylePreset,
+  quote: string
+): TextValidation {
+  const trimmed = quote.trim()
+
+  if (style.family !== "illustrated") {
+    if (trimmed !== "") {
+      return {
+        ok: false,
+        error: `"${style.label}" has no line underneath — pick an illustrated style for that.`,
+      }
+    }
+    return { ok: true, text: null }
+  }
+
+  if (trimmed === "") {
+    return { ok: false, error: "Write the line that goes underneath." }
+  }
+  if (trimmed.length > MAX_QUOTE_CHARS) {
+    return { ok: false, error: `Keep the line to ${MAX_QUOTE_CHARS} characters or fewer.` }
+  }
+  if (trimmed.split(/\s+/).length > MAX_QUOTE_WORDS) {
+    return { ok: false, error: `Keep the line to ${MAX_QUOTE_WORDS} words or fewer.` }
   }
 
   return { ok: true, text: trimmed }
