@@ -2,27 +2,36 @@
  *
  *  The user supplies an idea, never the whole prompt. Raw user text sent
  *  straight to the model drifts hard — within seconds it degenerates into
- *  generic merch covered in garbled pseudo-lettering. Pinning the medium,
- *  palette and composition here keeps output deliberate, and the letterform
- *  rule is the single most important thing in the file.
+ *  generic merch covered in garbled pseudo-lettering.
  *
- *  That rule is now conditional, and the condition is the only one there is:
- *  `pictorial` styles keep the blanket ban verbatim, because the model cannot
- *  spell and is therefore never asked to. `typographic` styles are the sole
- *  exception — there the words *are* the artwork, so the ban is replaced by an
- *  instruction to render one exact string and nothing else. Nothing outside
- *  lib/generation/styles.ts may widen that exception.
+ *  STRUCTURE: this follows the gpt-image skill's Reference Gallery exactly,
+ *  rather than the JSON-ish config block that used to live here. Every prompt
+ *  in that gallery is prose in the same order:
  *
- *  Structured as a config block rather than prose deliberately — GPT Image 2
- *  follows schema-shaped prompts far more closely on scenes with several
- *  interacting systems (subject, palette, lighting, composition).
+ *    1. an opening line naming the artifact, the style and the aspect ratio
+ *    2. `Composition:` — what is where
+ *    3. `Backdrop:` — the ground, as its own element
+ *    4. `Exact typography:` — a dash list, each line quoting the literal string
+ *    5. `Art direction:` — technique vocabulary, then `Palette of …`, then the
+ *       negative constraints inline at the end
  *
- *  The flat background field is a chroma key, not a look. MuAPI's gpt-image-2
- *  endpoint has no transparency flag, so alpha comes from a second pass through
- *  ai-background-remover (lib/generation/adapter.ts) and that pass needs one
- *  uniform field to cut against. Which colour is per style: black for most,
- *  white for the black-ink styles that would otherwise be cut away along with
- *  the background. See `StylePreset.cutField`.
+ *  See `references/gallery-anime-and-manga.md` No. 1 and
+ *  `references/gallery-typography-and-posters.md` No. 35. The gallery's own
+ *  examples anchor to named studios and franchises; these designs are printed
+ *  and sold, so presets anchor to era and technique instead.
+ *
+ *  The letterform rule is the single most important thing in the file, and it
+ *  is conditional on the family: `pictorial` keeps the blanket ban verbatim,
+ *  because the model cannot spell and is therefore never asked to.
+ *  `typographic` and `illustrated` are the only exceptions, and they pin the
+ *  exact strings instead. Nothing outside lib/generation/styles.ts may widen
+ *  that exception.
+ *
+ *  The flat background field is a chroma key, not a look — for the styles that
+ *  still get cut. MuAPI's gpt-image-2 endpoint has no transparency flag (three
+ *  phrasings tested, all returned opaque RGB), so alpha comes from a second
+ *  pass through ai-background-remover and that pass needs one uniform field to
+ *  cut against. Full-bleed plates skip removal entirely and keep their ground.
  */
 
 import type { StylePreset } from "./styles"
@@ -31,6 +40,9 @@ import type { StylePreset } from "./styles"
  *  which is the model's drift failure mode, not a feature. */
 export const MAX_PROMPT_LENGTH = 200
 export const MIN_PROMPT_LENGTH = 3
+
+const ARTIFACT =
+  "flat screen-print artwork for the front of a t-shirt, not a photograph of a shirt"
 
 /** The flat field the artwork is keyed against, phrased for the model. */
 const FIELD_PHRASE = {
@@ -42,11 +54,15 @@ const FIELD_PHRASE = {
  *  remover cuts it away with the background. Mirrors the invariant enforced in
  *  styles.test.ts. */
 const MERGE_WARNING = {
-  black:
-    "any part of the subject rendered in pure black, which would merge into the background",
-  white:
-    "any part of the subject rendered in pure white, which would merge into the background",
+  black: "any part of the subject rendered in pure black, which would merge into the background",
+  white: "any part of the subject rendered in pure white, which would merge into the background",
 } as const
+
+/** Quoted the way the gallery quotes literal in-image copy, and escaped so a
+ *  quote or newline in user text cannot break out of the line it belongs to. */
+const literal = (value: string) => JSON.stringify(value)
+
+const negatives = (items: string[]) => `Do not include ${items.join("; ")}.`
 
 export function buildPrompt(input: {
   idea: string
@@ -58,111 +74,75 @@ export function buildPrompt(input: {
   quote?: string | null
 }): string {
   const { idea, style, text, quote = null } = input
+  const trimmedIdea = idea.trim()
 
-  // An illustrated design is a lockup: title, picture, line. It gets its own
-  // branch rather than being squeezed into either of the other two, because
-  // pictorial forbids the text and typographic forbids the picture.
+  const backdrop = `Backdrop: ${FIELD_PHRASE[style.cutField]} — no glow, no gradient, no texture, no scenery.`
+  const palette = `Palette of ${style.palette.join(", ")}.`
+
   if (style.family === "illustrated") {
-    return buildIllustratedPrompt({ idea, style, title: text ?? "", quote: quote ?? "" })
+    return [
+      `A ${style.aesthetic}, 3:4 portrait, as ${ARTIFACT}.`,
+      "",
+      "Composition: an arched display title across the top, a single hero illustration filling the centre, and the line set in two balanced centred rows beneath it. Title, illustration and line lock together as one designed plate, symmetrical, with generous margin on all four sides.",
+      "",
+      `Subject: ${trimmedIdea}`,
+      "",
+      backdrop,
+      "",
+      "Exact typography:",
+      `- Title (large display capitals, arched across the full width): ${literal(text ?? "")}`,
+      `- Line (smaller capitals, two balanced centred rows): ${literal(quote ?? "")}`,
+      "",
+      `Art direction: ${style.linework}. ${palette} High contrast, crisp linework, print-ready, no CGI tell. ${negatives(
+        [
+          "any word, letter or numeral that is not part of the exact typography above",
+          "misspelling, duplicating or reordering those words",
+          "letting the illustration overlap or obscure the title or the line",
+          "photographic realism or a mockup of a physical shirt",
+          MERGE_WARNING[style.cutField],
+        ],
+      )}`,
+    ].join("\n")
   }
 
-  const isTypographic = style.family === "typographic"
-
-  const letterformRules = isTypographic
-    ? [
-        "any word, letter or numeral that is not part of TEXT_CONTENT",
-        "misspelling, duplicating or reordering the words in TEXT_CONTENT",
-      ]
-    : ["any words, letters, numerals or letterforms anywhere in the image"]
-
-  const subject = isTypographic
-    ? { key: "TEXT_CONTENT", value: text ?? "", direction: idea.trim() }
-    : { key: "SUBJECT", value: idea.trim(), direction: null }
-
-  return `/* SHIRT_PRINT_CONFIG: 1-of-1 Design
-   VERSION: 2.0.0
-   STYLE: ${style.slug} */
-{
-  "GLOBAL_SETTINGS": {
-    "artifact": "flat screen-print artwork for the front of a t-shirt, not a photograph of a shirt",
-    "aesthetic": ${JSON.stringify(style.aesthetic)},
-    "style": ${JSON.stringify(style.linework)}
-  },
-  ${JSON.stringify(subject.key)}: ${JSON.stringify(subject.value)},${
-    subject.direction
-      ? `\n  "ART_DIRECTION": ${JSON.stringify(subject.direction)},`
-      : ""
+  if (style.family === "typographic") {
+    return [
+      `A ${style.aesthetic}, 3:4 portrait, as ${ARTIFACT}.`,
+      "",
+      "Composition: the words are the entire artwork, centred and filling the frame, with generous margin on all four sides. No illustration, no mascot, no scenery.",
+      "",
+      backdrop,
+      "",
+      "Exact typography:",
+      `- The only text in the image: ${literal(text ?? "")}`,
+      "",
+      `Art direction: ${style.linework}. ${palette} ${trimmedIdea}. High contrast, crisp linework, print-ready, no CGI tell. ${negatives(
+        [
+          "any word, letter or numeral that is not the exact text above",
+          "misspelling, duplicating or reordering those words",
+          "photographic realism or a mockup of a physical shirt",
+          MERGE_WARNING[style.cutField],
+        ],
+      )}`,
+    ].join("\n")
   }
-  "COMPOSITION": {
-    "framing": ${JSON.stringify(
-      isTypographic
-        ? "the words are the whole artwork, centred, filling the frame, generous margin on all four sides"
-        : "single centred hero subject, symmetrical, generous margin on all four sides",
-    )},
-    "background": ${JSON.stringify(
-      `${FIELD_PHRASE[style.cutField]}, no glow, no gradient, no texture, no scenery`,
-    )}
-  },
-  "PALETTE": ${JSON.stringify(style.palette)},
-  "RENDER_FLAGS": ["high_contrast", "crisp_linework", "print_ready", "no_CGI_tell"],
-  "AVOID": ${JSON.stringify([
-    ...letterformRules,
-    "photographic realism or a mockup of a physical shirt",
-    "any halo, vignette, gradient, panel or frame behind the subject",
-    MERGE_WARNING[style.cutField],
-  ])}
-}`
-}
 
-/** A broadside: arched title, hero illustration, line underneath, all one
- *  lockup on a flat field.
- *
- *  Two text slots rather than one, and both are pinned verbatim. The model is
- *  told exactly what may appear and forbidden everything else — the same guard
- *  the typographic branch uses, widened only to two strings.
- *
- *  Composition is spelled out slot by slot because "title, picture, quote" is a
- *  layout, not a subject, and describing it loosely produces a picture with
- *  words floating over it instead of a designed plate. */
-function buildIllustratedPrompt(input: {
-  idea: string
-  style: StylePreset
-  title: string
-  quote: string
-}): string {
-  const { idea, style, title, quote } = input
-
-  return `/* SHIRT_PRINT_CONFIG: 1-of-1 Design
-   VERSION: 2.1.0
-   STYLE: ${style.slug} (illustrated broadside) */
-{
-  "GLOBAL_SETTINGS": {
-    "artifact": "flat screen-print artwork for the front of a t-shirt, not a photograph of a shirt",
-    "aesthetic": ${JSON.stringify(style.aesthetic)},
-    "style": ${JSON.stringify(style.linework)}
-  },
-  "LAYOUT": {
-    "top": "the TITLE, set large in display capitals on a gentle upward arch, spanning the full width",
-    "middle": "the SUBJECT, rendered as the hero illustration, centred and dominant",
-    "bottom": "the LINE, set in two balanced rows of smaller capitals, centred"
-  },
-  "TITLE": ${JSON.stringify(title)},
-  "SUBJECT": ${JSON.stringify(idea.trim())},
-  "LINE": ${JSON.stringify(quote)},
-  "COMPOSITION": {
-    "framing": "one symmetrical vertical plate, title and line locked to the illustration as a single designed unit, generous margin on all four sides",
-    "background": ${JSON.stringify(
-      `${FIELD_PHRASE[style.cutField]}, no glow, no gradient, no scenery`,
-    )}
-  },
-  "PALETTE": ${JSON.stringify(style.palette)},
-  "RENDER_FLAGS": ["high_contrast", "crisp_linework", "print_ready", "no_CGI_tell"],
-  "AVOID": ${JSON.stringify([
-    "any word, letter or numeral that is not part of TITLE or LINE",
-    "misspelling, duplicating or reordering the words in TITLE or LINE",
-    "letting the illustration overlap or obscure the TITLE or the LINE",
-    "photographic realism or a mockup of a physical shirt",
-    MERGE_WARNING[style.cutField],
-  ])}
-}`
+  return [
+    `A ${style.aesthetic}, 3:4 portrait, as ${ARTIFACT}.`,
+    "",
+    `Subject: ${trimmedIdea}`,
+    "",
+    "Composition: a single centred hero subject, symmetrical, with generous margin on all four sides.",
+    "",
+    backdrop,
+    "",
+    `Art direction: ${style.linework}. ${palette} High contrast, crisp linework, print-ready, no CGI tell. ${negatives(
+      [
+        "any words, letters, numerals or letterforms anywhere in the image",
+        "photographic realism or a mockup of a physical shirt",
+        "any halo, vignette, gradient, panel or frame behind the subject",
+        MERGE_WARNING[style.cutField],
+      ],
+    )}`,
+  ].join("\n")
 }
