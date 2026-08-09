@@ -213,6 +213,62 @@ const PLAN: Concept[] = [
     idea: "a girl standing on a rooftop with both arms raised into a breaking thunderhead, hair whipping",
   },
 
+
+  // --- Anime archetypes ----------------------------------------------------
+  // The roles that carry an anime merch store — the sealed prodigy, the ancient
+  // devouring god, the commander of the dead — written as archetypes rather
+  // than as any named character. These become real Printify products for sale,
+  // so a recognisable licensed character here would be commercial infringement
+  // and would be pulled by Printify regardless.
+  {
+    style: "anime-villain",
+    colour: "Black",
+    placement: "back",
+    title: "THE BLINDFOLD",
+    quote: "I COVERED THEM SO YOU COULD LOOK",
+    idea: "a tall sorcerer with a cloth bound over his eyes, hands in pockets, unbothered, light bending around him",
+  },
+  {
+    style: "anime-villain",
+    colour: "Black",
+    placement: "back",
+    title: "OLD APPETITE",
+    quote: "I WAS WORSHIPPED BEFORE I WAS FEARED",
+    idea: "an ancient devouring god with painted ritual markings and too many arms, grinning in the dark",
+  },
+  {
+    style: "anime-villain",
+    colour: "Navy",
+    placement: "back",
+    title: "THE LAST GATE",
+    quote: "EVERYTHING I KILLED STILL WALKS",
+    idea: "a lone hunter in a dark coat with an army of shadow silhouettes kneeling in ranks behind him",
+  },
+  {
+    style: "anime-villain",
+    colour: "Maroon",
+    placement: "both",
+    title: "DOMAIN",
+    quote: "STEP INSIDE AND THE RULES ARE MINE",
+    idea: "a figure standing at the centre of an expanding sphere of warped space, hands forming a seal",
+  },
+  {
+    style: "anime-poster",
+    colour: "Black",
+    placement: "back",
+    title: "RANK E",
+    quote: "CHECK THE BOARD AGAIN TOMORROW",
+    idea: "a scrawny hunter gripping a chipped dagger at the mouth of a glowing dungeon gate, refusing to leave",
+  },
+  {
+    style: "anime-poster",
+    colour: "Forest",
+    placement: "front",
+    title: "SIX SEALS",
+    quote: "THEY BOUND ME FOR A REASON",
+    idea: "a young monk wrapped in talisman paper seals, one eye glowing through a gap in the wrappings",
+  },
+
   // Varsity lockups — the tee3 shape.
   {
     style: "varsity-lockup",
