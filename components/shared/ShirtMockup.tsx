@@ -1,47 +1,29 @@
 import Image from "next/image"
 
+import type { GarmentTone } from "@/lib/printify/tones"
 import { cn, hueFromString } from "@/lib/utils"
 
 /** Garment colours, not UI colours — a bone tee is bone in any theme, so these
  *  are literals rather than tokens. Three tones, picked per design, so a wall of
  *  mockups doesn't read as one shirt photocopied fifty times.
  *
- *  `blend` is what stops the print reading as a sticker: the artwork carries its
- *  own background, and multiply drops a pale one into a pale garment while
- *  screen drops a dark one into a dark garment. Where artwork and garment
- *  disagree the print stays a visible panel — which is what that shirt would
- *  actually look like.
+ *  There is no blend mode here any more, and that is the point: the artwork is
+ *  generated on a transparent canvas (lib/generation/prompt.ts), so the ink is
+ *  the only thing there is to draw. Blending it into the garment was a way of
+ *  hiding the background rectangle the model used to produce, and it cost the
+ *  print its real colours — gold multiplied into a charcoal tee is black.
  *
  *  `id` names the gradient set this tone renders. Gradients have to be declared
  *  per-document, and a feed mounts dozens of these: keying the ids to the tone
- *  rather than to the instance means at most three distinct definitions on the
- *  page, and the duplicates that browsers resolve to the first match are
- *  identical anyway. */
+ *  rather than to the instance means at most three distinct definitions on a
+ *  feed page, and the duplicates that browsers resolve to the first match are
+ *  identical anyway. An explicit `tone` (the listing form's colour preview)
+ *  adds one more id per configured colour, which is fine — that surface mounts
+ *  one mockup, not fifty. */
 export const GARMENT_TONES = [
-  {
-    id: "bone",
-    body: "#e9e7e2",
-    shade: "#c3bfb6",
-    deep: "#a6a199",
-    seam: "#b5b0a7",
-    blend: "mix-blend-multiply",
-  },
-  {
-    id: "heather",
-    body: "#a1a7ac",
-    shade: "#7f868c",
-    deep: "#666d73",
-    seam: "#727980",
-    blend: "mix-blend-multiply",
-  },
-  {
-    id: "charcoal",
-    body: "#2b2b30",
-    shade: "#1c1c20",
-    deep: "#121216",
-    seam: "#3a3a41",
-    blend: "mix-blend-screen",
-  },
+  { id: "bone", body: "#e9e7e2", shade: "#c3bfb6", deep: "#a6a199", seam: "#b5b0a7" },
+  { id: "heather", body: "#a1a7ac", shade: "#7f868c", deep: "#666d73", seam: "#727980" },
+  { id: "charcoal", body: "#2b2b30", shade: "#1c1c20", deep: "#121216", seam: "#3a3a41" },
 ]
 
 /** Same design, same shirt — every surface that draws this garment resolves it
@@ -111,13 +93,19 @@ export function ShirtMockup({
   imageUrl,
   priority = false,
   className,
+  tone: toneOverride,
 }: {
   imageUrl: string
   priority?: boolean
   /** Extra classes for the positioning wrapper, not the tee. */
   className?: string
+  /** The garment colour the maker picked, for the listing form's live preview.
+   *  Omitted everywhere else: a feed card has no configured colour, and the
+   *  hash keeps a wall of mockups from reading as one shirt photocopied fifty
+   *  times. */
+  tone?: GarmentTone
 }) {
-  const tone = garmentToneFor(imageUrl)
+  const tone = toneOverride ?? garmentToneFor(imageUrl)
   const sideId = `tee-side-${tone.id}`
   const chestId = `tee-chest-${tone.id}`
   const contactId = `tee-contact-${tone.id}`
@@ -273,7 +261,7 @@ export function ShirtMockup({
             fill
             sizes="(min-width: 1280px) 110px, (min-width: 768px) 12vw, 18vw"
             priority={priority}
-            className={cn("object-contain", tone.blend)}
+            className="object-contain"
           />
           {/* The print has to take the same light as the fabric under it, or it
               floats above the shirt no matter how well the shirt is drawn: the
