@@ -86,22 +86,32 @@ async function uploadImage(
  *  label, then to `position`, then to whatever came first. */
 function pickMockup(
   product: Product,
-  featuredVariantId: number | null
+  featuredVariantId: number | null,
+  placement: Placement
 ): string | null {
   const images = product.images ?? []
+
+  // The camera has to face the print. A back-only design photographed from the
+  // front is a picture of a blank shirt — which is exactly what the bazaar was
+  // showing before this took placement into account.
+  const camera = placement === "back" ? "camera_label=back" : "camera_label=front"
+
   const forVariant = featuredVariantId
     ? images.filter((image) => image.variant_ids.includes(featuredVariantId))
     : []
 
   const chosen =
-    forVariant.find((image) => image.src.includes("camera_label=front")) ??
+    forVariant.find((image) => image.src.includes(camera)) ??
+    // Right colour but no shot from the side we want: still better than the
+    // right camera on the wrong colour, because the design is at least visible
+    // in the default render.
     forVariant.find((image) => image.is_default) ??
     forVariant[0] ??
     // No featured variant (a design from before garment config existed), or
     // Printify rendered nothing for it.
+    images.find((image) => image.src.includes(camera)) ??
     images.find((image) => image.is_default) ??
-    images.find((image) => image.src.includes("camera_label=front")) ??
-    images.find((image) => image.position === "front") ??
+    images.find((image) => image.position === placement) ??
     images[0] ??
     null
 
@@ -179,7 +189,7 @@ export async function createDesignProduct({
     }
   )
 
-  let mockupUrl = pickMockup(created, featuredVariantId)
+  let mockupUrl = pickMockup(created, featuredVariantId, placement)
 
   for (let attempt = 0; attempt < MOCKUP_POLL_ATTEMPTS && !mockupUrl; attempt++) {
     await sleep(MOCKUP_POLL_DELAY_MS)
@@ -187,7 +197,7 @@ export async function createDesignProduct({
       config,
       `/v1/shops/${config.shopId}/products/${created.id}.json`
     )
-    mockupUrl = pickMockup(product, featuredVariantId)
+    mockupUrl = pickMockup(product, featuredVariantId, placement)
   }
 
   return { productId: created.id, mockupUrl }
@@ -197,7 +207,8 @@ export async function createDesignProduct({
  *  render hadn't finished within the claim's budget. */
 export async function fetchProductMockup(
   productId: string,
-  featuredVariantId: number | null = null
+  featuredVariantId: number | null = null,
+  placement: Placement = "front"
 ): Promise<string | null> {
   const config = printifyConfig()
   if (!config) return null
@@ -206,5 +217,5 @@ export async function fetchProductMockup(
     config,
     `/v1/shops/${config.shopId}/products/${productId}.json`
   )
-  return pickMockup(product, featuredVariantId)
+  return pickMockup(product, featuredVariantId, placement)
 }

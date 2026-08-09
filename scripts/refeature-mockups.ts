@@ -40,11 +40,15 @@ function flag(name: string): string | undefined {
 }
 
 const styles = (flag("style") ?? "").split(",").map((s) => s.trim()).filter(Boolean)
-const colour = flag("colour") ?? "Black"
+const colour = flag("colour")
 const dryRun = args.includes("--dry")
+/** Re-pick every design's hero mockup from its own stored placement, without
+ *  touching the featured colour. This is the repair for back-print designs that
+ *  were photographed from the front — a picture of a blank shirt. */
+const all = args.includes("--all")
 
-if (styles.length === 0) {
-  console.error("--style is required, e.g. --style mythic-broadside,occult-almanac")
+if (styles.length === 0 && !all) {
+  console.error("--style is required, or --all to re-pick every design's mockup")
   process.exit(1)
 }
 
@@ -54,11 +58,13 @@ if (!garment) {
   process.exit(1)
 }
 
-const variantId = coloursFrom(
-  sellableVariants(garment, await catalogVariants(garment))
-).find((option) => option.colour === colour)?.variantId
+const variantId = colour
+  ? coloursFrom(sellableVariants(garment, await catalogVariants(garment))).find(
+      (option) => option.colour === colour
+    )?.variantId
+  : null
 
-if (!variantId) {
+if (colour && !variantId) {
   console.error(`${colour} is not a sellable colour for ${garment.slug}.`)
   process.exit(1)
 }
@@ -69,21 +75,31 @@ const admin = createClient(
   { auth: { persistSession: false } }
 )
 
-// The style lives on the job, not the design, so the set is resolved there.
-const { data: jobs } = await admin
-  .from("generation_jobs")
-  .select("result_design_id, style_slug")
-  .in("style_slug", styles)
-  .not("result_design_id", "is", null)
+let designIds: string[] | null = null
 
-const designIds = [...new Set((jobs ?? []).map((j) => j.result_design_id))]
+if (!all) {
+  // The style lives on the job, not the design, so the set is resolved there.
+  const { data: jobs } = await admin
+    .from("generation_jobs")
+    .select("result_design_id, style_slug")
+    .in("style_slug", styles)
+    .not("result_design_id", "is", null)
 
-const { data: designs } = await admin
+  designIds = [...new Set((jobs ?? []).map((j) => j.result_design_id))]
+}
+
+let query = admin
   .from("designs")
-  .select("id, printify_product_id, featured_variant_id")
-  .in("id", designIds)
+  .select("id, printify_product_id, featured_variant_id, placement")
+  .not("printify_product_id", "is", null)
 
-const list = (designs ?? []).filter((d) => d.featured_variant_id !== variantId)
+if (designIds) query = query.in("id", designIds)
+
+const { data: designs } = await query
+
+const list = (designs ?? []).filter(
+  (d) => all || d.featured_variant_id !== variantId
+)
 console.log(
   `${list.length} design(s) to re-feature on ${colour} (variant ${variantId})${dryRun ? " — DRY RUN" : ""}`
 )
@@ -93,18 +109,26 @@ for (const [index, design] of list.entries()) {
   const label = `[${index + 1}/${list.length}] ${design.id.slice(0, 8)}`
 
   if (dryRun) {
-    console.log(`${label}  would move ${design.featured_variant_id} -> ${variantId}`)
+    console.log(
+      `${label}  placement=${design.placement ?? "front"}  variant ${design.featured_variant_id} -> ${variantId ?? design.featured_variant_id}`
+    )
     continue
   }
 
-  const mockupUrl = design.printify_product_id
-    ? await fetchProductMockup(design.printify_product_id, variantId)
-    : null
+  // Keep the design's own colour in --all mode; only --colour moves it.
+  const targetVariant = variantId ?? design.featured_variant_id
+  const placement = (design.placement ?? "front") as "front" | "back" | "both"
+
+  const mockupUrl = await fetchProductMockup(
+    design.printify_product_id!,
+    targetVariant,
+    placement
+  )
 
   const { error } = await admin
     .from("designs")
     .update({
-      featured_variant_id: variantId,
+      featured_variant_id: targetVariant,
       // Only overwrite the mockup when a better one was actually found; the
       // stored one is still a real render of this product.
       ...(mockupUrl ? { mockup_url: mockupUrl } : {}),
@@ -117,7 +141,9 @@ for (const [index, design] of list.entries()) {
   }
 
   done++
-  console.log(`${label}  ok  ${mockupUrl ? "mockup updated" : "mockup unchanged"}`)
+  console.log(
+    `${label}  ok  placement=${placement}  ${mockupUrl ? "mockup updated" : "mockup unchanged"}`
+  )
 }
 
 if (!dryRun) console.log(`\n${done}/${list.length} re-featured.`)

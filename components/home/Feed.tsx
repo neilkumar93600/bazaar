@@ -36,10 +36,20 @@ export function Feed({ columns }: { columns: FeedColumn[] }) {
   // the track count line up, which puts one aesthetic per column — the exact
   // thing the interleave above exists to prevent. A slice of consecutive
   // interleaved designs spans every vibe no matter how many there are.
-  const perTrack = Math.ceil(designs.length / TRACK_COUNT)
-  const tracks = Array.from({ length: TRACK_COUNT }, (_, track) =>
-    designs.slice(track * perTrack, (track + 1) * perTrack)
-  )
+  // Balanced, not `ceil` for every track: ceil over-fills the early tracks and
+  // can leave the last one empty — 13 designs across 6 tracks gave 3,3,3,3,1,0,
+  // which renders as five columns and a hole. Sizes here differ by at most one,
+  // so every track has something whenever there are at least TRACK_COUNT
+  // designs.
+  const base = Math.floor(designs.length / TRACK_COUNT)
+  const remainder = designs.length % TRACK_COUNT
+  let cursor = 0
+  const tracks = Array.from({ length: TRACK_COUNT }, (_, track) => {
+    const size = base + (track < remainder ? 1 : 0)
+    const slice = designs.slice(cursor, cursor + size)
+    cursor += size
+    return slice
+  })
 
   if (designs.length === 0) {
     return (

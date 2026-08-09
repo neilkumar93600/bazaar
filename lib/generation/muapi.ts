@@ -15,10 +15,17 @@ const BASE_URL = "https://api.muapi.ai/api/v1"
  *  so that is mostly wasted requests. */
 const POLL_INTERVAL_MS = 2_000
 
-/** Ceiling on one model run. Generation happens inside `after()` under the
- *  route's maxDuration of 300s, and a run has to leave room for the second call
- *  (background removal) plus the upload. */
-const POLL_TIMEOUT_MS = 120_000
+/** Ceiling on one model run.
+ *
+ *  Raised from 120s after three of sixteen house designs timed out — all three
+ *  were illustrated broadsides, whose dense engraving plus two pinned text slots
+ *  simply takes longer to render than a single-subject prompt.
+ *
+ *  Generation happens inside `after()` under the route's maxDuration of 300s,
+ *  and each image is two sequential runs (generate, then background removal).
+ *  180 + 120 leaves the pair just inside that budget with nothing to spare, so
+ *  raising this further means raising maxDuration too. */
+const POLL_TIMEOUT_MS = 180_000
 
 /** Per HTTP request. A hung socket must not eat the whole poll budget. */
 const REQUEST_TIMEOUT_MS = 30_000
