@@ -72,9 +72,11 @@ export const getStorefrontData = cache(async function getStorefrontData(
   const { data: designRows } = designIds.length
     ? await supabase
         .from("designs")
-        .select("id, image_url, vibe_id, price_cents, created_at")
+        .select("id, image_url, mockup_url, vibe_id, price_cents, created_at")
         .in("id", designIds)
         .eq("moderation_status", "approved")
+        // An owner who delists a design they own stops showing it publicly.
+        .not("listed_at", "is", null)
     : { data: [] }
 
   const vibeIds = [
@@ -98,6 +100,7 @@ export const getStorefrontData = cache(async function getStorefrontData(
     .map((d) => ({
       id: d.id,
       imageUrl: d.image_url,
+      mockupUrl: d.mockup_url ?? null,
       claimedAt: claimedAtByDesignId.get(d.id)!,
       createdAt: d.created_at,
       priceCents: d.price_cents,
@@ -109,23 +112,18 @@ export const getStorefrontData = cache(async function getStorefrontData(
     }))
     .sort((a, b) => (a.claimedAt < b.claimedAt ? 1 : -1))
 
-  // Designs this profile prompted into existence — independent of who (if
-  // anyone) ended up claiming them, so each one resolves its own claimant.
-  const { data: jobRows } = await supabase
-    .from("generation_jobs")
-    .select("id")
-    .eq("user_id", profile.id)
-
-  const jobIds = (jobRows ?? []).map((j) => j.id)
-
-  const { data: createdRows } = jobIds.length
-    ? await supabase
-        .from("designs")
-        .select("id, image_url, vibe_id, price_cents, created_at, is_claimed, claimed_by")
-        .in("generation_job_id", jobIds)
-        .eq("moderation_status", "approved")
-        .order("created_at", { ascending: false })
-    : { data: [] }
+  // Designs this profile made — independent of who (if anyone) ended up
+  // claiming them, so each one resolves its own claimant. `creator_id` replaces
+  // the old two-step hop through generation_jobs.
+  const { data: createdRows } = await supabase
+    .from("designs")
+    .select("id, image_url, mockup_url, vibe_id, price_cents, created_at, is_claimed, claimed_by")
+    .eq("creator_id", profile.id)
+    .eq("moderation_status", "approved")
+    // A public storefront shows what this maker put in the bazaar, never their
+    // private drafts.
+    .not("listed_at", "is", null)
+    .order("created_at", { ascending: false })
 
   const createdVibeIds = [
     ...new Set(
@@ -158,6 +156,7 @@ export const getStorefrontData = cache(async function getStorefrontData(
   const createdDesigns: DesignCardData[] = (createdRows ?? []).map((d) => ({
     id: d.id,
     imageUrl: d.image_url,
+    mockupUrl: d.mockup_url ?? null,
     createdAt: d.created_at,
     priceCents: d.price_cents,
     vibeName: (d.vibe_id ? createdVibeNameById.get(d.vibe_id) : null) ?? null,

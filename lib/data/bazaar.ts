@@ -84,6 +84,9 @@ export async function getBazaarData(query: BazaarQuery): Promise<BazaarData> {
         .from("designs")
         .select("id", { count: "exact", head: true })
         .eq("moderation_status", "approved")
+        // Must match the design query below: a facet count that included
+        // unlisted designs would promise more rows than the filter returns.
+        .not("listed_at", "is", null)
         .eq("vibe_id", vibe.id)
       if (claimedFilter !== null) q = q.eq("is_claimed", claimedFilter)
 
@@ -96,10 +99,11 @@ export async function getBazaarData(query: BazaarQuery): Promise<BazaarData> {
   let designQuery = supabase
     .from("designs")
     .select(
-      "id, image_url, is_claimed, price_cents, created_at, vibe_id, claimed_by",
+      "id, image_url, mockup_url, is_claimed, price_cents, created_at, vibe_id, claimed_by",
       { count: "exact" }
     )
     .eq("moderation_status", "approved")
+    .not("listed_at", "is", null)
 
   if (claimedFilter !== null)
     designQuery = designQuery.eq("is_claimed", claimedFilter)
@@ -130,6 +134,7 @@ export async function getBazaarData(query: BazaarQuery): Promise<BazaarData> {
     designs: rows.map((d) => ({
       id: d.id,
       imageUrl: d.image_url,
+      mockupUrl: d.mockup_url ?? null,
       isClaimed: d.is_claimed,
       priceCents: d.price_cents,
       createdAt: d.created_at,
