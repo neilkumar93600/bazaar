@@ -3,7 +3,7 @@ import Link from "next/link"
 import { formatDistanceToNowStrict } from "date-fns"
 
 import type { DesignDetail } from "@/lib/data/design"
-import { formatCents } from "@/lib/utils"
+import { formatListingPrice } from "@/lib/utils"
 import { ClaimForm } from "@/components/design/ClaimForm"
 import { ShirtMockup } from "@/components/shared/ShirtMockup"
 import { Button } from "@/components/ui/button"
@@ -20,7 +20,18 @@ export function DesignDetailContent({
       {/* The same garment the card showed — opening a design shouldn't swap the
           product for its artwork. */}
       <div className="relative aspect-[4/5] w-full shrink-0 overflow-hidden rounded-2xl border border-border bg-card md:w-72">
-        <ShirtMockup imageUrl={design.imageUrl} priority />
+        {design.mockupUrl ? (
+          <Image
+            src={design.mockupUrl}
+            alt=""
+            fill
+            sizes="(min-width: 768px) 288px, 100vw"
+            priority
+            className="object-cover"
+          />
+        ) : (
+          <ShirtMockup imageUrl={design.imageUrl} priority />
+        )}
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col gap-4">
@@ -33,7 +44,7 @@ export function DesignDetailContent({
               {design.vibeName ?? "Unfiled"}
             </span>
             <span className="shrink-0 font-mono text-heading-sm text-gold-leaf">
-              {formatCents(design.priceCents)}
+              {formatListingPrice(design.priceCents)}
             </span>
           </div>
         </div>

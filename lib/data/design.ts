@@ -10,8 +10,12 @@ export type DesignCreator = {
 export type DesignDetail = {
   id: string
   imageUrl: string
+  /** Printify's photo of the finished garment, once the design is claimed and
+   *  synced. Null falls back to the drawn mockup. */
+  mockupUrl: string | null
   prompt: string | null
-  priceCents: number
+  /** Null means the maker listed it free. */
+  priceCents: number | null
   vibeName: string | null
   isClaimed: boolean
   claimantHandle: string | null
@@ -26,7 +30,7 @@ export async function getDesignDetail(id: string): Promise<DesignDetail | null> 
   const { data: design } = await supabase
     .from("designs")
     .select(
-      "id, image_url, prompt, price_cents, vibe_id, is_claimed, claimed_by, created_at, generation_job_id"
+      "id, image_url, mockup_url, prompt, price_cents, vibe_id, is_claimed, claimed_by, created_at, generation_job_id"
     )
     .eq("id", id)
     .eq("moderation_status", "approved")
@@ -79,6 +83,7 @@ export async function getDesignDetail(id: string): Promise<DesignDetail | null> 
   return {
     id: design.id,
     imageUrl: design.image_url,
+    mockupUrl: design.mockup_url ?? null,
     prompt: design.prompt,
     priceCents: design.price_cents,
     vibeName: vibe?.name ?? null,

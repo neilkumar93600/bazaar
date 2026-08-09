@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react"
 
-import { formatCents } from "@/lib/utils"
+import { formatListingPrice } from "@/lib/utils"
 import { claimDesign } from "@/app/(public)/design/[id]/actions"
 import { Button } from "@/components/ui/button"
 
@@ -11,7 +11,8 @@ export function ClaimForm({
   priceCents,
 }: {
   designId: string
-  priceCents: number
+  /** Null means the maker listed it free. */
+  priceCents: number | null
 }) {
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -36,7 +37,11 @@ export function ClaimForm({
           })
         }}
       >
-        {isPending ? "Claiming…" : `Claim for ${formatCents(priceCents)}`}
+        {isPending
+          ? "Claiming…"
+          : priceCents === null
+            ? "Claim it — free"
+            : `Claim for ${formatListingPrice(priceCents)}`}
       </Button>
     </div>
   )

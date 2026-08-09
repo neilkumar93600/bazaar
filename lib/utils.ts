@@ -24,3 +24,9 @@ const CURRENCY_FORMAT = new Intl.NumberFormat("en-US", {
 export function formatCents(cents: number) {
   return CURRENCY_FORMAT.format(cents / 100)
 }
+
+/** Listing price for display. `null` is free — a deliberate choice by the
+ *  maker, not a missing value, so it renders as a word rather than "$0.00". */
+export function formatListingPrice(cents: number | null) {
+  return cents === null ? "Free" : CURRENCY_FORMAT.format(cents / 100)
+}

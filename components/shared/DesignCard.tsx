@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import Link from "next/link"
 import { formatDistanceToNowStrict } from "date-fns"
 
@@ -13,8 +14,13 @@ import { ShirtMockup } from "@/components/shared/ShirtMockup"
 export type DesignCardData = {
   id: string
   imageUrl: string
+  /** Printify's photo of this design on a real garment, once it has one. Null
+   *  for everything unclaimed — products are only minted on claim — which is
+   *  why the drawn mockup isn't going anywhere. */
+  mockupUrl: string | null
   isClaimed: boolean
-  priceCents: number
+  /** Null means free. */
+  priceCents: number | null
   vibeName: string | null
   claimantHandle: string | null
   createdAt: string
@@ -83,9 +89,20 @@ export function DesignCard({
           frameClassName
         )}
       >
-        {/* The card sells a shirt, so it shows a shirt. The flat artwork is
-            still one click away in the design dialog. */}
-        <ShirtMockup imageUrl={design.imageUrl} priority={priority} />
+        {/* The card sells a shirt, so it shows a shirt: the real product photo
+            where one exists, the drawn stand-in everywhere else. */}
+        {design.mockupUrl ? (
+          <Image
+            src={design.mockupUrl}
+            alt=""
+            fill
+            sizes="(min-width: 1280px) 280px, (min-width: 768px) 30vw, 45vw"
+            priority={priority}
+            className="object-cover"
+          />
+        ) : (
+          <ShirtMockup imageUrl={design.imageUrl} priority={priority} />
+        )}
 
         {design.isClaimed ? (
           // Status Pill Badge — mint wash inside a mint edge, ink label. The
@@ -123,7 +140,9 @@ export function DesignCard({
           {design.vibeName ?? "Unfiled"}
         </span>
         <span className="shrink-0 font-mono text-body-sm text-gold-leaf">
-          {priceFormatter.format(design.priceCents / 100)}
+          {design.priceCents === null
+            ? "Free"
+            : priceFormatter.format(design.priceCents / 100)}
         </span>
       </div>
       {/* Branches on isClaimed, not on the handle: a claim whose profile we

@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 
 import { getDesignDetail } from "@/lib/data/design";
 import { createClient } from "@/lib/supabase/server";
-import { formatCents } from "@/lib/utils";
+import { formatListingPrice } from "@/lib/utils";
 import { DesignDialog } from "@/components/design/DesignDialog";
 
 export async function generateMetadata(
@@ -15,7 +15,7 @@ export async function generateMetadata(
   if (!design) return { title: "Design not found", robots: { index: false } };
 
   return {
-    title: `${design.vibeName ?? "1-of-1"} design — ${formatCents(design.priceCents)}`,
+    title: `${design.vibeName ?? "1-of-1"} design — ${formatListingPrice(design.priceCents)}`,
     robots: design.isClaimed ? undefined : { index: false, follow: true },
   };
 }
