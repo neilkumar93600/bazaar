@@ -12,6 +12,9 @@ import {
   parseVariant,
   coloursFrom,
   sizesForColour,
+  sellableVariants,
+  garments,
+  MAX_ENABLED_VARIANTS,
   type Variant,
 } from "./garments.ts"
 import { toneForColourName } from "./tones.ts"
@@ -67,6 +70,73 @@ assert.deepEqual(sizesForColour(MATRIX, "Black"), [
 // The rule: White's sizes are White's, not the union of every colour's.
 assert.deepEqual(sizesForColour(MATRIX, "White"), [{ size: "S", variantId: 20 }])
 assert.deepEqual(sizesForColour(MATRIX, "Nope"), [])
+
+// --- sellableVariants -----------------------------------------------------
+//
+// Regression: enabling the whole catalogue fails product creation outright with
+// Printify's `8251 Too many variants enabled` — and syncDesignProduct swallows
+// its errors, so the only symptom is designs silently having no product.
+
+{
+  const garment = {
+    slug: "tee",
+    label: "T-shirt",
+    blueprintId: 1,
+    printProviderId: 1,
+    priceCents: 2900,
+    colours: ["Black", "Navy"],
+  }
+
+  // Curated colours only, in the garment's order — White is not sold.
+  assert.deepEqual(
+    sellableVariants(garment, MATRIX).map((v) => v.id),
+    [10, 11, 12, 30, 31],
+  )
+
+  // A colour the catalogue doesn't stock is skipped, not fatal.
+  assert.deepEqual(
+    sellableVariants({ ...garment, colours: ["Black", "Chartreuse"] }, MATRIX).map(
+      (v) => v.id,
+    ),
+    [10, 11, 12],
+  )
+}
+
+// The ceiling holds, and colours are taken whole or not at all — a truncated
+// colour would appear in the picker missing its larger sizes.
+{
+  const wide: Variant[] = []
+  const colours: string[] = []
+  for (let c = 0; c < 40; c++) {
+    colours.push(`C${c}`)
+    for (let s = 0; s < 8; s++) wide.push({ id: c * 100 + s, colour: `C${c}`, size: `S${s}` })
+  }
+
+  const garment = {
+    slug: "tee",
+    label: "T-shirt",
+    blueprintId: 1,
+    printProviderId: 1,
+    priceCents: 2900,
+    colours,
+  }
+
+  const sellable = sellableVariants(garment, wide)
+  assert.ok(
+    sellable.length <= MAX_ENABLED_VARIANTS,
+    `${sellable.length} exceeds Printify's ceiling of ${MAX_ENABLED_VARIANTS}`,
+  )
+  // Whole colours only: 8 per colour divides exactly.
+  assert.equal(sellable.length % 8, 0, "a colour must never be half-included")
+}
+
+// The configured garments must themselves fit, or nothing can ever be minted.
+for (const garment of garments()) {
+  assert.ok(
+    garment.colours.length > 0,
+    `${garment.slug}: needs at least one sellable colour`,
+  )
+}
 
 // --- tones ----------------------------------------------------------------
 

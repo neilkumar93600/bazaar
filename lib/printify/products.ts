@@ -1,5 +1,10 @@
 import { printifyConfig, printifyFetch, type PrintifyConfig } from "./client.ts"
-import { parseVariant, type Garment, type Variant } from "./garments.ts"
+import {
+  parseVariant,
+  sellableVariants,
+  type Garment,
+  type Variant,
+} from "./garments.ts"
 import { printAreas, type Placement } from "./print-areas.ts"
 
 type UploadResponse = { id: string; file_name: string; preview_url: string }
@@ -142,13 +147,15 @@ export async function createDesignProduct({
     catalogVariants(garment),
   ])
 
-  // Every variant, always: the buyer picks colour and size at checkout, so
-  // narrowing the set here would make colours unbuyable.
-  const variantIds = variants.map((variant) => variant.id)
+  // The garment's curated colours, capped at Printify's 100-variant ceiling.
+  // Enabling the whole catalogue (995 variants on blueprint 12) fails with
+  // `8251 Too many variants enabled` — and because syncDesignProduct swallows
+  // its errors, the symptom is silently missing products.
+  const variantIds = sellableVariants(garment, variants).map((v) => v.id)
 
   if (variantIds.length === 0) {
     throw new Error(
-      `Printify blueprint ${garment.blueprintId} / provider ${garment.printProviderId} returned no variants`
+      `Printify blueprint ${garment.blueprintId} / provider ${garment.printProviderId} returned no sellable variants`
     )
   }
 

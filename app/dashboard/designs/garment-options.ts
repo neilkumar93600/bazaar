@@ -1,4 +1,9 @@
-import { garments, coloursFrom, type ColourOption } from "@/lib/printify/garments"
+import {
+  garments,
+  coloursFrom,
+  sellableVariants,
+  type ColourOption,
+} from "@/lib/printify/garments"
 import { catalogVariants } from "@/lib/printify/products"
 
 export type GarmentOption = {
@@ -20,10 +25,12 @@ export type GarmentOption = {
  *  choices that could never be minted. */
 export async function getGarmentOptions(): Promise<GarmentOption[]> {
   return Promise.all(
+    // Sellable, not the whole catalogue: the maker must not be offered a colour
+    // the product will not actually carry.
     garments().map(async (garment) => ({
       slug: garment.slug,
       label: garment.label,
-      colours: coloursFrom(await catalogVariants(garment)),
+      colours: coloursFrom(sellableVariants(garment, await catalogVariants(garment))),
     }))
   )
 }

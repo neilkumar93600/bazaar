@@ -5,7 +5,7 @@ import { after } from "next/server"
 
 import { createClient } from "@/lib/supabase/server"
 import { validateListingPrice } from "@/lib/listing"
-import { findGarment } from "@/lib/printify/garments"
+import { findGarment, sellableVariants } from "@/lib/printify/garments"
 import { PLACEMENTS, type Placement } from "@/lib/printify/print-areas"
 import { catalogVariants } from "@/lib/printify/products"
 import { syncDesignProduct } from "@/lib/printify/sync"
@@ -49,7 +49,8 @@ export async function listDesign(
     const garment = findGarment(config.garmentSlug)
     if (!garment) return { error: "Pick a garment." }
 
-    const variants = await catalogVariants(garment)
+    // Sellable only — the same set the product will actually enable.
+    const variants = sellableVariants(garment, await catalogVariants(garment))
     if (!variants.some((variant) => variant.id === config.variantId)) {
       return { error: "Pick a colour." }
     }

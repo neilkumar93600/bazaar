@@ -7,7 +7,13 @@ import { createClient } from "@/lib/supabase/server";
 import { charge } from "@/lib/payments/checkout";
 import { validateAddress } from "@/lib/orders/address";
 import { orderEligibility } from "@/lib/orders/eligibility";
-import { defaultGarment, findGarment, coloursFrom, sizesForColour } from "@/lib/printify/garments";
+import {
+  defaultGarment,
+  findGarment,
+  coloursFrom,
+  sizesForColour,
+  sellableVariants,
+} from "@/lib/printify/garments";
 import { catalogVariants } from "@/lib/printify/products";
 import { submitPrintifyOrder } from "@/lib/printify/orders";
 
@@ -31,7 +37,9 @@ export async function getOrderOptions(
   const garment = garmentSlug ? findGarment(garmentSlug) : defaultGarment();
   if (!garment) return null;
 
-  const variants = await catalogVariants(garment);
+  // Sellable, not the whole catalogue: offering a colour the product does not
+  // carry produces an order Printify rejects after the buyer has paid.
+  const variants = sellableVariants(garment, await catalogVariants(garment));
   if (variants.length === 0) return null;
 
   const colours = coloursFrom(variants);
@@ -96,7 +104,7 @@ export async function placeGarmentOrder(
 
   if (!garment) return { error: "This design isn't ready to order yet." };
 
-  const variants = await catalogVariants(garment);
+  const variants = sellableVariants(garment, await catalogVariants(garment));
   const check = orderEligibility(
     {
       claimedBy: design.claimed_by,
