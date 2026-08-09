@@ -33,10 +33,18 @@ create table public.reference_uploads (
 create table public.generation_jobs (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references public.profiles(id),
+  -- Resolved from the chosen style's vibeSlug, not asked for separately.
   vibe_id uuid references public.vibes(id),
   reference_upload_ids uuid[],
-  quality_tier text check (quality_tier in ('draft', 'upscale')),
+  -- Slug of the lib/generation/styles.ts preset used, and the exact words for a
+  -- typographic style. Neither is recoverable from designs.prompt.
+  style_slug text,
+  text_content text,
+  -- A direct user control. Was draft|upscale, a pricing concept that never shipped.
+  quality_tier text check (quality_tier in ('low', 'medium', 'high')),
   status text check (status in ('queued', 'generating', 'done', 'failed')) default 'queued',
+  -- The FIRST design that landed. One job now produces up to four; the full set
+  -- is `designs where generation_job_id = ?`.
   result_design_id uuid,
   created_at timestamptz default now()
 );
@@ -142,7 +150,9 @@ create table public.messages (
 ```
 
 ## Relationships (summary)
-- One `generation_job` produces at most one `design` (on success).
+- One `generation_job` produces **up to four** `designs` — MuAPI's image endpoint
+  has no `n` parameter, so four images is four parallel model runs, and the job
+  succeeds if at least one lands. `result_design_id` names the first.
 - One `design` has at most one `claim` (unique on `design_id`).
 - One `profile` has at most one `storefront` (unique on `owner_id`).
 - One `order` has zero or one `royalty_ledger` row — only when it resells a claimed design to someone other than the original claimant.

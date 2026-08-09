@@ -39,13 +39,35 @@ One line per route from `docs/ARCHITECTURE.md`. Check off as each ships (route f
 ## Dashboard (authenticated)
 - [ ] `/onboarding` — first-session multi-step flow
 - [ ] `/dashboard` — overview
-- [ ] `/dashboard/create` — generation flow
+- [x] `/create` — generation flow (moved out of `/dashboard`; 24 styles, four-up grid)
 - [x] `/dashboard/designs` — designs this user *made*, split Unlisted / Listed / Adopted, with list & delist
 - [ ] `/dashboard/messages` — inbox
 - [ ] `/dashboard/settings` — Account / Notifications / Twin (placeholder) / AI / Payouts tabs
 - [ ] `/dashboard/orders` — purchase history
 
 ## Notes
+- **Create v2 (2026-08-09).** The generator lives at `/create`, not
+  `/dashboard/create`, and signing in lands on `/`. Art direction comes from 24
+  presets in `lib/generation/styles.ts` — code, not a table, because they are
+  prompt fragments. Two families: `pictorial` keeps the no-letterforms ban
+  verbatim, `typographic` replaces it with an exact-string instruction, and
+  **nothing else may widen that exception**. Each preset carries a `vibeSlug`,
+  so the form asks for a style and the vibe follows. Spec:
+  `docs/superpowers/specs/2026-08-09-create-v2-design.md`, plan:
+  `docs/superpowers/plans/2026-08-09-create-v2.md`.
+- **`cutField` is load-bearing.** Artwork is keyed against a flat colour so
+  `ai-background-remover` has an edge. A style painted in that colour is cut
+  away entirely — an empty PNG, generated and paid for. Six black-ink presets
+  key against white; `styles.test.ts` enforces the invariant across all 24.
+- **MuAPI's image endpoint has no `n`.** Four images is four model runs plus
+  four background cuts, fanned out with `Promise.allSettled` inside `after()`.
+  Worst case is ~240s against `maxDuration = 300`. The job fails only when
+  nothing landed. Storage paths are `{jobId}-{index}.png` — the old
+  `{jobId}.png` with `upsert: true` would have collapsed four images into one.
+- **The daily cap counts jobs, not images, on purpose.** Every job is exactly 4
+  images, so `jobs ≤ 5` and `images ≤ 20` are the same constraint — and counting
+  design rows would stop charging for *failed* generations, which is the abuse
+  case the cap exists for.
 - **Ownership model (2026-08-09).** Generation is no longer publication. A
   generated design is private to `designs.creator_id` until they list it —
   `listed_at` null means private *or* delisted, the same state; `price_cents`

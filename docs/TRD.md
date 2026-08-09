@@ -10,7 +10,7 @@ Maps each PRD requirement to the data, services, and jobs needed to build it. Se
 ## Reference upload & generation
 - Data: `reference_uploads` (user-owned images), `generation_jobs` (status: queued, generating, done, failed), `designs` (finished output).
 - Generation is asynchronous: enqueue a job, then poll or subscribe (Supabase Realtime) for status, with a loading state rendered in `/dashboard/create`.
-- Image-gen adapter interface: `generate(prompt, references[], quality_tier) -> { image_url, cost }`. Two quality tiers minimum: draft (cheap) and upscale (paid, applied to an existing draft rather than a fresh generation).
+- Image-gen adapter interface: ~~`generate(prompt, references[], quality_tier) -> { image_url, cost }`~~. **Superseded 2026-08-09** by `generate({ prompt, references, aspectRatio, quality, cutField }) -> { bytes, contentType }`. `quality_tier` meant `draft | upscale`, a paid-upscale pricing model that never shipped; quality (`low|medium|high`) and aspect ratio are now direct user controls on the create form, and `cutField` tells the background remover which flat field the prompt keyed the artwork against. Bytes rather than a URL because MuAPI's output URLs are short-lived CDN links the caller must persist. `references` survives in the signature, accepted and rejected, so reference uploads stay an additive change.
 
 ## Claim & storefront
 - Data: `claims` (design_id, claimant_id, claimed_at) — this row is simultaneously "who owns it" and "proof of first use."
