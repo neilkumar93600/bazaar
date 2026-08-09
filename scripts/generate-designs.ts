@@ -158,6 +158,60 @@ const PLAN: Concept[] = [
     idea: "a girl on a rooftop at dawn holding a paper lantern, hair lifting in the wind",
   },
 
+
+  // --- Anime: villains and heroes, each with its own line ------------------
+  // Original characters by design. These become real Printify products for
+  // sale, and a recognisable franchise character on merchandise is trademark
+  // infringement — so the prompts describe archetypes, never named properties.
+  {
+    style: "anime-villain",
+    colour: "Black",
+    placement: "back",
+    title: "THE HOLLOW KING",
+    quote: "MERCY WAS THE FIRST THING I BURIED",
+    idea: "a masked antagonist in a high collar, crown of broken blades, embers drifting past a half-lit face",
+  },
+  {
+    style: "anime-villain",
+    colour: "Maroon",
+    placement: "back",
+    title: "SILENCE",
+    quote: "YOU TALK THE WAY THE STRONG DO",
+    idea: "a cloaked swordsman lowering a chipped katana, one eye burning through the shadow across his face",
+  },
+  {
+    style: "anime-villain",
+    colour: "Navy",
+    placement: "both",
+    title: "THE NINTH",
+    quote: "COUNT AGAIN I AM STILL HERE",
+    idea: "a nine-tailed beast silhouette rising behind a small calm figure, tails curling like smoke",
+  },
+  {
+    style: "anime-villain",
+    colour: "Forest",
+    placement: "front",
+    title: "ASHFALL",
+    quote: "I ONLY BURN WHAT ASKED TO BE WARM",
+    idea: "a figure walking away from a burning treeline, coat streaming, not looking back",
+  },
+  {
+    style: "anime-poster",
+    colour: "Black",
+    placement: "back",
+    title: "LAST TRAIN",
+    quote: "I MISSED IT ON PURPOSE",
+    idea: "a student on an empty midnight platform, headphones on, rain lit by the departures board",
+  },
+  {
+    style: "anime-poster",
+    colour: "Red",
+    placement: "back",
+    title: "STORMCALLER",
+    quote: "THE SKY OWES ME NOTHING",
+    idea: "a girl standing on a rooftop with both arms raised into a breaking thunderhead, hair whipping",
+  },
+
   // Varsity lockups — the tee3 shape.
   {
     style: "varsity-lockup",

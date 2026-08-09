@@ -386,6 +386,19 @@ export const STYLE_PRESETS: StylePreset[] = [
     cutField: "black",
     },
   {
+    slug: "anime-villain",
+    label: "Anime Villain",
+    family: "illustrated",
+    vibeSlug: "riot",
+    aesthetic: "anime antagonist key visual, high-contrast villain poster",
+    linework:
+      "a single menacing figure shot from below, face half in shadow, one eye catching the light, sharp cel shading with hard rim light and drifting embers, bold display title arched above and a short line beneath",
+    // Deliberately colder and higher-contrast than anime-poster, so a hero and
+    // a villain never come out looking like the same shirt.
+    palette: ["blood crimson", "bruised violet", "sulphur yellow", "cold steel"],
+    cutField: "black",
+  },
+  {
     slug: "varsity-lockup",
     label: "Varsity Lockup",
     family: "illustrated",
