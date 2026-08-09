@@ -46,6 +46,27 @@ One line per route from `docs/ARCHITECTURE.md`. Check off as each ships (route f
 - [ ] `/dashboard/orders` — purchase history
 
 ## Notes
+- **Garment config (2026-08-09).** The maker picks garment, colour and
+  placement in the listing panel before going live. Their colour is
+  *presentation* — it selects the hero mockup out of the ~66 renders Printify
+  produces. The product carries **every** variant, because the buyer picks
+  colour and size at checkout, so `PRINTIFY_VARIANT_IDS` is gone. `placement:
+  'both'` means a **small chest mark plus a full back print**, in that
+  direction; `lib/printify/print-areas.test.ts` pins it because reversing it is
+  a plausible one-line diff with an expensive physical consequence. Config
+  freezes once `printify_product_id` is set — `syncDesignProduct` early-returns
+  on an existing product, so a change would orphan one in the Printify shop.
+  Spec: `docs/superpowers/specs/2026-08-09-garment-config-design.md`, plan:
+  `docs/superpowers/plans/2026-08-09-garment-config.md`.
+- **Printify colours and sizes are one axis.** A variant is `"Black / M"`.
+  Sizes are always derived per colour, never from a global list — offering a
+  size a colour doesn't stock produces an order Printify rejects after the
+  buyer has paid. `sizesForColour` is unused by D and exists for the buyer flow;
+  it is tested, not dead.
+- **`lib/printify/tones.ts` is import-free on purpose.** `ListingForm` and
+  `ShirtMockup` are client components and need the colour maths, while
+  `garments.ts` next door reads `PRINTIFY_API_TOKEN`. Keeping them apart is what
+  stops that token's module graph reaching the browser.
 - **Create v2 (2026-08-09).** The generator lives at `/create`, not
   `/dashboard/create`, and signing in lands on `/`. Art direction comes from 24
   presets in `lib/generation/styles.ts` — code, not a table, because they are

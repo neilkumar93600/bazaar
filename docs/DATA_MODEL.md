@@ -63,6 +63,13 @@ create table public.designs (
   -- When it went live in the bazaar. Null means private: freshly generated, or
   -- delisted. Generation is not publication — the maker lists deliberately.
   listed_at timestamptz,
+  -- What it prints on. Set at listing, then frozen: syncDesignProduct
+  -- early-returns on an existing product, so a later change would orphan one.
+  -- featured_variant_id is a stand-in for the maker's COLOUR, used to pick the
+  -- hero mockup — it is not what anyone buys.
+  garment_slug text,
+  featured_variant_id integer,
+  placement text check (placement in ('front', 'back', 'both')),
   -- Nullable: null means the maker listed it free. No default — a listed
   -- design must have had a price decided, and free is a decision.
   price_cents integer check (price_cents is null or price_cents > 0),
