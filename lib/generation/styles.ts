@@ -374,6 +374,82 @@ export const STYLE_PRESETS: StylePreset[] = [
     cutField: "white",
   },
 
+
+  // --- The rest of the printable gallery ------------------------------------
+  // The technical and scientific plates are deliberately pictorial: their
+  // gallery originals carry a dozen callout labels each, and this pipeline can
+  // only pin two strings. Ten unpinnable labels is ten chances to misspell, so
+  // these keep the blanket letterform ban and sell on the drawing alone.
+  {
+    slug: "paper-cut",
+    label: "Paper Cut",
+    family: "pictorial",
+    vibeSlug: "late-bloomer",
+    aesthetic: "layered paper-cut diorama, mid-century children's book illustration",
+    linework:
+      "visible cut-paper edges with soft shadows between the layers, handmade paper texture, a cosy glowing silhouette first and small stories second, no photorealism and no 3D plastic look",
+    palette: ["moss green", "pumpkin orange", "midnight blue", "warm sand"],
+    cutField: "black",
+  },
+  {
+    slug: "mecha-key-visual",
+    label: "Mecha Key Visual",
+    family: "pictorial",
+    vibeSlug: "compound",
+    aesthetic: "cinematic anime key visual, high-contrast editorial poster",
+    linework:
+      "painterly digital illustration with crisp line art, hard backlight carving the silhouette, wet specular highlights on armour plating, volumetric haze compressing the background into layered silhouettes, film grain",
+    palette: ["oceanic teal", "gunmetal", "rust", "warm amber accent"],
+    cutField: "black",
+  },
+  {
+    slug: "isometric-diorama",
+    label: "Isometric Diorama",
+    family: "pictorial",
+    vibeSlug: "compound",
+    aesthetic: "isometric 3D miniature diorama",
+    linework:
+      "precise 30-degree isometric alignment, clean geometric forms, soft ambient light from the upper left with no harsh shadows, subtle ambient occlusion in the corners, high-detail miniature texturing, the scene floating with no ground-plane shadow",
+    palette: ["terracotta", "sage green", "dusty blue", "warm sand"],
+    cutField: "black",
+  },
+  {
+    slug: "colour-field",
+    label: "Colour Field",
+    family: "pictorial",
+    vibeSlug: "dusk-atelier",
+    aesthetic: "mid-century colour-field abstract painting",
+    linework:
+      "stacked soft-edged rectangular forms floating against a darker ground, hazy feathered edges letting the colours bleed into one another, thin layered washes with canvas texture showing through, no representational subject at all",
+    // Full-bleed: there is no subject to isolate, so removal would take
+    // everything or nothing. The field is the painting.
+    palette: ["oxblood red", "burnt orange", "dusty ochre"],
+    cutField: "black",
+    fullBleed: true,
+  },
+  {
+    slug: "exploded-blueprint",
+    label: "Exploded Blueprint",
+    family: "pictorial",
+    vibeSlug: "compound",
+    aesthetic: "premium technical exploded-view illustration",
+    linework:
+      "components separated vertically with precise spacing over fine blueprint grid accents, technically believable and sharply rendered with refined material realism and clean hierarchy",
+    palette: ["blueprint cyan", "brushed steel", "brass", "ruby accent"],
+    cutField: "black",
+  },
+  {
+    slug: "radial-phylogeny",
+    label: "Radial Diagram",
+    family: "pictorial",
+    vibeSlug: "insatiable",
+    aesthetic: "museum-science poster, radial diagram",
+    linework:
+      "fine botanical-meets-scientific linework branching outward from a single centre, balanced branch geometry, structured and visually rich with the clarity of an educational plate",
+    palette: ["moss green", "deep teal", "amber", "plum"],
+    cutField: "black",
+  },
+
   // --- Typographic --------------------------------------------------------
   {
     slug: "slab-statement",
