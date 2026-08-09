@@ -8,8 +8,11 @@ import { MAX_PROMPT_LENGTH, MIN_PROMPT_LENGTH } from "@/lib/generation/prompt"
 import {
   findStyle,
   validateStyleText,
+  validateQuote,
   MAX_TEXT_CHARS,
   MAX_TEXT_WORDS,
+  MAX_TITLE_CHARS,
+  MAX_QUOTE_CHARS,
 } from "@/lib/generation/styles"
 import type { AspectRatio, Quality } from "@/lib/generation/adapter"
 import { clearHeroDraft, readHeroDraft } from "@/lib/hero-draft"
@@ -119,6 +122,7 @@ export function CreateForm({
       : DEFAULT_STYLE,
   )
   const [text, setText] = useState("")
+  const [quote, setQuote] = useState("")
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>("3:4")
   const [quality, setQuality] = useState<Quality>("medium")
   const [picked, setPicked] = useState<string | null>(null)
@@ -126,6 +130,9 @@ export function CreateForm({
 
   const style = findStyle(styleSlug)
   const isTypographic = style?.family === "typographic"
+  const isIllustrated = style?.family === "illustrated"
+  // Both families need words; only the poster styles need a second line.
+  const needsWords = isTypographic || isIllustrated
 
   // A signed-out visitor who submitted the hero form was bounced through
   // /login, which dropped the query string. The draft rode along in
@@ -229,6 +236,12 @@ export function CreateForm({
       return
     }
 
+    const quoteCheck = validateQuote(style, quote)
+    if (!quoteCheck.ok) {
+      setPhase({ step: "failed", message: quoteCheck.error })
+      return
+    }
+
     setPicked(null)
     setPhase({ step: "generating", partial: [] })
 
@@ -239,6 +252,7 @@ export function CreateForm({
         prompt,
         styleSlug,
         text: textCheck.text ?? "",
+        quote: quoteCheck.text ?? "",
         aspectRatio,
         quality,
       }),
@@ -292,18 +306,22 @@ export function CreateForm({
             value={prompt}
             onChange={(e) => setPrompt(e.target.value.slice(0, MAX_PROMPT_LENGTH))}
             placeholder={
-              isTypographic
-                ? "How the words should feel — chunky, stacked, hand-drawn…"
-                : "A hooded elder weighing two planets on a golden scale"
+              isIllustrated
+                ? "What the picture shows — a chained titan holding fire"
+                : isTypographic
+                  ? "How the words should feel — chunky, stacked, hand-drawn…"
+                  : "A hooded elder weighing two planets on a golden scale"
             }
             rows={3}
             disabled={busy}
           />
           <p className="text-caption text-muted-foreground">
             {prompt.trim().length}/{MAX_PROMPT_LENGTH} ·{" "}
-            {isTypographic
-              ? "this directs how your words are set"
-              : "we handle the art direction"}
+            {isIllustrated
+              ? "this is the illustration between the title and the line"
+              : isTypographic
+                ? "this directs how your words are set"
+                : "we handle the art direction"}
           </p>
         </div>
 
@@ -312,27 +330,56 @@ export function CreateForm({
           <StylePicker value={styleSlug} onChange={setStyleSlug} disabled={busy} />
         </div>
 
-        {isTypographic && (
+        {needsWords && (
           <div className="flex flex-col gap-2">
-            <Label htmlFor="text">Your words</Label>
+            <Label htmlFor="text">
+              {isIllustrated ? "Title" : "Your words"}
+            </Label>
             <Input
               id="text"
               value={text}
               onChange={(e) => setText(e.target.value)}
-              placeholder="stay weird"
+              placeholder={isIllustrated ? "PROMETHEUS" : "stay weird"}
               disabled={busy}
             />
             <p
               className={cn(
                 "text-caption",
-                wordCount > MAX_TEXT_WORDS || text.trim().length > MAX_TEXT_CHARS
+                (isIllustrated
+                  ? text.trim().length > MAX_TITLE_CHARS
+                  : wordCount > MAX_TEXT_WORDS ||
+                    text.trim().length > MAX_TEXT_CHARS)
                   ? "text-destructive"
                   : "text-muted-foreground",
               )}
             >
-              {wordCount}/{MAX_TEXT_WORDS} words · {text.trim().length}/
-              {MAX_TEXT_CHARS} characters · spelling can miss, so pick the one
-              that got it right
+              {isIllustrated
+                ? `${text.trim().length}/${MAX_TITLE_CHARS} characters · one or two words reads best`
+                : `${wordCount}/${MAX_TEXT_WORDS} words · ${text.trim().length}/${MAX_TEXT_CHARS} characters`}
+              {" · spelling can miss, so pick the one that got it right"}
+            </p>
+          </div>
+        )}
+
+        {isIllustrated && (
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="quote">The line underneath</Label>
+            <Input
+              id="quote"
+              value={quote}
+              onChange={(e) => setQuote(e.target.value)}
+              placeholder="THEY CHAINED THE BODY THE FIRE SPREAD"
+              disabled={busy}
+            />
+            <p
+              className={cn(
+                "text-caption",
+                quote.trim().length > MAX_QUOTE_CHARS
+                  ? "text-destructive"
+                  : "text-muted-foreground",
+              )}
+            >
+              {quote.trim().length}/{MAX_QUOTE_CHARS} characters
             </p>
           </div>
         )}

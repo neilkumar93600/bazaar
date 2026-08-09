@@ -17,6 +17,7 @@ import {
 import {
   findStyle,
   validateStyleText,
+  validateQuote,
   type StylePreset,
 } from "@/lib/generation/styles"
 import {
@@ -47,6 +48,7 @@ export async function POST(request: Request) {
     prompt?: unknown
     styleSlug?: unknown
     text?: unknown
+    quote?: unknown
     aspectRatio?: unknown
     quality?: unknown
   } | null
@@ -78,6 +80,17 @@ export async function POST(request: Request) {
 
   if (!textResult.ok) {
     return Response.json({ error: textResult.error }, { status: 400 })
+  }
+
+  // Only `illustrated` styles carry a second line; every other family is told
+  // so rather than having it silently dropped.
+  const quoteResult = validateQuote(
+    style,
+    typeof body?.quote === "string" ? body.quote : "",
+  )
+
+  if (!quoteResult.ok) {
+    return Response.json({ error: quoteResult.error }, { status: 400 })
   }
 
   // Unknown values fall back rather than 400: an out-of-range aspect or quality
@@ -148,6 +161,7 @@ export async function POST(request: Request) {
       prompt,
       style,
       textResult.text,
+      quoteResult.text,
       vibe.id,
       aspectRatio,
       quality,
@@ -174,6 +188,7 @@ async function runGeneration(
   idea: string,
   style: StylePreset,
   text: string | null,
+  quote: string | null,
   vibeId: string,
   aspectRatio: AspectRatio,
   quality: Quality,
@@ -182,7 +197,7 @@ async function runGeneration(
 
   await admin.from("generation_jobs").update({ status: "generating" }).eq("id", jobId)
 
-  const prompt = buildPrompt({ idea, style, text })
+  const prompt = buildPrompt({ idea, style, text, quote })
 
   // Four model runs, not one call for four images: MuAPI's endpoint has no `n`
   // parameter. In parallel because each image is two sequential model runs

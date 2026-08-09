@@ -9,6 +9,11 @@ import { cn } from "@/lib/utils"
 const GROUPS: { family: StyleFamily; label: string; hint: string }[] = [
   { family: "pictorial", label: "Picture", hint: "A drawn subject. No words." },
   { family: "typographic", label: "Words", hint: "Your text is the design." },
+  {
+    family: "illustrated",
+    label: "Poster",
+    hint: "A title, a picture and a line underneath.",
+  },
 ]
 
 export function StylePicker({
