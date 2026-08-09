@@ -31,6 +31,7 @@ export function ListingForm({
   imageUrl,
   isListed,
   priceCents,
+  initialHidePrompt = false,
   garmentOptions,
   frozen,
   initialConfig,
@@ -42,6 +43,7 @@ export function ListingForm({
   /** Pre-fills the box on a relist: the maker confirms the old number rather
    *  than silently inheriting one they set weeks ago. */
   priceCents: number | null
+  initialHidePrompt?: boolean
   /** Empty when Printify isn't configured — the garment section is then hidden
    *  rather than offering choices that could never be minted. */
   garmentOptions: GarmentOption[]
@@ -58,6 +60,7 @@ export function ListingForm({
   const [dollars, setDollars] = useState(
     priceCents === null ? "" : (priceCents / 100).toString()
   )
+  const [hidePrompt, setHidePrompt] = useState(initialHidePrompt)
 
   const [garmentSlug, setGarmentSlug] = useState(
     () => initialConfig.garmentSlug ?? garmentOptions[0]?.slug ?? ""
@@ -82,6 +85,7 @@ export function ListingForm({
 
   const priceFieldId = `price-${designId}`
   const freeFieldId = `free-${designId}`
+  const hidePromptFieldId = `hide-prompt-${designId}`
 
   const showGarment = garmentOptions.length > 0
 
@@ -211,16 +215,30 @@ export function ListingForm({
         </div>
       )}
 
-      <div className="flex items-center gap-2">
-        <Checkbox
-          id={freeFieldId}
-          checked={free}
-          onCheckedChange={(checked) => setFree(checked === true)}
-          disabled={isPending}
-        />
-        <Label htmlFor={freeFieldId} className="text-caption">
-          Free to claim
-        </Label>
+      <div className="flex flex-col gap-2.5">
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id={freeFieldId}
+            checked={free}
+            onCheckedChange={(checked) => setFree(checked === true)}
+            disabled={isPending}
+          />
+          <Label htmlFor={freeFieldId} className="text-caption">
+            Free to claim
+          </Label>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id={hidePromptFieldId}
+            checked={hidePrompt}
+            onCheckedChange={(checked) => setHidePrompt(checked === true)}
+            disabled={isPending}
+          />
+          <Label htmlFor={hidePromptFieldId} className="text-caption text-muted-foreground">
+            Hide prompt publicly (shows &quot;Prompt hidden by creator&quot;)
+          </Label>
+        </div>
       </div>
 
       {!free && (
@@ -249,7 +267,7 @@ export function ListingForm({
           onClick={() => {
             setError(null)
             startTransition(async () => {
-              const result = await listDesign(designId, config(), free, dollars)
+              const result = await listDesign(designId, config(), free, dollars, hidePrompt)
               if (result.error) setError(result.error)
             })
           }}

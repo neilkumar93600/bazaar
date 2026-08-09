@@ -14,9 +14,9 @@ export type DesignDetail = {
    *  synced. Null falls back to the drawn mockup. */
   mockupUrl: string | null
   prompt: string | null
+  isPromptHidden?: boolean
   /** The arched title and the line underneath, for poster designs. Null for
-   *  every other style — the words are the design there, so the detail page
-   *  should show them next to the idea that made the picture. */
+   *  every other style — the words are the detail page design title. */
   title: string | null
   quote: string | null
   /** Null means the maker listed it free. */
@@ -42,7 +42,7 @@ export async function getDesignDetail(id: string): Promise<DesignDetail | null> 
   const { data: design } = await supabase
     .from("designs")
     .select(
-      "id, image_url, mockup_url, prompt, price_cents, vibe_id, is_claimed, claimed_by, created_at, generation_job_id, printify_product_id, garment_slug, featured_variant_id"
+      "id, image_url, mockup_url, prompt, is_prompt_hidden, price_cents, vibe_id, is_claimed, claimed_by, created_at, generation_job_id, printify_product_id, garment_slug, featured_variant_id"
     )
     .eq("id", id)
     .eq("moderation_status", "approved")
@@ -99,6 +99,7 @@ export async function getDesignDetail(id: string): Promise<DesignDetail | null> 
     imageUrl: design.image_url,
     mockupUrl: design.mockup_url ?? null,
     prompt: design.prompt,
+    isPromptHidden: Boolean(design.is_prompt_hidden),
     title: job?.text_content ?? null,
     quote: job?.quote_content ?? null,
     priceCents: design.price_cents,

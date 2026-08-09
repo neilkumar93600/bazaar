@@ -5,3 +5,15 @@ export const siteUrl = (
 ).replace(/\/$/, "");
 
 export const siteName = "Shirt Bazaar";
+
+/** The published inboxes. One place to change them, because they appear on
+ *  /contact, /careers and all four legal pages — and a marketplace that lists
+ *  an address nobody reads is worse than listing none.
+ *
+ *  ponytail: the legal pages still spell these out inline; fold them in when
+ *  those get their real company details filled in. */
+export const CONTACT_EMAILS = {
+  support: "support@shirtbazaar.com",
+  privacy: "privacy@shirtbazaar.com",
+  legal: "legal@shirtbazaar.com",
+} as const;

@@ -11,6 +11,10 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
+    // `scripts/*.ts` run straight through `node`, which strips types and so
+    // requires the real `.ts` extension on relative imports. Safe alongside
+    // noEmit — tsc only ever typechecks here.
+    "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
     "incremental": true,
     "plugins": [

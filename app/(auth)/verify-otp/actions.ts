@@ -37,7 +37,9 @@ export async function verifyOtp(
       .eq("id", data.user.id);
   }
 
-  redirect("/onboarding");
+  // Straight to the thing they signed up to do. There is no separate setup
+  // step — handle and display name were captured at signup and written above.
+  redirect("/create");
 }
 
 export async function resendOtp(email: string) {

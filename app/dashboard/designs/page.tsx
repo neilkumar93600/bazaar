@@ -103,6 +103,7 @@ export default async function DesignsPage() {
                       imageUrl={design.imageUrl}
                       isListed={false}
                       priceCents={design.priceCents}
+                      initialHidePrompt={design.isPromptHidden}
                       garmentOptions={garmentOptions}
                       frozen={design.hasProduct}
                       initialConfig={{
@@ -137,6 +138,7 @@ export default async function DesignsPage() {
                       imageUrl={design.imageUrl}
                       isListed
                       priceCents={design.priceCents}
+                      initialHidePrompt={design.isPromptHidden}
                       garmentOptions={garmentOptions}
                       frozen={design.hasProduct}
                       initialConfig={{

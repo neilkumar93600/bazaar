@@ -8,6 +8,7 @@ export type MakerDesign = {
   createdAt: string
   /** Null means listed free, or never priced. */
   priceCents: number | null
+  isPromptHidden?: boolean
   listedAt: string | null
   /** Once a Printify product exists the garment cannot change — re-minting
    *  would orphan it — so the listing form renders that section read-only. */
@@ -44,7 +45,7 @@ export async function getMyDesigns(): Promise<MyDesigns | null> {
   const { data: rows } = await supabase
     .from("designs")
     .select(
-      "id, image_url, vibe_id, created_at, price_cents, listed_at, claimed_by, printify_product_id, garment_slug, featured_variant_id, placement"
+      "id, image_url, vibe_id, created_at, price_cents, is_prompt_hidden, listed_at, claimed_by, printify_product_id, garment_slug, featured_variant_id, placement"
     )
     .eq("creator_id", user.id)
     .order("created_at", { ascending: false })
@@ -95,6 +96,7 @@ export async function getMyDesigns(): Promise<MyDesigns | null> {
     vibeName: d.vibe_id ? (vibeNameById.get(d.vibe_id) ?? null) : null,
     createdAt: d.created_at,
     priceCents: d.price_cents,
+    isPromptHidden: Boolean(d.is_prompt_hidden),
     listedAt: d.listed_at,
     hasProduct: d.printify_product_id !== null,
     garmentSlug: d.garment_slug,

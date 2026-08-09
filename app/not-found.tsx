@@ -1,8 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, Home, Search } from "lucide-react";
+import { ArrowLeft, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Logo } from "@/components/ui/logo";
 
 export default function NotFound() {
   return (
@@ -52,20 +51,24 @@ export default function NotFound() {
             <ArrowLeft className="size-4" />
             Back to Home
           </Button>
-          <Button render={<Link href="/search" />} variant="outline" size="lg" className="gap-2">
+          <Button render={<Link href="/shop" />} variant="outline" size="lg" className="gap-2">
             <Search className="size-4" />
-            Browse Catalog
+            Browse the bazaar
           </Button>
         </div>
       </main>
 
       {/* Footer Navigation */}
       <footer className="w-full max-w-md text-center py-4 text-xs text-muted-foreground border-t border-border/40">
-        Need help? Check out our{" "}
-        <Link href="/" className="underline underline-offset-4 hover:text-foreground">
-          Popular Items
+        Need help? Read the{" "}
+        <Link href="/faq" className="underline underline-offset-4 hover:text-foreground">
+          FAQ
         </Link>{" "}
-        or contact support.
+        or{" "}
+        <Link href="/contact" className="underline underline-offset-4 hover:text-foreground">
+          contact support
+        </Link>
+        .
       </footer>
     </div>
   );

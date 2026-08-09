@@ -72,7 +72,7 @@ export const getStorefrontData = cache(async function getStorefrontData(
   const { data: designRows } = designIds.length
     ? await supabase
         .from("designs")
-        .select("id, image_url, mockup_url, vibe_id, price_cents, created_at")
+        .select("id, image_url, mockup_url, vibe_id, price_cents, prompt, is_prompt_hidden, created_at")
         .in("id", designIds)
         .eq("moderation_status", "approved")
         // An owner who delists a design they own stops showing it publicly.
@@ -104,6 +104,8 @@ export const getStorefrontData = cache(async function getStorefrontData(
       claimedAt: claimedAtByDesignId.get(d.id)!,
       createdAt: d.created_at,
       priceCents: d.price_cents,
+      prompt: d.prompt,
+      isPromptHidden: Boolean(d.is_prompt_hidden),
       vibeName: (d.vibe_id ? vibeById.get(d.vibe_id)?.name : null) ?? null,
       // Every design on a storefront is claimed, by definition — it got here
       // through this profile's claims.
@@ -117,7 +119,7 @@ export const getStorefrontData = cache(async function getStorefrontData(
   // the old two-step hop through generation_jobs.
   const { data: createdRows } = await supabase
     .from("designs")
-    .select("id, image_url, mockup_url, vibe_id, price_cents, created_at, is_claimed, claimed_by")
+    .select("id, image_url, mockup_url, vibe_id, price_cents, prompt, is_prompt_hidden, created_at, is_claimed, claimed_by")
     .eq("creator_id", profile.id)
     .eq("moderation_status", "approved")
     // A public storefront shows what this maker put in the bazaar, never their
@@ -159,6 +161,8 @@ export const getStorefrontData = cache(async function getStorefrontData(
     mockupUrl: d.mockup_url ?? null,
     createdAt: d.created_at,
     priceCents: d.price_cents,
+    prompt: d.prompt,
+    isPromptHidden: Boolean(d.is_prompt_hidden),
     vibeName: (d.vibe_id ? createdVibeNameById.get(d.vibe_id) : null) ?? null,
     isClaimed: d.is_claimed,
     claimantHandle: d.claimed_by

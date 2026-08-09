@@ -93,8 +93,14 @@ export default function RootLayout({
                 "@type": "WebSite",
                 name: siteName,
                 url: siteUrl,
-                // No SearchAction: /search is still a ComingSoon stub. Add it
-                // once the route actually handles ?q= and returns results.
+                potentialAction: {
+                  "@type": "SearchAction",
+                  target: {
+                    "@type": "EntryPoint",
+                    urlTemplate: `${siteUrl}/search?q={search_term_string}`,
+                  },
+                  "query-input": "required name=search_term_string",
+                },
               },
             ]),
           }}

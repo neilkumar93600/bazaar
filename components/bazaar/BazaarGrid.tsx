@@ -17,11 +17,16 @@ import { bazaarHref } from "./href"
 export function BazaarGrid({
   data,
   query,
+  basePath = "/shop",
 }: {
   data: BazaarData
   query: BazaarQuery
+  /** Route the pagination and clear-filter links point back at. `/search`
+   *  renders this same grid against the same query shape. */
+  basePath?: string
 }) {
   if (data.designs.length === 0) {
+    const searched = query.q.length > 0
     const filtered = query.vibes.length > 0 || query.availability !== "all"
 
     return (
@@ -31,23 +36,35 @@ export function BazaarGrid({
             <ShirtIcon />
           </EmptyMedia>
           <EmptyTitle>
-            {filtered
-              ? "Nothing matches those filters"
-              : "The bazaar is still filling up"}
+            {searched
+              ? `No designs match “${query.q}”`
+              : filtered
+                ? "Nothing matches those filters"
+                : "The bazaar is still filling up"}
           </EmptyTitle>
           <EmptyDescription>
-            {filtered
-              ? "Try widening the vibe selection or switching availability back to All."
-              : "New 1-of-1 designs land here as they clear moderation. Check back shortly."}
+            {searched
+              ? "Search reads the prompt each design was made from. Try a plainer word, or browse the whole bazaar."
+              : filtered
+                ? "Try widening the vibe selection or switching availability back to All."
+                : "New 1-of-1 designs land here as they clear moderation. Check back shortly."}
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          {filtered ? (
+          {searched ? (
+            <Button variant="outline" render={<Link href="/shop" />}>
+              Browse the bazaar
+            </Button>
+          ) : filtered ? (
             <Button
               variant="outline"
               render={
                 <Link
-                  href={bazaarHref(query, { vibes: [], availability: "all" })}
+                  href={bazaarHref(
+                    query,
+                    { vibes: [], availability: "all" },
+                    basePath
+                  )}
                 />
               }
             >
@@ -85,7 +102,9 @@ export function BazaarGrid({
             <Button
               variant="outline"
               render={
-                <Link href={bazaarHref(query, { page: data.page - 1 })} />
+                <Link
+                  href={bazaarHref(query, { page: data.page - 1 }, basePath)}
+                />
               }
             >
               Previous
@@ -102,7 +121,9 @@ export function BazaarGrid({
             <Button
               variant="outline"
               render={
-                <Link href={bazaarHref(query, { page: data.page + 1 })} />
+                <Link
+                  href={bazaarHref(query, { page: data.page + 1 }, basePath)}
+                />
               }
             >
               Next

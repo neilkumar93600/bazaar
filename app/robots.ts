@@ -11,13 +11,18 @@ export default function robots(): MetadataRoute.Robots {
         "/api/",
         "/dashboard/",
 
-        "/onboarding",
         "/login",
         "/signup",
         "/forgot-password",
         "/reset-password",
         "/verify-otp",
-        "/design/", // ComingSoon stub — drop this line once the claim flow ships
+
+        // Not /design/ — those are the product pages, and each one sets its own
+        // robots directive (claimed indexes, unclaimed doesn't). Blocking the
+        // prefix here would stop Google reading that directive at all.
+        //
+        // /search is crawlable but self-noindexes; leaving it allowed lets the
+        // canonical to /shop be seen.
       ],
     },
     sitemap: `${siteUrl}/sitemap.xml`,

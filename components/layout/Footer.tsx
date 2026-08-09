@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -94,8 +93,8 @@ export function Footer({ className = "" }: FooterProps) {
               <ul className="space-y-2.5">
                 {[
                   { label: "Design generator", href: "/create" },
-                  { label: "Style library", href: "/blog" },
                   { label: "Browse the bazaar", href: "/shop" },
+                  { label: "Search", href: "/search" },
                 ].map((link) => (
                   <li key={link.label}>
                     <Link
@@ -138,7 +137,8 @@ export function Footer({ className = "" }: FooterProps) {
               </h4>
               <ul className="space-y-2.5">
                 {[
-                  { label: "Help centre", href: "/contact" },
+                  { label: "FAQ", href: "/faq" },
+                  { label: "Contact", href: "/contact" },
                   { label: "Privacy policy", href: "/privacy" },
                   { label: "Terms of service", href: "/terms" },
                 ].map((link) => (

@@ -6,6 +6,7 @@ import type { DesignDetail } from "@/lib/data/design"
 import type { OrderOptions } from "@/app/(public)/design/[id]/order-actions"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { DesignDetailContent } from "@/components/design/DesignDetailContent"
+import { designLabel } from "@/lib/utils"
 
 export function DesignDialog({
   design,
@@ -27,9 +28,9 @@ export function DesignDialog({
         if (!open) router.back()
       }}
     >
-      <DialogContent className="max-h-[calc(100vh-4rem)] overflow-y-auto sm:max-w-xl md:max-w-3xl">
+      <DialogContent className="max-h-[calc(100vh-4rem)] overflow-y-auto rounded-2xl border-border/80 p-6 shadow-2xl backdrop-blur-xl sm:max-w-xl md:max-w-3xl">
         <DialogTitle className="sr-only">
-          {design.vibeName ?? "Design"} — {design.isClaimed ? "claimed" : "unclaimed"}
+          {designLabel(design, 70)} — {design.isClaimed ? "claimed" : "unclaimed"}
         </DialogTitle>
         <DesignDetailContent
           design={design}

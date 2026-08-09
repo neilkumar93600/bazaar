@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { getDesignDetail } from "@/lib/data/design";
 import { getOrderOptions } from "@/app/(public)/design/[id]/order-actions";
 import { createClient } from "@/lib/supabase/server";
-import { formatListingPrice } from "@/lib/utils";
+import { designLabel, formatListingPrice } from "@/lib/utils";
 import { DesignDialog } from "@/components/design/DesignDialog";
 
 export async function generateMetadata(
@@ -15,8 +15,16 @@ export async function generateMetadata(
 
   if (!design) return { title: "Design not found", robots: { index: false } };
 
+  // Every design gets its own title. Heading these with `vibeName` gave every
+  // design in a vibe the same <title>, which is a duplicate-content problem as
+  // much as a UX one. 60 chars leaves room for the " — Shirt Bazaar" template.
+  const label = designLabel(design, 44);
+
   return {
-    title: `${design.vibeName ?? "1-of-1"} design — ${formatListingPrice(design.priceCents)}`,
+    title: `${label} — ${formatListingPrice(design.priceCents)}`,
+    description: design.prompt
+      ? `A 1-of-1 AI shirt design: ${design.prompt}. ${design.isClaimed ? "Already claimed." : "Unclaimed — claim it and it's yours alone, forever."}`
+      : undefined,
     robots: design.isClaimed ? undefined : { index: false, follow: true },
   };
 }

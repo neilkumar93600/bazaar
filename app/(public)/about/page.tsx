@@ -1,13 +1,124 @@
-import type { Metadata } from "next";
-import { ComingSoon } from "@/components/shared/ComingSoon";
+import type { Metadata } from "next"
+import Link from "next/link"
 
-export const metadata: Metadata = { title: "About" };
+import { Button } from "@/components/ui/button"
+import { DAILY_IMAGE_CAP } from "@/lib/generation/quota"
+import { ROYALTY_RATE_PERCENT } from "@/lib/royalty"
+
+export const metadata: Metadata = {
+  title: "About",
+  description:
+    "Why Shirt Bazaar makes every design 1-of-1: what the claim model is, what it costs a buyer, and what it pays a creator.",
+  alternates: { canonical: "/about" },
+}
+
+/** Deliberately makes no claim about audience, volume or traction — there
+ *  isn't any yet, and a marketplace caught inflating itself on its own about
+ *  page has nothing left to be believed about. Every number is a constant. */
+const PRINCIPLES = [
+  {
+    heading: "Exclusive by default, not as an upsell",
+    body: "A design gets exactly one claim, forever. That isn't a tier you pay extra for — it's the only way anything here is sold. Charging for exclusivity would mean selling the same design to everyone who didn't pay.",
+  },
+  {
+    heading: "The claim is permanent",
+    body: "No reprints, no second edition, no quiet restock when something sells well. A claim that could be unwound would make every other claim worth less, so none of them can be.",
+  },
+  {
+    heading: "Taste keeps earning",
+    body: `Claim a design and you earn ${ROYALTY_RATE_PERCENT}% of every resale of it after yours, for as long as it keeps changing hands. Spotting it first is the work, and it should pay more than once.`,
+  },
+  {
+    heading: "Browse-and-buy, not build-your-own",
+    body: "Custom print-on-demand asks you to become a designer. Mass-market blanks ask you to settle. This asks for neither: the designs already exist, and you take the one that's already yours.",
+  },
+]
 
 export default function AboutPage() {
   return (
-    <ComingSoon
-      title="About Shirt Bazaar"
-      description="Our story is coming soon."
-    />
-  );
+    <div className="mx-auto flex max-w-4xl flex-col gap-14 px-6 py-16 md:px-16 sm:py-24">
+      <div className="flex flex-col gap-4">
+        <h1 className="text-display text-foreground uppercase tracking-tight">
+          One prompt in.
+          <br />
+          One shirt out.
+          <br />
+          <span className="font-serif font-medium italic normal-case tracking-normal">
+            One owner.
+          </span>
+        </h1>
+        <p className="text-body max-w-2xl text-muted-foreground">
+          Shirt Bazaar is a marketplace for 1-of-1 AI apparel. Every design here
+          exists exactly once, belongs to exactly one person, and can never be
+          printed for anybody else.
+        </p>
+      </div>
+
+      <section className="flex flex-col gap-4 border-t border-hairline pt-10">
+        <h2 className="text-heading text-foreground">Why it works this way</h2>
+        <div className="flex max-w-2xl flex-col gap-4 text-body text-muted-foreground">
+          <p>
+            Buying a t-shirt is usually a choice between two bad options. Off
+            the shelf is fast and generic — the same print on a warehouse full
+            of blanks. Fully custom is neither: setting up a print-on-demand
+            storefront is real work, and most people don&apos;t want to design a
+            shirt, they want to recognise themselves in one.
+          </p>
+          <p>
+            So the designs are made first and browsed second. You scroll a feed
+            of finished work, and when something is unmistakably yours, you
+            claim it — and it stops being available to anyone else. That&apos;s
+            the whole product. The exclusivity isn&apos;t a feature bolted onto
+            a shop; it&apos;s the reason the shop exists.
+          </p>
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-1">
+        <h2 className="font-mono text-caption uppercase tracking-wider text-muted-foreground">
+          What we hold to
+        </h2>
+        <div className="flex flex-col">
+          {PRINCIPLES.map((principle) => (
+            <div
+              key={principle.heading}
+              className="grid grid-cols-1 gap-3 border-t border-hairline py-8 lg:grid-cols-[240px_1fr] lg:gap-8"
+            >
+              <h3 className="text-subheading text-foreground">
+                {principle.heading}
+              </h3>
+              <p className="text-body text-muted-foreground">
+                {principle.body}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-4 border-t border-hairline pt-10">
+        <h2 className="text-heading text-foreground">Where we actually are</h2>
+        <div className="flex max-w-2xl flex-col gap-4 text-body text-muted-foreground">
+          <p>
+            Early, and saying so. Designs are generated by real models against
+            real prompts — {DAILY_IMAGE_CAP} images a day per account, free —
+            and shirts are printed on demand by a fulfilment partner. Claiming,
+            listing, storefronts and orders all work today.
+          </p>
+          <p>
+            Creator payouts do not work yet. Royalties are published and tracked
+            against every claim, but the money doesn&apos;t move until the
+            payout path ships. We&apos;d rather tell you that here than let you
+            discover it later.
+          </p>
+        </div>
+      </section>
+
+      <div className="flex flex-wrap gap-3 border-t border-hairline pt-10">
+        <Button render={<Link href="/shop" />}>Browse the bazaar</Button>
+        <Button variant="outline" render={<Link href="/faq" />}>
+          Read the FAQ
+        </Button>
+      </div>
+    </div>
+  )
 }

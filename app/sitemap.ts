@@ -3,12 +3,15 @@ import type { MetadataRoute } from "next";
 import { siteUrl } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
 
-// Only routes that render real content. /shop, /search, /auctions, /blog,
-// /faq, /about, /contact, /careers, /design/[id] are all still <ComingSoon />
-// stubs — submitting them would hand Google a dozen near-identical thin pages.
-// Add each one back here the day it ships real content.
+// Only routes that render real content. /search stays out deliberately — its
+// results are thin, infinite in combination and canonicalised to /shop.
 const staticPaths: { path: string; priority: number }[] = [
   { path: "/", priority: 1 },
+  { path: "/shop", priority: 0.9 },
+  { path: "/faq", priority: 0.5 },
+  { path: "/about", priority: 0.5 },
+  { path: "/contact", priority: 0.3 },
+  { path: "/careers", priority: 0.2 },
   { path: "/terms", priority: 0.2 },
   { path: "/privacy", priority: 0.2 },
   { path: "/cookies", priority: 0.2 },
@@ -32,7 +35,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = await createClient();
   const { data: claims } = await supabase
     .from("claims")
-    .select("claimant_id")
+    .select("claimant_id, design_id")
     .limit(45000);
 
   const claimantIds = [...new Set((claims ?? []).map((c) => c.claimant_id))];
@@ -46,6 +49,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${siteUrl}/creator/${encodeURIComponent(handle)}`,
       lastModified: now,
       priority: 0.6,
+    });
+  }
+
+  // Claimed designs only — matching the per-page robots directive in
+  // /design/[id], which noindexes anything unclaimed. An unclaimed design is
+  // transient (it's about to be claimed and change state), a claimed one is
+  // permanent and has an owner to point at.
+  for (const { design_id } of claims ?? []) {
+    entries.push({
+      url: `${siteUrl}/design/${design_id}`,
+      lastModified: now,
+      priority: 0.7,
     });
   }
 

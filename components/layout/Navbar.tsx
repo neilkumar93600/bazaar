@@ -32,7 +32,6 @@ import type { NotificationItem } from "@/lib/data/notifications";
 const NAV_LINKS = [
   { href: "/", label: "Feed" },
   { href: "/shop", label: "Bazaar" },
-  { href: "/auctions", label: "Auctions" },
 ];
 
 const EASE = [0.16, 1, 0.3, 1] as const;

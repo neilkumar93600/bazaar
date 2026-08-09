@@ -32,7 +32,8 @@ export async function listDesign(
    *  at that point, because re-minting would orphan the existing product. */
   config: GarmentConfig | null,
   free: boolean,
-  dollars: string
+  dollars: string,
+  hidePrompt: boolean = false
 ): Promise<ListingState> {
   const price = validateListingPrice(free, dollars)
   if (!price.ok) return { error: price.error }
@@ -40,6 +41,7 @@ export async function listDesign(
   const update: Record<string, unknown> = {
     listed_at: new Date().toISOString(),
     price_cents: price.priceCents,
+    is_prompt_hidden: hidePrompt,
   }
 
   if (config) {

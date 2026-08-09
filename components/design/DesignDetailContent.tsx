@@ -1,10 +1,14 @@
+"use client"
+
+import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { formatDistanceToNowStrict } from "date-fns"
+import { Sparkles, EyeOff, Info, Copy, Check } from "lucide-react"
 
 import type { DesignDetail } from "@/lib/data/design"
 import type { OrderOptions } from "@/app/(public)/design/[id]/order-actions"
-import { formatListingPrice } from "@/lib/utils"
+import { designLabel, formatListingPrice } from "@/lib/utils"
 import { ClaimForm } from "@/components/design/ClaimForm"
 import { OrderForm } from "@/components/design/OrderForm"
 import { ShirtMockup } from "@/components/shared/ShirtMockup"
@@ -24,11 +28,20 @@ export function DesignDetailContent({
    *  is there a garment to order. */
   orderOptions?: OrderOptions
 }) {
+  const [copied, setCopied] = useState(false)
+
+  const handleCopyPrompt = () => {
+    if (!design.prompt) return
+    navigator.clipboard.writeText(design.prompt)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
   return (
     <div className="flex min-w-0 flex-col gap-6 md:flex-row md:items-start">
       {/* The same garment the card showed — opening a design shouldn't swap the
           product for its artwork. */}
-      <div className="relative aspect-[4/5] w-full shrink-0 overflow-hidden rounded-2xl border border-border bg-card md:w-72">
+      <div className="relative aspect-[4/5] w-full shrink-0 overflow-hidden rounded-2xl border border-border bg-card shadow-sm md:w-72">
         {design.mockupUrl ? (
           <Image
             src={design.mockupUrl}
@@ -45,20 +58,23 @@ export function DesignDetailContent({
 
       <div className="flex min-w-0 flex-1 flex-col gap-4">
         <div className="flex flex-col gap-1">
+          {/* Vibe demoted to the eyebrow beside the date: it's the category,
+              not the name. The heading below is this design's own. */}
           <span className="text-caption font-medium tracking-wide text-muted-foreground uppercase">
+            {design.vibeName ? `${design.vibeName} · ` : ""}
             Minted {formatDistanceToNowStrict(new Date(design.createdAt), { addSuffix: true })}
           </span>
           <div className="flex items-baseline justify-between gap-3">
-            <span className="truncate text-heading-lg text-foreground">
-              {design.vibeName ?? "Unfiled"}
-            </span>
-            <span className="shrink-0 font-mono text-heading-sm text-gold-leaf">
+            <h2 className="min-w-0 text-heading-lg text-foreground">
+              {designLabel(design)}
+            </h2>
+            <span className="shrink-0 font-mono text-heading-sm font-semibold text-gold-leaf">
               {formatListingPrice(design.priceCents)}
             </span>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 rounded-xl border border-border bg-card p-4">
+        <div className="grid grid-cols-2 gap-4 rounded-xl border border-border bg-card p-4 shadow-sm">
           <div className="flex min-w-0 flex-col gap-1">
             <span className="text-caption font-medium tracking-wide text-muted-foreground uppercase">
               Edition
@@ -79,29 +95,84 @@ export function DesignDetailContent({
           </div>
         </div>
 
-        {(design.prompt || design.title) && (
-          <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4">
-            <span className="text-caption font-medium tracking-wide text-muted-foreground uppercase">
-              Prompt
-            </span>
-
-            {/* On a poster design the words ARE half the artwork, so showing
-                only the illustration idea told you nothing about the shirt in
-                front of you. */}
-            {design.title && (
-              <p className="font-mono text-body-sm break-words text-foreground">
-                {design.title}
-                {design.quote && (
-                  <span className="text-muted-foreground"> — {design.quote}</span>
+        {/* Prompt & Idea Section — always rendered to clearly explain the prompt status */}
+        {design.isPromptHidden ? (
+          /* State 1: Creator explicitly hid the prompt */
+          <div className="flex flex-col gap-2 rounded-xl border border-border/80 bg-muted/30 p-4 shadow-sm">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <EyeOff className="size-4 shrink-0 text-muted-foreground" />
+              <span className="text-caption font-semibold tracking-wide uppercase">
+                Prompt / Idea
+              </span>
+              <span className="ml-auto rounded-full bg-secondary px-2.5 py-0.5 text-caption font-medium text-muted-foreground">
+                Hidden
+              </span>
+            </div>
+            <p className="text-body-sm font-medium text-foreground">
+              Prompt hidden by creator
+            </p>
+            <p className="text-caption text-muted-foreground">
+              The creator of this design chose to keep the generation prompt private.
+            </p>
+          </div>
+        ) : design.prompt ? (
+          /* State 2: Prompt is available */
+          <div className="flex flex-col gap-3 rounded-xl border border-primary/20 bg-card p-4 shadow-sm relative overflow-hidden">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-primary">
+                <Sparkles className="size-4 shrink-0" />
+                <span className="text-caption font-semibold tracking-wide uppercase">
+                  Prompt / Idea
+                </span>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleCopyPrompt}
+                title="Copy prompt text"
+                className="h-7 px-2.5 text-caption font-medium text-muted-foreground hover:text-foreground"
+              >
+                {copied ? (
+                  <>
+                    <Check className="mr-1 size-3 text-success" />
+                    Copied
+                  </>
+                ) : (
+                  <>
+                    <Copy className="mr-1 size-3" />
+                    Copy prompt
+                  </>
                 )}
-              </p>
-            )}
+              </Button>
+            </div>
+            
+            <blockquote className="border-l-2 border-primary/60 pl-3 font-mono text-body-sm break-words text-foreground italic">
+              &ldquo;{design.prompt}&rdquo;
+            </blockquote>
 
-            {design.prompt && (
-              <p className="font-mono text-body-sm break-words text-muted-foreground">
-                {design.prompt}
-              </p>
+            {design.quote && (
+              <div className="flex flex-col gap-1 pt-1 border-t border-border/50">
+                <span className="text-caption font-medium text-muted-foreground">Line text:</span>
+                <p className="font-mono text-caption text-foreground">{design.quote}</p>
+              </div>
             )}
+          </div>
+        ) : (
+          /* State 3: Prompt is not available */
+          <div className="flex flex-col gap-2 rounded-xl border border-border/80 bg-muted/20 p-4 shadow-sm">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Info className="size-4 shrink-0 text-muted-foreground" />
+              <span className="text-caption font-semibold tracking-wide uppercase">
+                Prompt / Idea
+              </span>
+            </div>
+            <p className="text-body-sm font-medium text-foreground">
+              Prompt not available
+            </p>
+            <p className="text-caption text-muted-foreground">
+              No original prompt text was recorded for this design.
+            </p>
           </div>
         )}
 

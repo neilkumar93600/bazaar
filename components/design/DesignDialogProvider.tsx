@@ -10,6 +10,7 @@ import {
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { DesignDetailContent } from "@/components/design/DesignDetailContent"
 import { DesignDialogSkeleton } from "@/components/design/DesignDialogSkeleton"
+import { designLabel } from "@/lib/utils"
 
 type DesignDialogContextValue = {
   openDesign: (id: string) => void
@@ -70,9 +71,9 @@ export function DesignDialogProvider({ children }: { children: ReactNode }) {
           if (!open) close()
         }}
       >
-        <DialogContent className="max-h-[calc(100vh-4rem)] overflow-y-auto sm:max-w-xl md:max-w-3xl">
+        <DialogContent className="max-h-[calc(100vh-4rem)] overflow-y-auto rounded-2xl border-border/80 p-6 shadow-2xl backdrop-blur-xl sm:max-w-xl md:max-w-3xl">
           <DialogTitle className="sr-only">
-            {data?.design ? (data.design.vibeName ?? "Design") : "Design"}
+            {data?.design ? designLabel(data.design, 70) : "Design"}
           </DialogTitle>
           {isPending || !data ? (
             <DesignDialogSkeleton />

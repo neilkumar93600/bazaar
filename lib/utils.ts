@@ -30,3 +30,31 @@ export function formatCents(cents: number) {
 export function formatListingPrice(cents: number | null) {
   return cents === null ? "Free" : CURRENCY_FORMAT.format(cents / 100)
 }
+
+/** What to call a design.
+ *
+ *  Designs have no title column — nobody names them. The words printed on a
+ *  typographic shirt are the closest thing, then the maker's prompt. `vibeName`
+ *  is the last resort and used to be the first: heading every card and every
+ *  <title> with it meant a grid of fourteen cards all reading "Riot", and
+ *  fourteen product pages sharing one <title>.
+ *
+ *  `maxLength` clips for <title> and share cards, where CSS truncation can't
+ *  reach. Cards pass nothing and clip with `truncate` instead. */
+export function designLabel(
+  design: { title?: string | null; prompt?: string | null; vibeName?: string | null },
+  maxLength?: number
+) {
+  const label =
+    design.title?.trim() ||
+    design.prompt?.trim() ||
+    design.vibeName?.trim() ||
+    "Untitled design"
+
+  if (!maxLength || label.length <= maxLength) return label
+  // Clip on a word boundary where there is one close to the limit, so titles
+  // don't end mid-word.
+  const clipped = label.slice(0, maxLength - 1)
+  const lastSpace = clipped.lastIndexOf(" ")
+  return `${(lastSpace > maxLength * 0.6 ? clipped.slice(0, lastSpace) : clipped).trimEnd()}…`
+}

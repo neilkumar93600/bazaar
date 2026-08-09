@@ -195,7 +195,7 @@
 
 /* shadcn semantic layer. Light values only — do not add a second theme block. */
 :root {
-    --background: #ffffff;
+    --background: #f7ffe8;
     --foreground: #262626;
     /* Cards are Cream, not white — Brainfish's only lift above the paper, a
        barely-there yellow-green tint that reads as a different sheet rather

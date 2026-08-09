@@ -1,6 +1,6 @@
 // Mock payment adapter — same shape a real Stripe integration would have,
-// so swapping one in later only touches this file. Same pattern as the local
-// t-shirt renders standing in for the image-gen adapter (supabase/seed.sql).
+// so swapping one in later only touches this file. The last stub standing:
+// generation and fulfilment (lib/printify) are both wired to real services now.
 
 export type ChargeInput = {
   amountCents: number
