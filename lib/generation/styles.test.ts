@@ -14,6 +14,7 @@ import {
   findStyle,
   stylesForVibeSlug,
   validateStyleText,
+  requiredColourFor,
   MAX_TEXT_WORDS,
   MAX_TEXT_CHARS,
 } from "./styles"
@@ -56,6 +57,18 @@ for (const preset of STYLE_PRESETS) {
     0,
     `${preset.slug}: cutField "${preset.cutField}" collides with palette ${collides.join(", ")}`,
   )
+}
+
+// A full-bleed style keeps its ground through background removal (measured:
+// ~4% transparent, versus 52-70% for an isolated subject), so that ground
+// becomes part of the print and the garment must match it.
+for (const preset of STYLE_PRESETS) {
+  const required = requiredColourFor(preset)
+  if (preset.fullBleed) {
+    assert.ok(required, `${preset.slug}: full-bleed must demand a garment colour`)
+  } else {
+    assert.equal(required, null, `${preset.slug}: only full-bleed styles constrain the garment`)
+  }
 }
 
 // Both families exist and are non-trivial.

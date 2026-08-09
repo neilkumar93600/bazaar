@@ -21,7 +21,7 @@ import { readFileSync } from "node:fs"
 
 import { generate } from "../lib/generation/adapter.ts"
 import { buildPrompt, MAX_PROMPT_LENGTH } from "../lib/generation/prompt.ts"
-import { findStyle } from "../lib/generation/styles.ts"
+import { findStyle, requiredColourFor } from "../lib/generation/styles.ts"
 import {
   coloursFrom,
   defaultGarment,
@@ -109,7 +109,7 @@ const PLAN: Concept[] = [
   },
   {
     style: "mythic-broadside",
-    colour: "Maroon",
+    colour: "Black",
     placement: "back",
     title: "ICARUS",
     quote: "HE WAS WARNED HE WENT ANYWAY",
@@ -117,7 +117,7 @@ const PLAN: Concept[] = [
   },
   {
     style: "mythic-broadside",
-    colour: "Navy",
+    colour: "Black",
     placement: "both",
     title: "ATLAS",
     quote: "NOBODY ASKED IF IT WAS HEAVY",
@@ -125,7 +125,7 @@ const PLAN: Concept[] = [
   },
   {
     style: "occult-almanac",
-    colour: "Black",
+    colour: "White",
     placement: "back",
     title: "THE HOURS",
     quote: "EVERY CLOCK IS A SLOW ALARM",
@@ -133,7 +133,7 @@ const PLAN: Concept[] = [
   },
   {
     style: "occult-almanac",
-    colour: "Forest",
+    colour: "White",
     placement: "front",
     title: "ROOTWORK",
     quote: "WHAT GROWS DOWN HOLDS UP",
@@ -424,6 +424,16 @@ for (const [i, concept] of plan.entries()) {
     continue
   }
   if (vibeSlug && vibe.slug !== vibeSlug) continue
+
+  // A full-bleed style prints its own ground, so the shirt has to match it —
+  // otherwise the plate reads as a rectangle sitting on the garment.
+  const required = requiredColourFor(style)
+  if (required && concept.colour !== required) {
+    console.error(
+      `${label}  FAILED  ${style.slug} is full-bleed and needs a ${required} garment, not ${concept.colour}`
+    )
+    continue
+  }
 
   const featuredVariantId = variantIdByColour.get(concept.colour)
   if (!featuredVariantId) {

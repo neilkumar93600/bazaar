@@ -38,6 +38,29 @@ export type StylePreset = {
   linework: string
   palette: string[]
   cutField: "black" | "white"
+  /** True when the artwork is a full-bleed plate rather than an isolated
+   *  subject — a bordered broadside, say.
+   *
+   *  Measured, not guessed: background removal leaves an isolated subject
+   *  52-70% transparent, but a bordered plate only ~4%, because the border makes
+   *  the whole thing read as one object. So the ground survives and *becomes*
+   *  part of the print, which means the garment has to match it. A full-bleed
+   *  black plate on a maroon shirt is a black rectangle.
+   *
+   *  Enforced by REQUIRED_GARMENT_COLOUR below. */
+  fullBleed?: boolean
+}
+
+/** A full-bleed style prints its own ground, so the garment must match it.
+ *  Keyed by `cutField` because that is the ground's colour. */
+export const REQUIRED_GARMENT_COLOUR: Record<"black" | "white", string> = {
+  black: "Black",
+  white: "White",
+}
+
+/** The garment colour a preset demands, or null when any colour is fine. */
+export function requiredColourFor(style: StylePreset): string | null {
+  return style.fullBleed ? REQUIRED_GARMENT_COLOUR[style.cutField] : null
 }
 
 export const MAX_TEXT_WORDS = 7
@@ -334,17 +357,22 @@ export const STYLE_PRESETS: StylePreset[] = [
     // belong on a dark garment.
     palette: ["antique gold", "aged parchment", "oxblood", "ember orange"],
     cutField: "black",
+      fullBleed: true,
   },
   {
     slug: "occult-almanac",
     label: "Occult Almanac",
     family: "illustrated",
     vibeSlug: "insatiable",
-    aesthetic: "esoteric almanac plate, alchemical frontispiece",
+    aesthetic:
+      "esoteric almanac plate printed on pale stock, alchemical frontispiece",
     linework:
-      "fine engraved linework with astrological marginalia, a central emblem ringed by symbols, arched title above and an inscription below, hairline border",
-    palette: ["tarnished gold", "deep indigo", "verdigris", "dried rose"],
-    cutField: "black",
+      "fine dark engraved linework with astrological marginalia, a central emblem ringed by symbols, arched title above and an inscription below, hairline border",
+    // Dark ink on a pale plate — the light counterpart to mythic-broadside, so
+    // the two broadside styles do not produce the same shirt twice.
+    palette: ["iron gall", "deep indigo", "oxidised copper", "dried rose"],
+    cutField: "white",
+      fullBleed: true,
   },
   {
     slug: "anime-poster",
@@ -356,7 +384,7 @@ export const STYLE_PRESETS: StylePreset[] = [
       "cel-shaded character rendered large and centred with hard two-tone shadows and speed lines, bold display title arched above, a single kanji-style rule and a short line beneath",
     palette: ["sky cyan", "sunset coral", "warm sand", "deep violet"],
     cutField: "black",
-  },
+    },
   {
     slug: "varsity-lockup",
     label: "Varsity Lockup",
@@ -367,7 +395,7 @@ export const STYLE_PRESETS: StylePreset[] = [
       "heavy block collegiate letterforms with a contrasting outline, the first line arched over a much larger second line, a small star and a horizontal rule beneath, tight and symmetrical",
     palette: ["team navy", "cream", "signal gold"],
     cutField: "black",
-  },
+    },
   {
     slug: "kinetic-type-grid",
     label: "Kinetic Type Grid",
