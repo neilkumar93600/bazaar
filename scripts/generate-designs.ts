@@ -10,6 +10,7 @@
  *   node scripts/generate-designs.ts --count 30      more of them
  *   node scripts/generate-designs.ts --vibe riot     all into one vibe
  *   node scripts/generate-designs.ts --dry           print the plan, call nothing
+ *   node scripts/generate-designs.ts --from 8        start at the 8th plan entry
  *
  * Needs MUAPI_API_KEY and the Supabase service-role key in .env.local. Costs
  * real money per image — two MuAPI calls each, generation then background
@@ -334,6 +335,10 @@ const count = Number(flag("count") ?? 12)
 const vibeSlug = flag("vibe")
 const priceCents = Number(flag("price") ?? 2900)
 const dryRun = args.includes("--dry")
+/** 1-based index into PLAN. Lets a later run pick up only the entries added
+ *  since an earlier one, instead of regenerating everything that already
+ *  exists — the plan is ordered and append-only, so an offset is enough. */
+const from = Math.max(1, Number(flag("from") ?? 1))
 
 if (!Number.isInteger(count) || count < 1) {
   console.error("--count must be a positive integer")
@@ -461,7 +466,7 @@ const variantIdByColour = new Map(
   )
 )
 
-const plan = PLAN.slice(0, count)
+const plan = PLAN.slice(from - 1, from - 1 + count)
 
 for (const [i, concept] of plan.entries()) {
   const style = findStyle(concept.style)
