@@ -79,14 +79,29 @@ export function DesignDetailContent({
           </div>
         </div>
 
-        {design.prompt && (
-          <div className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4">
+        {(design.prompt || design.title) && (
+          <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4">
             <span className="text-caption font-medium tracking-wide text-muted-foreground uppercase">
               Prompt
             </span>
-            <p className="font-mono text-body-sm break-words text-muted-foreground">
-              {design.prompt}
-            </p>
+
+            {/* On a poster design the words ARE half the artwork, so showing
+                only the illustration idea told you nothing about the shirt in
+                front of you. */}
+            {design.title && (
+              <p className="font-mono text-body-sm break-words text-foreground">
+                {design.title}
+                {design.quote && (
+                  <span className="text-muted-foreground"> — {design.quote}</span>
+                )}
+              </p>
+            )}
+
+            {design.prompt && (
+              <p className="font-mono text-body-sm break-words text-muted-foreground">
+                {design.prompt}
+              </p>
+            )}
           </div>
         )}
 

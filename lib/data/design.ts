@@ -14,6 +14,11 @@ export type DesignDetail = {
    *  synced. Null falls back to the drawn mockup. */
   mockupUrl: string | null
   prompt: string | null
+  /** The arched title and the line underneath, for poster designs. Null for
+   *  every other style — the words are the design there, so the detail page
+   *  should show them next to the idea that made the picture. */
+  title: string | null
+  quote: string | null
   /** Null means the maker listed it free. */
   priceCents: number | null
   vibeName: string | null
@@ -46,6 +51,8 @@ export async function getDesignDetail(id: string): Promise<DesignDetail | null> 
   if (!design) return null
 
   type CreatorJob = {
+    text_content: string | null
+    quote_content: string | null
     profiles: {
       handle: string
       display_name: string | null
@@ -79,7 +86,7 @@ export async function getDesignDetail(id: string): Promise<DesignDetail | null> 
       design.generation_job_id
         ? supabase
             .from("generation_jobs")
-            .select("profiles(handle, display_name, avatar_url, bio)")
+            .select("profiles(handle, display_name, avatar_url, bio), text_content, quote_content")
             .eq("id", design.generation_job_id)
             .maybeSingle<CreatorJob>()
         : Promise.resolve({ data: null as CreatorJob | null }),
@@ -92,6 +99,8 @@ export async function getDesignDetail(id: string): Promise<DesignDetail | null> 
     imageUrl: design.image_url,
     mockupUrl: design.mockup_url ?? null,
     prompt: design.prompt,
+    title: job?.text_content ?? null,
+    quote: job?.quote_content ?? null,
     priceCents: design.price_cents,
     vibeName: vibe?.name ?? null,
     isClaimed: design.is_claimed,

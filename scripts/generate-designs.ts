@@ -524,6 +524,30 @@ const variantIdByColour = new Map(
 
 const plan = PLAN.slice(from - 1, from - 1 + count)
 
+// Titles have to be unique. Two shirts reading PROMETHEUS is two shirts nobody
+// can tell apart in a feed, and the plan is append-only so a repeat is easy to
+// write by accident. Checked against the plan itself and against everything
+// already generated, before a single image is paid for.
+{
+  const planned = plan.map((c) => c.title).filter(Boolean) as string[]
+  const dupes = planned.filter((t, i) => planned.indexOf(t) !== i)
+  if (dupes.length > 0) {
+    console.error(`Duplicate titles in the plan: ${[...new Set(dupes)].join(", ")}`)
+    process.exit(1)
+  }
+
+  const existing = await db.select<{ text_content: string }[]>(
+    "generation_jobs?select=text_content&text_content=not.is.null"
+  )
+  const taken = new Set(existing.map((row) => row.text_content))
+  const clashes = planned.filter((t) => taken.has(t))
+  if (clashes.length > 0) {
+    console.error(`Already generated: ${[...new Set(clashes)].join(", ")}`)
+    console.error("Change the title or use --from to skip past them.")
+    process.exit(1)
+  }
+}
+
 for (const [i, concept] of plan.entries()) {
   const style = findStyle(concept.style)
   const label = `[${String(i + 1).padStart(2, "0")}/${plan.length}] ${concept.style}`
@@ -574,6 +598,7 @@ for (const [i, concept] of plan.entries()) {
       quality_tier: "medium",
       style_slug: style.slug,
       text_content: concept.title ?? null,
+      quote_content: concept.quote ?? null,
       status: "generating",
     })
     jobId = job.id

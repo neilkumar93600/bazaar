@@ -142,6 +142,7 @@ export async function POST(request: Request) {
       vibe_id: vibe.id,
       style_slug: style.slug,
       text_content: textResult.text,
+      quote_content: quoteResult.text,
       quality_tier: quality,
       status: "queued",
     })

@@ -43,12 +43,13 @@ export function Feed({ columns }: { columns: FeedColumn[] }) {
   // designs.
   const base = Math.floor(designs.length / TRACK_COUNT)
   const remainder = designs.length % TRACK_COUNT
-  let cursor = 0
   const tracks = Array.from({ length: TRACK_COUNT }, (_, track) => {
+    // Offset computed rather than carried in a cursor: the first `remainder`
+    // tracks are one longer, so everything before this track is
+    // `track * base` plus one for each of those.
+    const start = track * base + Math.min(track, remainder)
     const size = base + (track < remainder ? 1 : 0)
-    const slice = designs.slice(cursor, cursor + size)
-    cursor += size
-    return slice
+    return designs.slice(start, start + size)
   })
 
   if (designs.length === 0) {
