@@ -178,3 +178,20 @@ One line per route from `docs/ARCHITECTURE.md`. Check off as each ships (route f
 - Blocked on: Supabase MCP OAuth (`claude /mcp` in an interactive terminal, pick `supabase`, authenticate) — needed to (1) apply the migration + seed, (2) pull the project URL/anon key into `.env.local` (see `.env.example`), (3) render/verify `/` against live data.
 - Env vars required by the app: see `.env.example`.
 - Typecheck + lint are clean (`npm run typecheck`, `npm run lint`). Dev server boots and correctly fails only on the missing Supabase env vars — confirms the data-fetch wiring (proxy → server client → `lib/data/feed.ts` → page) is correct end to end.
+
+## Printify variant ceiling (2026-08-09)
+
+Printify refuses any product with **more than 100 enabled variants**
+(`400 8251 Too many variants enabled`). Blueprint 12 / provider 99 offers 125
+colours across 995 variants, so "enable everything" is not an option — it broke
+product creation entirely for a while, silently, because `syncDesignProduct`
+swallows its failures.
+
+`Garment.colours` is the curated list and `sellableVariants` enforces the
+ceiling, taking colours whole. Currently 995 → 92 across 11 colours. Every
+consumer must go through it: product creation, the maker's listing form and the
+buyer's order form. A variant offered but not enabled produces an order Printify
+rejects **after** the buyer has paid.
+
+`scripts/backfill-products.ts` repairs designs whose sync failed. Safe to
+re-run.
