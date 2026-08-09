@@ -565,6 +565,8 @@ for (const [i, concept] of plan.entries()) {
     continue
   }
 
+  let jobId: string | null = null
+
   try {
     const job = await db.insert<{ id: string }>("generation_jobs", {
       user_id: owner.id,
@@ -574,6 +576,7 @@ for (const [i, concept] of plan.entries()) {
       text_content: concept.title ?? null,
       status: "generating",
     })
+    jobId = job.id
 
     // The app's own adapter, not a copy of it: same MuAPI calls, same prompt,
     // same background cut, so a seeded design is byte-for-byte the kind of thing
@@ -625,6 +628,15 @@ for (const [i, concept] of plan.entries()) {
     console.log(`${label}  ok  ${design.id}`)
   } catch (error) {
     console.error(`${label}  FAILED  ${(error as Error).message}`)
+
+    // Mark the job dead. Without this a failed run is left on `generating`,
+    // which is indistinguishable from one still in flight — so a batch that
+    // half-failed reads as a batch still working.
+    if (jobId) {
+      await db
+        .patch("generation_jobs", `id=eq.${jobId}`, { status: "failed" })
+        .catch(() => {})
+    }
   }
 }
 
