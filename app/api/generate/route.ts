@@ -84,7 +84,7 @@ export async function POST(request: Request) {
   // Hand back the id now; the client polls the row. Everything below runs
   // after the response has been sent.
   after(async () => {
-    await runGeneration(job.id, prompt, vibe?.name ?? null, vibe?.id ?? null)
+    await runGeneration(job.id, user.id, prompt, vibe?.name ?? null, vibe?.id ?? null)
   })
 
   return Response.json({ jobId: job.id }, { status: 202 })
@@ -103,6 +103,7 @@ function serviceClient() {
 
 async function runGeneration(
   jobId: string,
+  userId: string,
   userPrompt: string,
   vibeName: string | null,
   vibeId: string | null,
@@ -130,8 +131,15 @@ async function runGeneration(
       .insert({
         vibe_id: vibeId,
         generation_job_id: jobId,
+        creator_id: userId,
         image_url: publicUrl,
         prompt: userPrompt,
+        // Private until the maker lists it. Generation is no longer
+        // publication: listed_at stays null, and price_cents stays null
+        // because free and priced are both decisions the maker has not made
+        // yet. See docs/superpowers/specs/2026-08-09-design-ownership-listing-design.md
+        listed_at: null,
+        price_cents: null,
         // Auto-approved by design decision — the model refuses policy
         // violations at source and there is no review queue. See the spec.
         moderation_status: "approved",
