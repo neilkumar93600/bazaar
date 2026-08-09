@@ -384,9 +384,16 @@ export const STYLE_PRESETS: StylePreset[] = [
     label: "Anime Poster",
     family: "illustrated",
     vibeSlug: "late-bloomer",
-    aesthetic: "1990s anime key visual poster",
+    aesthetic:
+      "late-1990s cel-animation OVA key visual, printed as a tour poster",
+    // Rewritten against the gpt-image skill's anime gallery, which pairs every
+    // subject with a dense "Art direction:" block. The earlier version named
+    // only cel shading and speed lines and produced flat, generic output.
+    //
+    // Era and technique anchors, never a studio or franchise: these are printed
+    // and sold, and "in the style of <studio>'s <show>" is the IP problem.
     linework:
-      "cel-shaded character rendered large and centred with hard two-tone shadows and speed lines, bold display title arched above, a single kanji-style rule and a short line beneath",
+      "polished high-end anime rendering, genga-quality crisp line art with varied line weight, soft cel shading in two hard tones, luminous eyes, a hard rim light separating the figure from the ground, motion streaks and speed lines where there is movement, saturated but never neon, a strong readable silhouette that still holds at t-shirt size, bold display title arched above and a short line beneath",
     palette: ["sky cyan", "sunset coral", "warm sand", "deep violet"],
     cutField: "black",
     fullBleed: true,
@@ -396,9 +403,10 @@ export const STYLE_PRESETS: StylePreset[] = [
     label: "Anime Villain",
     family: "illustrated",
     vibeSlug: "riot",
-    aesthetic: "anime antagonist key visual, high-contrast villain poster",
+    aesthetic:
+      "anime antagonist key visual, high-contrast villain poster, cel-animation era",
     linework:
-      "a single menacing figure shot from below, face half in shadow, one eye catching the light, sharp cel shading with hard rim light and drifting embers, bold display title arched above and a short line beneath",
+      "genga-quality crisp line art with heavy cel shading, the figure framed from below and lit from behind so a hard rim light carves it out of the dark, face half in shadow with one eye catching a specular highlight, drifting embers and motion streaks, deep blacks against a narrow band of saturated colour, never neon, a strong readable silhouette that still holds at t-shirt size, bold display title arched above and a short line beneath",
     // Deliberately colder and higher-contrast than anime-poster, so a hero and
     // a villain never come out looking like the same shirt.
     palette: ["blood crimson", "bruised violet", "sulphur yellow", "cold steel"],
