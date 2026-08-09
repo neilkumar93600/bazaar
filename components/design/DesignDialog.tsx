@@ -3,15 +3,20 @@
 import { useRouter } from "next/navigation"
 
 import type { DesignDetail } from "@/lib/data/design"
+import type { OrderOptions } from "@/app/(public)/design/[id]/order-actions"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { DesignDetailContent } from "@/components/design/DesignDetailContent"
 
 export function DesignDialog({
   design,
   viewerIsLoggedIn,
+  viewerEmail,
+  orderOptions,
 }: {
   design: DesignDetail
   viewerIsLoggedIn: boolean
+  viewerEmail: string
+  orderOptions: OrderOptions
 }) {
   const router = useRouter()
 
@@ -26,7 +31,12 @@ export function DesignDialog({
         <DialogTitle className="sr-only">
           {design.vibeName ?? "Design"} — {design.isClaimed ? "claimed" : "unclaimed"}
         </DialogTitle>
-        <DesignDetailContent design={design} viewerIsLoggedIn={viewerIsLoggedIn} />
+        <DesignDetailContent
+          design={design}
+          viewerIsLoggedIn={viewerIsLoggedIn}
+          viewerEmail={viewerEmail}
+          orderOptions={orderOptions}
+        />
       </DialogContent>
     </Dialog>
   )

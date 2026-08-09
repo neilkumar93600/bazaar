@@ -3,8 +3,10 @@
 import { createContext, useContext, useState, useTransition, type ReactNode } from "react"
 import { usePathname } from "next/navigation"
 
-import type { DesignDetail } from "@/lib/data/design"
-import { getDesignDialogData } from "@/app/(public)/design/[id]/actions"
+import {
+  getDesignDialogData,
+  type DesignDialogData,
+} from "@/app/(public)/design/[id]/actions"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { DesignDetailContent } from "@/components/design/DesignDetailContent"
 import { DesignDialogSkeleton } from "@/components/design/DesignDialogSkeleton"
@@ -26,10 +28,9 @@ export function useDesignDialog() {
 
 export function DesignDialogProvider({ children }: { children: ReactNode }) {
   const [designId, setDesignId] = useState<string | null>(null)
-  const [data, setData] = useState<{
-    design: DesignDetail | null
-    viewerIsLoggedIn: boolean
-  } | null>(null)
+  // The action's own return type rather than a local restatement of it — a
+  // second copy is a second thing to forget to update.
+  const [data, setData] = useState<DesignDialogData | null>(null)
   const [isPending, startTransition] = useTransition()
   const pathname = usePathname()
 
@@ -76,7 +77,12 @@ export function DesignDialogProvider({ children }: { children: ReactNode }) {
           {isPending || !data ? (
             <DesignDialogSkeleton />
           ) : data.design ? (
-            <DesignDetailContent design={data.design} viewerIsLoggedIn={data.viewerIsLoggedIn} />
+            <DesignDetailContent
+              design={data.design}
+              viewerIsLoggedIn={data.viewerIsLoggedIn}
+              viewerEmail={data.viewerEmail}
+              orderOptions={data.orderOptions}
+            />
           ) : (
             <p className="text-body-sm text-muted-foreground">Design not found.</p>
           )}

@@ -3,17 +3,26 @@ import Link from "next/link"
 import { formatDistanceToNowStrict } from "date-fns"
 
 import type { DesignDetail } from "@/lib/data/design"
+import type { OrderOptions } from "@/app/(public)/design/[id]/order-actions"
 import { formatListingPrice } from "@/lib/utils"
 import { ClaimForm } from "@/components/design/ClaimForm"
+import { OrderForm } from "@/components/design/OrderForm"
 import { ShirtMockup } from "@/components/shared/ShirtMockup"
 import { Button } from "@/components/ui/button"
 
 export function DesignDetailContent({
   design,
   viewerIsLoggedIn,
+  viewerEmail = "",
+  orderOptions = null,
 }: {
   design: DesignDetail
   viewerIsLoggedIn: boolean
+  /** Prefills the shipping form. Empty for a signed-out viewer. */
+  viewerEmail?: string
+  /** Null unless the design is claimed and has a Printify product — only then
+   *  is there a garment to order. */
+  orderOptions?: OrderOptions
 }) {
   return (
     <div className="flex min-w-0 flex-col gap-6 md:flex-row md:items-start">
@@ -113,11 +122,38 @@ export function DesignDetailContent({
         )}
 
         {design.isClaimed ? (
-          design.claimantHandle && (
-            <Button variant="outline" render={<Link href={`/creator/${design.claimantHandle}`} />}>
-              View storefront
-            </Button>
-          )
+          <>
+            {design.claimantHandle && (
+              <Button
+                variant="outline"
+                render={<Link href={`/creator/${design.claimantHandle}`} />}
+              >
+                View storefront
+              </Button>
+            )}
+
+            {/* Claimed designs are the only wearable ones: a claim gives the
+                design an owner, and every garment order earns them a royalty. */}
+            {orderOptions ? (
+              viewerIsLoggedIn ? (
+                <OrderForm
+                  designId={design.id}
+                  options={orderOptions}
+                  featuredVariantId={design.featuredVariantId}
+                  defaultEmail={viewerEmail}
+                />
+              ) : (
+                <div className="glass-surface flex flex-col gap-4 rounded-xl border bg-card p-6 text-card-foreground">
+                  <p className="text-body-sm text-muted-foreground">
+                    Sign in to order this design printed.
+                  </p>
+                  <Button variant="ember" render={<Link href="/login" />}>
+                    Log in to order
+                  </Button>
+                </div>
+              )
+            ) : null}
+          </>
         ) : viewerIsLoggedIn ? (
           <ClaimForm designId={design.id} priceCents={design.priceCents} />
         ) : (

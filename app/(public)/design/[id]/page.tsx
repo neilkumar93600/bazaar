@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { getDesignDetail } from "@/lib/data/design";
+import { getOrderOptions } from "@/app/(public)/design/[id]/order-actions";
 import { createClient } from "@/lib/supabase/server";
 import { formatListingPrice } from "@/lib/utils";
 import { DesignDialog } from "@/components/design/DesignDialog";
@@ -31,5 +32,19 @@ export default async function DesignDetailPage(props: PageProps<"/design/[id]">)
     data: { user },
   } = await supabase.auth.getUser();
 
-  return <DesignDialog design={design} viewerIsLoggedIn={Boolean(user)} />;
+  // Only a claimed design with a product can be ordered, so the Printify
+  // catalogue call is skipped entirely for everything else.
+  const orderOptions =
+    design.claimedBy && design.printifyProductId
+      ? await getOrderOptions(design.garmentSlug)
+      : null;
+
+  return (
+    <DesignDialog
+      design={design}
+      viewerIsLoggedIn={Boolean(user)}
+      viewerEmail={user?.email ?? ""}
+      orderOptions={orderOptions}
+    />
+  );
 }

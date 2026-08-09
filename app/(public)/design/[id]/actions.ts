@@ -7,12 +7,23 @@ import { createClient } from "@/lib/supabase/server";
 import { charge } from "@/lib/payments/checkout";
 import { syncDesignProduct } from "@/lib/printify/sync";
 import { getDesignDetail, type DesignDetail } from "@/lib/data/design";
+import {
+  getOrderOptions,
+  type OrderOptions,
+} from "@/app/(public)/design/[id]/order-actions";
 
 export type ClaimState = { error?: string };
 
+export type DesignDialogData = {
+  design: DesignDetail | null;
+  viewerIsLoggedIn: boolean;
+  viewerEmail: string;
+  orderOptions: OrderOptions;
+};
+
 export async function getDesignDialogData(
   designId: string
-): Promise<{ design: DesignDetail | null; viewerIsLoggedIn: boolean }> {
+): Promise<DesignDialogData> {
   const [design, supabase] = await Promise.all([
     getDesignDetail(designId),
     createClient(),
@@ -21,7 +32,19 @@ export async function getDesignDialogData(
     data: { user },
   } = await supabase.auth.getUser();
 
-  return { design, viewerIsLoggedIn: Boolean(user) };
+  // Only a claimed design with a product can be ordered, so the catalogue call
+  // is skipped entirely for everything else.
+  const orderOptions =
+    design?.claimedBy && design.printifyProductId
+      ? await getOrderOptions(design.garmentSlug)
+      : null;
+
+  return {
+    design,
+    viewerIsLoggedIn: Boolean(user),
+    viewerEmail: user?.email ?? "",
+    orderOptions,
+  };
 }
 
 export async function claimDesign(

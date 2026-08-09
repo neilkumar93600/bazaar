@@ -18,7 +18,14 @@ export type DesignDetail = {
   priceCents: number | null
   vibeName: string | null
   isClaimed: boolean
+  /** The owner's id. A garment can only be ordered once a design has one. */
+  claimedBy: string | null
   claimantHandle: string | null
+  /** Ordering needs all three: the product to order against, and the garment
+   *  whose catalogue the chosen variant must belong to. */
+  printifyProductId: string | null
+  garmentSlug: string | null
+  featuredVariantId: number | null
   claimedAt: string | null
   createdAt: string
   creator: DesignCreator | null
@@ -30,7 +37,7 @@ export async function getDesignDetail(id: string): Promise<DesignDetail | null> 
   const { data: design } = await supabase
     .from("designs")
     .select(
-      "id, image_url, mockup_url, prompt, price_cents, vibe_id, is_claimed, claimed_by, created_at, generation_job_id"
+      "id, image_url, mockup_url, prompt, price_cents, vibe_id, is_claimed, claimed_by, created_at, generation_job_id, printify_product_id, garment_slug, featured_variant_id"
     )
     .eq("id", id)
     .eq("moderation_status", "approved")
@@ -88,7 +95,11 @@ export async function getDesignDetail(id: string): Promise<DesignDetail | null> 
     priceCents: design.price_cents,
     vibeName: vibe?.name ?? null,
     isClaimed: design.is_claimed,
+    claimedBy: design.claimed_by ?? null,
     claimantHandle: claimantProfile?.handle ?? null,
+    printifyProductId: design.printify_product_id ?? null,
+    garmentSlug: design.garment_slug ?? null,
+    featuredVariantId: design.featured_variant_id ?? null,
     claimedAt: claimRow?.claimed_at ?? null,
     createdAt: design.created_at,
     creator: creatorProfile
