@@ -1,6 +1,8 @@
 import { createClient } from "@supabase/supabase-js"
 
 import { printifyConfig } from "./client.ts"
+import { defaultGarment, findGarment } from "./garments.ts"
+import { type Placement } from "./print-areas.ts"
 import { createDesignProduct } from "./products.ts"
 
 /** Service-role client. This runs after the user's response has been sent, with
@@ -13,18 +15,6 @@ function serviceClient() {
     { auth: { persistSession: false } }
   )
 }
-
-/** What the Printify product's variants are priced at when the design itself
- *  carries no price (the maker listed it free).
- *
- *  These are different prices wearing the same name: `designs.price_cents` is
- *  what a claimer pays for *ownership*; this is what a buyer pays for a
- *  *garment*. Sub-project D gives the garment its own price and this constant
- *  goes away. Until then, free ownership must not mean a free t-shirt.
- *
- *  ponytail: one constant, not a config table — there is exactly one garment
- *  price in the system today. */
-const FALLBACK_GARMENT_PRICE_CENTS = 2900
 
 /** Mints the Printify product for a design and stores the id and mockup on the
  *  row.
@@ -50,13 +40,24 @@ export async function syncDesignProduct(designId: string): Promise<void> {
 
   const { data: design } = await admin
     .from("designs")
-    .select("id, image_url, print_ready_front_url, price_cents, printify_product_id, vibe_id")
+    .select(
+      "id, image_url, print_ready_front_url, printify_product_id, vibe_id, garment_slug, featured_variant_id, placement"
+    )
     .eq("id", designId)
     .maybeSingle()
 
   if (!design) return
-  // Already minted. Claims are one-way, so this is only reachable via a retry.
+  // Already minted. This is also why the garment config is frozen once a
+  // product exists: re-minting would orphan the old one in the Printify shop.
   if (design.printify_product_id) return
+
+  // A null config is the backfill path — designs from before garment choice
+  // existed, and the claim-path retry. Default garment, front print.
+  const garment = design.garment_slug
+    ? findGarment(design.garment_slug)
+    : defaultGarment()
+
+  if (!garment) return
 
   const { data: vibe } = design.vibe_id
     ? await admin.from("vibes").select("name").eq("id", design.vibe_id).maybeSingle()
@@ -65,11 +66,13 @@ export async function syncDesignProduct(designId: string): Promise<void> {
   try {
     const result = await createDesignProduct({
       designId: design.id,
+      garment,
       title: `${vibe?.name ?? "Shirt Bazaar"} — 1 of 1`,
       description:
         "A one-of-a-kind AI design, claimed by a single owner and never reprinted for anyone else.",
       imageUrl: design.print_ready_front_url ?? design.image_url,
-      priceCents: design.price_cents ?? FALLBACK_GARMENT_PRICE_CENTS,
+      placement: (design.placement as Placement | null) ?? "front",
+      featuredVariantId: design.featured_variant_id ?? null,
     })
 
     if (!result) return
