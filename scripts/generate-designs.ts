@@ -21,6 +21,7 @@ import { readFileSync } from "node:fs"
 
 import { generate } from "../lib/generation/adapter.ts"
 import { buildPrompt, MAX_PROMPT_LENGTH } from "../lib/generation/prompt.ts"
+import { stylesForVibeSlug } from "../lib/generation/styles.ts"
 import { syncDesignProduct } from "../lib/printify/sync.ts"
 
 // ---------------------------------------------------------------------------
@@ -247,18 +248,34 @@ for (let i = 0; i < count; i++) {
     continue
   }
 
+  // House stock uses the first preset filed under this vibe, so a seeded design
+  // looks like something the create flow could actually have produced. Single
+  // image, not a four-up grid — nobody is choosing between these.
+  const style = stylesForVibeSlug(vibe.slug)[0]
+  if (!style) {
+    console.error(`${label}  FAILED  no style preset files under vibe ${vibe.slug}`)
+    continue
+  }
+
   try {
     const job = await db.insert<{ id: string }>("generation_jobs", {
       user_id: owner.id,
       vibe_id: vibe.id,
-      quality_tier: "draft",
+      quality_tier: "medium",
+      style_slug: style.slug,
       status: "generating",
     })
 
     // The app's own adapter, not a copy of it: same MuAPI calls, same prompt,
     // same background cut, so a seeded design is byte-for-byte the kind of thing
     // the create flow produces.
-    const image = await generate(buildPrompt(idea, vibe.name), [], "draft")
+    const image = await generate({
+      prompt: buildPrompt({ idea, style, text: null }),
+      references: [],
+      aspectRatio: "3:4",
+      quality: "medium",
+      cutField: style.cutField,
+    })
     const imageUrl = await db.upload(`${job.id}.png`, image.bytes)
 
     const design = await db.insert<{ id: string }>("designs", {

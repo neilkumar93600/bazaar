@@ -2,16 +2,35 @@ import { after } from "next/server"
 import { createClient as createServiceClient } from "@supabase/supabase-js"
 
 import { createClient } from "@/lib/supabase/server"
-import { generate } from "@/lib/generation/adapter"
+import {
+  generate,
+  ASPECT_RATIOS,
+  QUALITIES,
+  type AspectRatio,
+  type Quality,
+} from "@/lib/generation/adapter"
 import {
   buildPrompt,
   MAX_PROMPT_LENGTH,
   MIN_PROMPT_LENGTH,
 } from "@/lib/generation/prompt"
-import { countRecentGenerations, DAILY_CAP } from "@/lib/generation/quota"
+import {
+  findStyle,
+  validateStyleText,
+  type StylePreset,
+} from "@/lib/generation/styles"
+import {
+  countRecentGenerations,
+  DAILY_CAP,
+  IMAGES_PER_JOB,
+} from "@/lib/generation/quota"
 
 /** Ceiling for the background work. The platform kills the invocation at its
- *  own limit regardless; this just keeps a wedged request from holding on. */
+ *  own limit regardless; this just keeps a wedged request from holding on.
+ *
+ *  Four images run in parallel and each is two sequential model runs with a
+ *  120s poll timeout apiece, so the worst case is ~240s. Inside this, but not
+ *  by much — see the plan's risks. */
 export const maxDuration = 300
 
 export async function POST(request: Request) {
@@ -26,11 +45,13 @@ export async function POST(request: Request) {
 
   const body = (await request.json().catch(() => null)) as {
     prompt?: unknown
-    vibeId?: unknown
+    styleSlug?: unknown
+    text?: unknown
+    aspectRatio?: unknown
+    quality?: unknown
   } | null
 
   const prompt = typeof body?.prompt === "string" ? body.prompt.trim() : ""
-  const vibeId = typeof body?.vibeId === "string" ? body.vibeId : null
 
   if (prompt.length < MIN_PROMPT_LENGTH || prompt.length > MAX_PROMPT_LENGTH) {
     return Response.json(
@@ -41,14 +62,49 @@ export async function POST(request: Request) {
     )
   }
 
-  // Resolve the vibe rather than trusting the id: it names the row we write
-  // and feeds the prompt, so a bogus id must not reach either.
-  const { data: vibe } = vibeId
-    ? await supabase.from("vibes").select("id, name").eq("id", vibeId).maybeSingle()
-    : { data: null }
+  const style =
+    typeof body?.styleSlug === "string" ? findStyle(body.styleSlug) : null
 
-  if (vibeId && !vibe) {
-    return Response.json({ error: "Pick a vibe." }, { status: 400 })
+  if (!style) {
+    return Response.json({ error: "Pick a style." }, { status: 400 })
+  }
+
+  // Enforced server-side even though the form gates it: the client is a
+  // convenience, this is the boundary.
+  const textResult = validateStyleText(
+    style,
+    typeof body?.text === "string" ? body.text : "",
+  )
+
+  if (!textResult.ok) {
+    return Response.json({ error: textResult.error }, { status: 400 })
+  }
+
+  // Unknown values fall back rather than 400: an out-of-range aspect or quality
+  // is a stale client, not an attack, and the defaults are always safe.
+  const aspectRatio = ASPECT_RATIOS.includes(body?.aspectRatio as AspectRatio)
+    ? (body!.aspectRatio as AspectRatio)
+    : "3:4"
+  const quality = QUALITIES.includes(body?.quality as Quality)
+    ? (body!.quality as Quality)
+    : "medium"
+
+  // The style decides the column — the form asks one question, not two.
+  //
+  // A style naming a vibe that doesn't exist means the presets and the database
+  // disagree. That is a deployment bug, not a user error, so it is a 500 rather
+  // than a silently unfiled design nobody can find in the feed.
+  const { data: vibe } = await supabase
+    .from("vibes")
+    .select("id")
+    .eq("slug", style.vibeSlug)
+    .maybeSingle()
+
+  if (!vibe) {
+    console.error(
+      `[generate] style ${style.slug} names unknown vibe ${style.vibeSlug}`,
+    )
+    return Response.json({ error: "Could not start generation." }, { status: 500 })
   }
 
   const used = await countRecentGenerations(supabase, user.id)
@@ -61,7 +117,7 @@ export async function POST(request: Request) {
 
   if (used >= DAILY_CAP) {
     return Response.json(
-      { error: `You've hit today's limit of ${DAILY_CAP} generations.` },
+      { error: `You've hit today's limit of ${DAILY_CAP * IMAGES_PER_JOB} images.` },
       { status: 429 },
     )
   }
@@ -70,8 +126,10 @@ export async function POST(request: Request) {
     .from("generation_jobs")
     .insert({
       user_id: user.id,
-      vibe_id: vibe?.id ?? null,
-      quality_tier: "draft",
+      vibe_id: vibe.id,
+      style_slug: style.slug,
+      text_content: textResult.text,
+      quality_tier: quality,
       status: "queued",
     })
     .select("id")
@@ -84,7 +142,16 @@ export async function POST(request: Request) {
   // Hand back the id now; the client polls the row. Everything below runs
   // after the response has been sent.
   after(async () => {
-    await runGeneration(job.id, user.id, prompt, vibe?.name ?? null, vibe?.id ?? null)
+    await runGeneration(
+      job.id,
+      user.id,
+      prompt,
+      style,
+      textResult.text,
+      vibe.id,
+      aspectRatio,
+      quality,
+    )
   })
 
   return Response.json({ jobId: job.id }, { status: 202 })
@@ -104,59 +171,118 @@ function serviceClient() {
 async function runGeneration(
   jobId: string,
   userId: string,
-  userPrompt: string,
-  vibeName: string | null,
-  vibeId: string | null,
+  idea: string,
+  style: StylePreset,
+  text: string | null,
+  vibeId: string,
+  aspectRatio: AspectRatio,
+  quality: Quality,
 ) {
   const admin = serviceClient()
 
-  try {
-    await admin.from("generation_jobs").update({ status: "generating" }).eq("id", jobId)
+  await admin.from("generation_jobs").update({ status: "generating" }).eq("id", jobId)
 
-    const image = await generate(buildPrompt(userPrompt, vibeName), [], "draft")
+  const prompt = buildPrompt({ idea, style, text })
 
-    const path = `${jobId}.png`
-    const { error: uploadError } = await admin.storage
-      .from("designs")
-      .upload(path, image.bytes, { contentType: image.contentType, upsert: true })
+  // Four model runs, not one call for four images: MuAPI's endpoint has no `n`
+  // parameter. In parallel because each image is two sequential model runs
+  // (generate, then cut) and four of those in series would breach maxDuration.
+  const settled = await Promise.allSettled(
+    Array.from({ length: IMAGES_PER_JOB }, (_, index) =>
+      generateOne(
+        admin,
+        jobId,
+        userId,
+        idea,
+        vibeId,
+        prompt,
+        style,
+        aspectRatio,
+        quality,
+        index,
+      ),
+    ),
+  )
 
-    if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`)
-
-    const {
-      data: { publicUrl },
-    } = admin.storage.from("designs").getPublicUrl(path)
-
-    const { data: design, error: designError } = await admin
-      .from("designs")
-      .insert({
-        vibe_id: vibeId,
-        generation_job_id: jobId,
-        creator_id: userId,
-        image_url: publicUrl,
-        prompt: userPrompt,
-        // Private until the maker lists it. Generation is no longer
-        // publication: listed_at stays null, and price_cents stays null
-        // because free and priced are both decisions the maker has not made
-        // yet. See docs/superpowers/specs/2026-08-09-design-ownership-listing-design.md
-        listed_at: null,
-        price_cents: null,
-        // Auto-approved by design decision — the model refuses policy
-        // violations at source and there is no review queue. See the spec.
-        moderation_status: "approved",
-      })
-      .select("id")
-      .single()
-
-    if (designError || !design) {
-      throw new Error(`Design insert failed: ${designError?.message}`)
-    }
-
-    await admin
-      .from("generation_jobs")
-      .update({ status: "done", result_design_id: design.id })
-      .eq("id", jobId)
-  } catch (error) {
-    console.error(`[generate] job ${jobId} failed:`, error)
-    await admin.from("generation_jobs").update({ status: "failed" }).eq("id", jobId)
+  const designIds: string[] = []
+  for (const result of settled) {
+    if (result.status === "fulfilled") designIds.push(result.value)
+    else console.error(`[generate] job ${jobId} image failed:`, result.reason)
   }
+
+  // Three good images is a good result. The job only fails when nothing landed,
+  // so one timed-out run never throws away the three that worked.
+  if (designIds.length === 0) {
+    await admin.from("generation_jobs").update({ status: "failed" }).eq("id", jobId)
+    return
+  }
+
+  await admin
+    .from("generation_jobs")
+    .update({ status: "done", result_design_id: designIds[0] })
+    .eq("id", jobId)
+}
+
+/** One image, start to finish. Returns the design id, throws on any failure —
+ *  the caller settles it.
+ *
+ *  The row is inserted here rather than after the fan-out so the grid fills
+ *  incrementally: the client's poll sees each design the moment it lands. */
+async function generateOne(
+  admin: ReturnType<typeof serviceClient>,
+  jobId: string,
+  userId: string,
+  idea: string,
+  vibeId: string,
+  prompt: string,
+  style: StylePreset,
+  aspectRatio: AspectRatio,
+  quality: Quality,
+  index: number,
+): Promise<string> {
+  const image = await generate({
+    prompt,
+    references: [],
+    aspectRatio,
+    quality,
+    cutField: style.cutField,
+  })
+
+  // Indexed: four images share one job, and `upsert: true` would silently
+  // overwrite them into a single object otherwise.
+  const path = `${jobId}-${index}.png`
+  const { error: uploadError } = await admin.storage
+    .from("designs")
+    .upload(path, image.bytes, { contentType: image.contentType, upsert: true })
+
+  if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`)
+
+  const {
+    data: { publicUrl },
+  } = admin.storage.from("designs").getPublicUrl(path)
+
+  const { data: design, error: designError } = await admin
+    .from("designs")
+    .insert({
+      vibe_id: vibeId,
+      generation_job_id: jobId,
+      creator_id: userId,
+      image_url: publicUrl,
+      prompt: idea,
+      // Private until the maker lists it. Generation is not publication —
+      // see docs/superpowers/specs/2026-08-09-design-ownership-listing-design.md
+      listed_at: null,
+      price_cents: null,
+      // Auto-approved by design decision — the model refuses policy
+      // violations at source and there is no review queue.
+      moderation_status: "approved",
+    })
+    .select("id")
+    .single()
+
+  if (designError || !design) {
+    throw new Error(`Design insert failed: ${designError?.message}`)
+  }
+
+  return design.id
 }

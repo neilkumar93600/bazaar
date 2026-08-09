@@ -3,44 +3,102 @@
  *  The user supplies an idea, never the whole prompt. Raw user text sent
  *  straight to the model drifts hard — within seconds it degenerates into
  *  generic merch covered in garbled pseudo-lettering. Pinning the medium,
- *  palette and composition here keeps output recognisably Shirt Bazaar, and
- *  the no-letterforms rule is the single most important line in the file:
- *  the model cannot spell, so it is never asked to.
+ *  palette and composition here keeps output deliberate, and the letterform
+ *  rule is the single most important thing in the file.
+ *
+ *  That rule is now conditional, and the condition is the only one there is:
+ *  `pictorial` styles keep the blanket ban verbatim, because the model cannot
+ *  spell and is therefore never asked to. `typographic` styles are the sole
+ *  exception — there the words *are* the artwork, so the ban is replaced by an
+ *  instruction to render one exact string and nothing else. Nothing outside
+ *  lib/generation/styles.ts may widen that exception.
  *
  *  Structured as a config block rather than prose deliberately — GPT Image 2
  *  follows schema-shaped prompts far more closely on scenes with several
  *  interacting systems (subject, palette, lighting, composition).
+ *
+ *  The flat background field is a chroma key, not a look. MuAPI's gpt-image-2
+ *  endpoint has no transparency flag, so alpha comes from a second pass through
+ *  ai-background-remover (lib/generation/adapter.ts) and that pass needs one
+ *  uniform field to cut against. Which colour is per style: black for most,
+ *  white for the black-ink styles that would otherwise be cut away along with
+ *  the background. See `StylePreset.cutField`.
  */
+
+import type { StylePreset } from "./styles"
 
 /** Longest idea we accept. Past this the user is writing the art direction,
  *  which is the model's drift failure mode, not a feature. */
 export const MAX_PROMPT_LENGTH = 200
 export const MIN_PROMPT_LENGTH = 3
 
-export function buildPrompt(userText: string, vibeName: string | null): string {
-  const idea = userText.trim()
+/** The flat field the artwork is keyed against, phrased for the model. */
+const FIELD_PHRASE = {
+  black: "one flat solid pure black field, edge to edge",
+  white: "one flat solid pure white field, edge to edge",
+} as const
+
+/** The subject must not be painted in the field colour or the background
+ *  remover cuts it away with the background. Mirrors the invariant enforced in
+ *  styles.test.ts. */
+const MERGE_WARNING = {
+  black:
+    "any part of the subject rendered in pure black, which would merge into the background",
+  white:
+    "any part of the subject rendered in pure white, which would merge into the background",
+} as const
+
+export function buildPrompt(input: {
+  idea: string
+  style: StylePreset
+  /** Typographic styles only. Null for pictorial. */
+  text: string | null
+}): string {
+  const { idea, style, text } = input
+  const isTypographic = style.family === "typographic"
+
+  const letterformRules = isTypographic
+    ? [
+        "any word, letter or numeral that is not part of TEXT_CONTENT",
+        "misspelling, duplicating or reordering the words in TEXT_CONTENT",
+      ]
+    : ["any words, letters, numerals or letterforms anywhere in the image"]
+
+  const subject = isTypographic
+    ? { key: "TEXT_CONTENT", value: text ?? "", direction: idea.trim() }
+    : { key: "SUBJECT", value: idea.trim(), direction: null }
 
   return `/* SHIRT_PRINT_CONFIG: 1-of-1 Design
-   VERSION: 1.0.0
-   AESTHETIC: Screen-printed streetwear poster art */
+   VERSION: 2.0.0
+   STYLE: ${style.slug} */
 {
   "GLOBAL_SETTINGS": {
     "artifact": "flat screen-print artwork for the front of a t-shirt, not a photograph of a shirt",
-    "aspect_ratio": "portrait 2:3",
-    "style": "bold pictorial line art, thick confident linework, vintage woodcut and tattoo-flash influence"
+    "aesthetic": ${JSON.stringify(style.aesthetic)},
+    "style": ${JSON.stringify(style.linework)}
   },
-  "SUBJECT": ${JSON.stringify(idea)},
-  "VIBE": ${JSON.stringify(vibeName ?? "unfiled")},
+  ${JSON.stringify(subject.key)}: ${JSON.stringify(subject.value)},${
+    subject.direction
+      ? `\n  "ART_DIRECTION": ${JSON.stringify(subject.direction)},`
+      : ""
+  }
   "COMPOSITION": {
-    "framing": "single centred hero subject, symmetrical, generous margin on all four sides",
-    "background": "flat near-black field, subtle halo glow behind the subject, no scenery"
+    "framing": ${JSON.stringify(
+      isTypographic
+        ? "the words are the whole artwork, centred, filling the frame, generous margin on all four sides"
+        : "single centred hero subject, symmetrical, generous margin on all four sides",
+    )},
+    "background": ${JSON.stringify(
+      `${FIELD_PHRASE[style.cutField]}, no glow, no gradient, no texture, no scenery`,
+    )}
   },
-  "PALETTE": ["antique gold", "bone white", "muted teal", "deep crimson"],
+  "PALETTE": ${JSON.stringify(style.palette)},
   "RENDER_FLAGS": ["high_contrast", "crisp_linework", "print_ready", "no_CGI_tell"],
-  "AVOID": [
-    "any words, letters, numerals or letterforms anywhere in the image",
+  "AVOID": ${JSON.stringify([
+    ...letterformRules,
     "photographic realism or a mockup of a physical shirt",
-    "washed-out pastel haze"
-  ]
+    "any halo, vignette, gradient, panel or frame behind the subject",
+    MERGE_WARNING[style.cutField],
+  ])}
 }`
 }

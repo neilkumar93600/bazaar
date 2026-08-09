@@ -8,6 +8,16 @@ import type { SupabaseClient } from "@supabase/supabase-js"
  *  they actually get. */
 export const DAILY_CAP = Number(process.env.GENERATION_DAILY_CAP ?? 5)
 
+/** Images produced by one generation. Lives here beside DAILY_CAP because the
+ *  two numbers together are the spend ceiling: DAILY_CAP × IMAGES_PER_JOB is
+ *  what one user can cost per day.
+ *
+ *  The cap counts *jobs*, deliberately. Counting design rows instead would stop
+ *  charging for failed generations — which is the abuse case the cap exists
+ *  for, since a broken prompt retried forever still costs money. */
+export const IMAGES_PER_JOB = 4
+export const DAILY_IMAGE_CAP = DAILY_CAP * IMAGES_PER_JOB
+
 const WINDOW_MS = 24 * 60 * 60 * 1000
 
 /** Generations this user has started in the last 24h.
