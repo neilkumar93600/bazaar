@@ -46,6 +46,27 @@ One line per route from `docs/ARCHITECTURE.md`. Check off as each ships (route f
 - [ ] `/dashboard/orders` — purchase history
 
 ## Notes
+- **Garment orders / E1 (2026-08-09).** A claimed design can be bought as a
+  printed garment: colour, size, address, order. **`PRINTIFY_SUBMIT_ORDERS`
+  gates the actual Printify call and defaults OFF** — payment is still the mock
+  adapter, so submitting would manufacture a garment and ship it to a real
+  address against money that never moved. Do not turn it on before real payment
+  lands. Only *claimed* designs are orderable: an unclaimed one has no owner, so
+  a royalty would have nowhere to go. No cart — designs are 1-of-1 and bought
+  one at a time; `/cart` was deleted rather than built. Spec:
+  `docs/superpowers/specs/2026-08-09-garment-orders-design.md`, plan:
+  `docs/superpowers/plans/2026-08-09-garment-orders.md`.
+- **Known hole: the margin is unknown.** `Garment.priceCents` is a flat 2900
+  while Printify charges cost plus destination-varying shipping. International
+  orders may sell below cost. Fixing it means Printify's shipping-rates endpoint
+  at checkout; not built.
+- **Order status has no webhook and no cron.** Open garment orders refresh from
+  Printify when the buyer views `/dashboard/orders`, capped at 10 per render.
+  Writing `orders.status` is what makes `notify_on_order_status_change` fire, so
+  buyer notifications come for free.
+- **E2 (real payment) and E3 (royalty rows and payouts) are not built.**
+  `royalty_ledger` has still never had a row written to it, and
+  `ROYALTY_RATE_PERCENT = 10` is quoted in marketing copy that nothing honours.
 - **Garment config (2026-08-09).** The maker picks garment, colour and
   placement in the listing panel before going live. Their colour is
   *presentation* — it selects the hero mockup out of the ~66 renders Printify

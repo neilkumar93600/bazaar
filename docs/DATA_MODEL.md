@@ -113,11 +113,27 @@ create table public.column_rentals (
   created_at timestamptz default now()
 );
 
--- Orders (purchases, including print/placement config)
+-- Orders. TWO kinds share this table:
+--   claim   — bought ownership of the design (written by claim_design)
+--   garment — bought a printed item (written by placeGarmentOrder)
+-- `kind` defaults to 'claim' so claim_design's insert never had to change.
 create table public.orders (
   id uuid primary key default gen_random_uuid(),
+  kind text not null default 'claim' check (kind in ('claim', 'garment')),
   buyer_id uuid references public.profiles(id),
   design_id uuid references public.designs(id),
+  -- Garment orders only: the Printify variant (a colour/size pair), the remote
+  -- order, and Printify's raw status word. `status` is a coarse mapping of it,
+  -- kept to four values so the orders page's badge variants stay valid.
+  variant_id integer,
+  printify_order_id text,
+  printify_status text,
+  -- Shipping address snapshot (PII), garment orders only. Never written to
+  -- profiles: an order shipped where it shipped, even if the buyer later moves.
+  -- Buyer-only under RLS. No retention or deletion policy yet.
+  ship_first_name text, ship_last_name text, ship_email text, ship_phone text,
+  ship_country text, ship_region text, ship_address1 text, ship_address2 text,
+  ship_city text, ship_zip text,
   quality_tier text,
   placement_front boolean default true,
   placement_back boolean default false,
