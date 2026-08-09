@@ -46,9 +46,18 @@ create table public.designs (
   id uuid primary key default gen_random_uuid(),
   vibe_id uuid references public.vibes(id),
   generation_job_id uuid references public.generation_jobs(id),
+  -- Who generated it. Paid once at claim, then out: no royalties, no control.
+  -- Null for house stock.
+  creator_id uuid references public.profiles(id),
   image_url text not null,
   print_ready_front_url text,
   print_ready_back_url text,
+  -- When it went live in the bazaar. Null means private: freshly generated, or
+  -- delisted. Generation is not publication — the maker lists deliberately.
+  listed_at timestamptz,
+  -- Nullable: null means the maker listed it free. No default — a listed
+  -- design must have had a price decided, and free is a decision.
+  price_cents integer check (price_cents is null or price_cents > 0),
   is_claimed boolean default false,
   claimed_by uuid references public.profiles(id),
   moderation_status text check (moderation_status in ('pending', 'approved', 'rejected')) default 'pending',
@@ -137,3 +146,24 @@ create table public.messages (
 - One `design` has at most one `claim` (unique on `design_id`).
 - One `profile` has at most one `storefront` (unique on `owner_id`).
 - One `order` has zero or one `royalty_ledger` row — only when it resells a claimed design to someone other than the original claimant.
+
+## Ownership (maker vs owner)
+
+Two different people, two different columns.
+
+- **`creator_id`** — made it. Controls listing and price, *only while
+  `claimed_by is null`*. Paid once when someone claims it, then has no further
+  rights: no relisting, no resale, no royalties. Enforced by the
+  `designs_update_creator_unclaimed` policy, not by application code.
+- **`claimed_by`** — owns it. Exclusive, one per design. Gets a storefront and
+  the royalty on every later order of that design.
+
+A design's visible state is fully described by three columns; there is no
+status enum:
+
+| `listed_at` | `price_cents` | `claimed_by` | Meaning |
+| --- | --- | --- | --- |
+| null | any | null | Private — maker only. Freshly generated, or delisted. |
+| set | null | null | Listed free. First claimer takes it. |
+| set | > 0 | null | Listed at a price. |
+| set | either | set | Claimed. Maker is out; owner controls it. |

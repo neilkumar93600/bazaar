@@ -40,12 +40,36 @@ One line per route from `docs/ARCHITECTURE.md`. Check off as each ships (route f
 - [ ] `/onboarding` — first-session multi-step flow
 - [ ] `/dashboard` — overview
 - [ ] `/dashboard/create` — generation flow
-- [ ] `/dashboard/designs` — owned designs & claims, storefront mgmt, royalty tracking
+- [x] `/dashboard/designs` — designs this user *made*, split Unlisted / Listed / Adopted, with list & delist
 - [ ] `/dashboard/messages` — inbox
 - [ ] `/dashboard/settings` — Account / Notifications / Twin (placeholder) / AI / Payouts tabs
 - [ ] `/dashboard/orders` — purchase history
 
 ## Notes
+- **Ownership model (2026-08-09).** Generation is no longer publication. A
+  generated design is private to `designs.creator_id` until they list it —
+  `listed_at` null means private *or* delisted, the same state; `price_cents`
+  null means listed free. Claiming transfers exclusive ownership to
+  `claimed_by`, and the maker loses every right at that instant, enforced by
+  the `designs_update_creator_unclaimed` policy rather than by application
+  code. The gate is RLS (`designs_select_listed`), not query filters, because
+  `designs` is read from the browser with the anon key. Spec:
+  `docs/superpowers/specs/2026-08-09-design-ownership-listing-design.md`,
+  plan: `docs/superpowers/plans/2026-08-09-design-ownership-listing.md`.
+- Printify products are minted when a design is **listed**, not when it is
+  generated — minting at generation paid for products nobody would list.
+- `generation_jobs_select_public_result` was dropped: it gated on
+  `moderation_status`, which no longer implies public, so it would have leaked
+  unlisted design ids to `anon`. `designs.creator_id` answers the question it
+  existed for.
+- Supabase's default privileges grant `execute` on new `public` functions to
+  `anon` **directly**, so `revoke ... from public` is not enough — name `anon`
+  explicitly or the security advisor will flag every new `SECURITY DEFINER`
+  function.
+- Migration history is out of sync: `list_migrations` on the remote returns
+  fewer entries than `supabase/migrations/` holds, and timestamps disagree.
+  Create files with `supabase migration new`; apply deliberately (MCP
+  `apply_migration`), never `supabase db push`, until the history is repaired.
 - File structure for every remaining route (storefront, legal, public,
   dashboard, onboarding) is scaffolded with a real `page.tsx` (and
   `layout.tsx` for `/dashboard`'s sidebar) so the route table fully
