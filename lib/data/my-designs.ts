@@ -1,74 +1,112 @@
 import { createClient } from "@/lib/supabase/server"
 
-export type MyDesign = {
+export type MakerDesign = {
   id: string
   imageUrl: string
-  claimedAt: string
   vibeName: string | null
-  royaltyTotalCents: number
+  createdAt: string
+  /** Null means listed free, or never priced. */
+  priceCents: number | null
+  listedAt: string | null
 }
 
-export async function getMyDesigns(): Promise<MyDesign[] | null> {
+export type AdoptedDesign = MakerDesign & {
+  claimantHandle: string | null
+  /** What the claimer actually paid. Zero for a free claim. */
+  soldForCents: number
+}
+
+export type MyDesigns = {
+  unlisted: MakerDesign[]
+  listed: MakerDesign[]
+  adopted: AdoptedDesign[]
+}
+
+/** Everything this user made, split by what they can still do with it.
+ *
+ *  Claimed designs move to `adopted` and lose every control — that is the
+ *  ownership rule, and it is enforced by RLS, not by this grouping. The
+ *  grouping exists so the page doesn't offer buttons that would fail. */
+export async function getMyDesigns(): Promise<MyDesigns | null> {
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) return null
 
-  const { data: claims } = await supabase
-    .from("claims")
-    .select("design_id, claimed_at")
-    .eq("claimant_id", user.id)
-    .order("claimed_at", { ascending: false })
+  const { data: rows } = await supabase
+    .from("designs")
+    .select("id, image_url, vibe_id, created_at, price_cents, listed_at, claimed_by")
+    .eq("creator_id", user.id)
+    .order("created_at", { ascending: false })
 
-  const claimList = claims ?? []
-  if (claimList.length === 0) return []
-
-  const designIds = claimList.map((c) => c.design_id)
-
-  const [{ data: designRows }, { data: royaltyRows }] = await Promise.all([
-    supabase
-      .from("designs")
-      .select("id, image_url, vibe_id")
-      .in("id", designIds),
-    supabase
-      .from("royalty_ledger")
-      .select("design_id, amount_cents")
-      .eq("original_claimant_id", user.id)
-      .in("design_id", designIds),
-  ])
+  const designs = rows ?? []
+  if (designs.length === 0) return { unlisted: [], listed: [], adopted: [] }
 
   const vibeIds = [
     ...new Set(
-      (designRows ?? [])
-        .map((d) => d.vibe_id)
-        .filter((id): id is string => id !== null)
+      designs.map((d) => d.vibe_id).filter((id): id is string => id !== null)
     ),
   ]
-  const { data: vibeRows } = vibeIds.length
-    ? await supabase.from("vibes").select("id, name").in("id", vibeIds)
-    : { data: [] }
+  const claimantIds = [
+    ...new Set(
+      designs.map((d) => d.claimed_by).filter((id): id is string => id !== null)
+    ),
+  ]
+  const soldIds = designs.filter((d) => d.claimed_by !== null).map((d) => d.id)
+
+  const [{ data: vibeRows }, { data: claimantRows }, { data: orderRows }] =
+    await Promise.all([
+      vibeIds.length
+        ? supabase.from("vibes").select("id, name").in("id", vibeIds)
+        : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+      claimantIds.length
+        ? supabase.from("profiles").select("id, handle").in("id", claimantIds)
+        : Promise.resolve({ data: [] as { id: string; handle: string }[] }),
+      soldIds.length
+        ? supabase
+            .from("orders")
+            .select("design_id, amount_cents")
+            .in("design_id", soldIds)
+            .eq("status", "paid")
+        : Promise.resolve({
+            data: [] as { design_id: string; amount_cents: number }[],
+          }),
+    ])
+
   const vibeNameById = new Map((vibeRows ?? []).map((v) => [v.id, v.name]))
-
-  const royaltyTotalByDesignId = new Map<string, number>()
-  for (const r of royaltyRows ?? []) {
-    royaltyTotalByDesignId.set(
-      r.design_id,
-      (royaltyTotalByDesignId.get(r.design_id) ?? 0) + r.amount_cents
-    )
-  }
-
-  const claimedAtByDesignId = new Map(
-    claimList.map((c) => [c.design_id, c.claimed_at])
+  const handleById = new Map((claimantRows ?? []).map((p) => [p.id, p.handle]))
+  const soldForByDesignId = new Map(
+    (orderRows ?? []).map((o) => [o.design_id, o.amount_cents])
   )
 
-  return (designRows ?? [])
-    .map((d) => ({
-      id: d.id,
-      imageUrl: d.image_url,
-      claimedAt: claimedAtByDesignId.get(d.id)!,
-      vibeName: d.vibe_id ? (vibeNameById.get(d.vibe_id) ?? null) : null,
-      royaltyTotalCents: royaltyTotalByDesignId.get(d.id) ?? 0,
-    }))
-    .sort((a, b) => (a.claimedAt < b.claimedAt ? 1 : -1))
+  const base = (d: (typeof designs)[number]): MakerDesign => ({
+    id: d.id,
+    imageUrl: d.image_url,
+    vibeName: d.vibe_id ? (vibeNameById.get(d.vibe_id) ?? null) : null,
+    createdAt: d.created_at,
+    priceCents: d.price_cents,
+    listedAt: d.listed_at,
+  })
+
+  // The three filters are mutually exclusive and exhaustive: a row is adopted,
+  // or unclaimed and listed, or unclaimed and unlisted. Nothing appears twice,
+  // nothing vanishes.
+  return {
+    unlisted: designs
+      .filter((d) => d.claimed_by === null && d.listed_at === null)
+      .map(base),
+    listed: designs
+      .filter((d) => d.claimed_by === null && d.listed_at !== null)
+      .map(base),
+    adopted: designs
+      .filter((d) => d.claimed_by !== null)
+      .map((d) => ({
+        ...base(d),
+        claimantHandle: d.claimed_by
+          ? (handleById.get(d.claimed_by) ?? null)
+          : null,
+        soldForCents: soldForByDesignId.get(d.id) ?? 0,
+      })),
+  }
 }

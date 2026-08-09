@@ -4,8 +4,9 @@ import Link from "next/link";
 import { ShirtIcon } from "lucide-react";
 import { formatDistanceToNowStrict } from "date-fns";
 
-import { getMyDesigns } from "@/lib/data/my-designs";
-import { formatCents } from "@/lib/utils";
+import { getMyDesigns, type MakerDesign } from "@/lib/data/my-designs";
+import { formatCents, formatListingPrice } from "@/lib/utils";
+import { ListingForm } from "@/components/dashboard/ListingForm";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -16,77 +17,151 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { Stagger, StaggerItem, TiltCard } from "@/components/ui/motion";
 
 export const metadata: Metadata = { title: "My designs" };
 
-export default async function DesignsPage() {
-  const designs = await getMyDesigns();
+function DesignFrame({ design }: { design: MakerDesign }) {
+  return (
+    <Link
+      href={`/design/${design.id}`}
+      className="group relative block outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      <div className="glass-surface relative aspect-[4/5] w-full overflow-hidden rounded-2xl bg-card">
+        <Image
+          src={design.imageUrl}
+          alt=""
+          fill
+          sizes="(min-width: 1024px) 240px, 45vw"
+          className="object-cover"
+        />
+        {design.vibeName && (
+          <Badge className="absolute top-2 left-2" variant="secondary">
+            {design.vibeName}
+          </Badge>
+        )}
+      </div>
+    </Link>
+  );
+}
 
-  if (!designs) return null;
+export default async function DesignsPage() {
+  const groups = await getMyDesigns();
+
+  if (!groups) return null;
+
+  const total =
+    groups.unlisted.length + groups.listed.length + groups.adopted.length;
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
+    <div className="mx-auto flex max-w-5xl flex-col gap-10 px-4 py-8 sm:px-6 lg:px-8">
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-heading-lg text-foreground">My designs</h1>
-        <Button render={<Link href="/dashboard/create" />}>Create a design</Button>
+        <Button render={<Link href="/dashboard/create" />}>
+          Create a design
+        </Button>
       </div>
 
-      {designs.length === 0 ? (
+      {total === 0 ? (
         <Empty>
           <EmptyHeader>
             <EmptyMedia variant="icon">
               <ShirtIcon />
             </EmptyMedia>
-            <EmptyTitle>No designs claimed yet</EmptyTitle>
+            <EmptyTitle>Nothing made yet</EmptyTitle>
             <EmptyDescription>
-              Claim a design from the feed to build your storefront and start
-              earning royalties.
+              Designs you generate stay private to you until you list them.
             </EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
-            <Button variant="outline" render={<Link href="/" />}>
-              Browse designs
+            <Button variant="outline" render={<Link href="/dashboard/create" />}>
+              Create a design
             </Button>
           </EmptyContent>
         </Empty>
       ) : (
-        <Stagger className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {designs.map((design) => (
-            <StaggerItem key={design.id} className="flex flex-col gap-2">
-              <Link
-                href={`/design/${design.id}`}
-                className="group relative block outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <TiltCard className="glass-surface relative aspect-[4/5] w-full overflow-hidden rounded-2xl bg-card">
-                  <Image
-                    src={design.imageUrl}
-                    alt=""
-                    fill
-                    sizes="(min-width: 1024px) 240px, 45vw"
-                    className="object-cover"
-                  />
-                  {design.vibeName && (
-                    <Badge className="absolute top-2 left-2" variant="secondary">
-                      {design.vibeName}
-                    </Badge>
-                  )}
-                </TiltCard>
-              </Link>
-              <div className="flex items-center justify-between gap-2 px-0.5">
-                <span className="text-caption text-muted-foreground">
-                  Claimed{" "}
-                  {formatDistanceToNowStrict(new Date(design.claimedAt), {
-                    addSuffix: true,
-                  })}
-                </span>
-                <span className="text-body-sm font-medium text-foreground">
-                  {formatCents(design.royaltyTotalCents)}
-                </span>
+        <>
+          {groups.unlisted.length > 0 && (
+            <section className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1">
+                <h2 className="text-heading-sm text-foreground">Unlisted</h2>
+                <p className="text-caption text-muted-foreground">
+                  Only you can see these. List one to put it in the bazaar.
+                </p>
               </div>
-            </StaggerItem>
-          ))}
-        </Stagger>
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                {groups.unlisted.map((design) => (
+                  <div key={design.id} className="flex flex-col gap-2">
+                    <DesignFrame design={design} />
+                    <ListingForm
+                      designId={design.id}
+                      isListed={false}
+                      priceCents={design.priceCents}
+                    />
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {groups.listed.length > 0 && (
+            <section className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1">
+                <h2 className="text-heading-sm text-foreground">Listed</h2>
+                <p className="text-caption text-muted-foreground">
+                  Live in the bazaar. Anyone can claim these.
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                {groups.listed.map((design) => (
+                  <div key={design.id} className="flex flex-col gap-2">
+                    <DesignFrame design={design} />
+                    <span className="px-0.5 font-mono text-body-sm text-gold-leaf">
+                      {formatListingPrice(design.priceCents)}
+                    </span>
+                    <ListingForm
+                      designId={design.id}
+                      isListed
+                      priceCents={design.priceCents}
+                    />
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {groups.adopted.length > 0 && (
+            <section className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1">
+                <h2 className="text-heading-sm text-foreground">Adopted</h2>
+                <p className="text-caption text-muted-foreground">
+                  Claimed by someone else. These are theirs now — you keep the
+                  record, not the design.
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                {groups.adopted.map((design) => (
+                  <div key={design.id} className="flex flex-col gap-2">
+                    <DesignFrame design={design} />
+                    <div className="flex items-center justify-between gap-2 px-0.5">
+                      <span className="truncate text-caption text-muted-foreground">
+                        {design.claimantHandle
+                          ? `@${design.claimantHandle}`
+                          : "Claimed"}
+                        {" · "}
+                        {formatDistanceToNowStrict(new Date(design.createdAt), {
+                          addSuffix: true,
+                        })}
+                      </span>
+                      <span className="shrink-0 text-body-sm font-medium text-foreground">
+                        {formatCents(design.soldForCents)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+        </>
       )}
     </div>
   );
