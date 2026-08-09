@@ -155,9 +155,15 @@ export function Navbar({
                   items={notifications?.items ?? []}
                   unreadCount={notifications?.unreadCount ?? 0}
                 />
-                <Button variant="ghost" size="icon" render={<Link href="/cart" />}>
+                {/* Orders, not a cart: designs are 1-of-1 and bought one at a
+                    time, so there is nothing to accumulate. */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  render={<Link href="/dashboard/orders" />}
+                >
                   <ShoppingCart className="w-5 h-5" />
-                  <span className="sr-only">Cart</span>
+                  <span className="sr-only">Orders</span>
                 </Button>
                 {/* The hero's prompt form used to be the create entry point on
                     home. With the feed filling the page this bar is the only

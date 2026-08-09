@@ -91,23 +91,18 @@ export default async function OrdersPage() {
                         )}
                       </div>
                       <span className="text-body-sm text-foreground sm:hidden">
-                        {order.size ?? "—"}
+                        {order.kind === "claim" ? "Design" : (order.size ?? "—")}
                       </span>
                     </div>
                   </TableCell>
+                  {/* A claim bought the design itself, so it has no size or
+                      shipping status — only a garment order does. */}
                   <TableCell className="hidden text-muted-foreground sm:table-cell">
-                    {[
-                      order.qualityTier,
-                      order.size,
-                      [
-                        order.placementFront && "front",
-                        order.placementBack && "back",
-                      ]
-                        .filter(Boolean)
-                        .join(" + "),
-                    ]
-                      .filter(Boolean)
-                      .join(" · ")}
+                    {order.kind === "claim"
+                      ? "Design ownership"
+                      : [order.size, order.printifyStatus]
+                          .filter(Boolean)
+                          .join(" · ") || "Shirt"}
                   </TableCell>
                   <TableCell>
                     <Badge variant={STATUS_VARIANT[order.status]} className="capitalize">
