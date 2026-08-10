@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import Image from "next/image"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion } from "framer-motion"
 import {
   Sparkles,
   Sliders,
@@ -11,7 +11,6 @@ import {
   Wand2,
   AlertCircle,
   Info,
-  UserCheck,
 } from "lucide-react"
 
 import { createClient } from "@/lib/supabase/client"
@@ -31,18 +30,6 @@ import { Skeleton } from "@/components/ui/skeleton"
 const POLL_INTERVAL_MS = 2000
 const POLL_CEILING_MS = 240_000
 
-const ASPECT_OPTIONS: { value: AspectRatio; label: string }[] = [
-  { value: "1:1", label: "Square (1:1)" },
-  { value: "3:4", label: "Portrait (3:4)" },
-  { value: "4:3", label: "Wide (4:3)" },
-]
-
-const QUALITY_OPTIONS: { value: Quality; label: string }[] = [
-  { value: "low", label: "Draft (Low)" },
-  { value: "medium", label: "Balanced (Medium)" },
-  { value: "high", label: "Ultra (High)" },
-]
-
 type Landed = { id: string; imageUrl: string }
 
 type Phase =
@@ -50,44 +37,6 @@ type Phase =
   | { step: "generating"; partial: Landed[] }
   | { step: "done"; designs: Landed[] }
   | { step: "failed"; message: string }
-
-function ChipRow<T extends string>({
-  options,
-  value,
-  onChange,
-  disabled,
-}: {
-  options: { value: T; label: string }[]
-  value: T
-  onChange: (value: T) => void
-  disabled?: boolean
-}) {
-  return (
-    <div className="flex flex-wrap gap-2">
-      {options.map((option) => {
-        const active = value === option.value
-        return (
-          <motion.button
-            key={option.value}
-            type="button"
-            aria-pressed={active}
-            disabled={disabled}
-            onClick={() => onChange(option.value)}
-            whileTap={{ scale: 0.95 }}
-            className={cn(
-              "rounded-full border px-3.5 py-1.5 text-caption font-medium whitespace-nowrap transition-all disabled:opacity-50",
-              active
-                ? "bg-foreground text-background border-foreground shadow-[2px_2px_0px_0px_#262626]"
-                : "bg-background text-foreground border-foreground/30 hover:border-foreground hover:bg-card",
-            )}
-          >
-            {option.label}
-          </motion.button>
-        )
-      })}
-    </div>
-  )
-}
 
 export function CreateForm({
   initialPrompt = null,
@@ -102,9 +51,15 @@ export function CreateForm({
   dailyImageCap: number
   garmentOptions: GarmentOption[]
 }) {
-  const [prompt, setPrompt] = useState(
-    () => initialPrompt?.slice(0, MAX_PROMPT_LENGTH) ?? "",
-  )
+  const [prompt, setPrompt] = useState(() => {
+    if (initialPrompt) return initialPrompt.slice(0, MAX_PROMPT_LENGTH)
+    const draft = readHeroDraft()
+    if (draft) {
+      clearHeroDraft()
+      return draft.prompt.slice(0, MAX_PROMPT_LENGTH)
+    }
+    return ""
+  })
   const [styleSlug, setStyleSlug] = useState(() =>
     initialStyleSlug && findStyle(initialStyleSlug)
       ? initialStyleSlug
@@ -117,13 +72,6 @@ export function CreateForm({
   const [phase, setPhase] = useState<Phase>({ step: "idle" })
 
   const style = findStyle(styleSlug)
-
-  useEffect(() => {
-    const draft = readHeroDraft()
-    clearHeroDraft()
-    if (initialPrompt || !draft) return
-    setPrompt(draft.prompt.slice(0, MAX_PROMPT_LENGTH))
-  }, [initialPrompt])
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 

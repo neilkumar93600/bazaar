@@ -85,7 +85,6 @@ export function ListingForm({
   const colour =
     garment?.colours.find((option) => option.variantId === variantId)?.colour ??
     null
-  const tone = colour ? toneForColourName(colour) : null
 
   const priceFieldId = `price-${designId}`
   const freeFieldId = `free-${designId}`

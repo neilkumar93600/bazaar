@@ -1,22 +1,15 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
 import {
   Sparkles,
   ChevronDown,
   Check,
   Search,
   Palette,
-  Layers,
-  Wand2,
-  Flame,
-  Shirt,
-  Image as ImageIcon,
-  Zap,
 } from "lucide-react"
 
-import { STYLE_PRESETS, findStyle, type StylePreset } from "@/lib/generation/styles"
+import { STYLE_PRESETS, findStyle } from "@/lib/generation/styles"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"

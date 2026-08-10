@@ -2,7 +2,6 @@ import Image from "next/image"
 import Link from "next/link"
 
 import type { DesignCreator } from "@/lib/data/design"
-import { Button } from "@/components/ui/button"
 
 /** The maker, as a card: banner, avatar, name, handle, and the way through to
  *  their storefront. Sits beside the design on desktop and above the strip on

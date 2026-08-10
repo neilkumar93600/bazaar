@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Shirt, DollarSign, Globe, Lock } from "lucide-react"
+import { Shirt, DollarSign, Globe } from "lucide-react"
 
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"

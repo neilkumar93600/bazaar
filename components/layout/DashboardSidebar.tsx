@@ -12,7 +12,6 @@ import {
   LogOut,
   User,
   Crown,
-  Plus,
   PanelLeftClose,
   PanelLeftOpen,
 } from "lucide-react";
