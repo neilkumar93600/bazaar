@@ -38,7 +38,7 @@ import type { StylePreset } from "./styles"
 
 /** Longest idea we accept. Past this the user is writing the art direction,
  *  which is the model's drift failure mode, not a feature. */
-export const MAX_PROMPT_LENGTH = 200
+export const MAX_PROMPT_LENGTH = 500
 export const MIN_PROMPT_LENGTH = 3
 
 const ARTIFACT =
@@ -64,6 +64,47 @@ const literal = (value: string) => JSON.stringify(value)
 
 const negatives = (items: string[]) => `Do not include ${items.join("; ")}.`
 
+/** The creative half of a prompt, when a model has written it.
+ *
+ *  Only these three fields are ever model-authored. The backdrop line, the
+ *  `Exact typography:` block and the negative constraints stay in code below,
+ *  because they are not art direction — they are the chroma key the background
+ *  remover cuts against and the letterform ban that keeps garbled pseudo-text
+ *  off a garment somebody pays for. A model that gets creative with those
+ *  produces an empty PNG or a misspelled shirt.
+ *
+ *  See lib/generation/compose.ts. Any field absent falls back to the template. */
+export type PromptDirection = {
+  /** Replaces the bare user idea in `Subject:`. The gallery's own subjects run
+   *  5–12 concrete nouns (references/craft.md §9, "scene density beats
+   *  adjectives"); a bare idea is one noun and renders like one. */
+  subject?: string | null
+  /** Replaces the stock `Composition:` sentence. */
+  composition?: string | null
+  /** Surfaces and textures — brass, enamel, worn leather, chipped paint.
+   *  Its own line, not folded into art direction: craft.md §12 keeps
+   *  materials, lighting and palette as three separate controls, because
+   *  compressing them into "premium" is what produces generic output. */
+  materials?: string | null
+  /** How the subject is lit. Never the backdrop — that is a flat key field. */
+  lighting?: string | null
+  /** Replaces the preset's `linework` clause. The palette sentence is still
+   *  appended from the preset — palette is a style property, not a per-design
+   *  one. */
+  artDirection?: string | null
+}
+
+/** How the opening line names the canvas. The form offers three ratios and the
+ *  prompt used to claim `3:4 portrait` regardless — so a maker who picked
+ *  square was telling the model one thing and the API another. */
+const CANVAS = {
+  "1:1": "1:1 square",
+  "3:4": "3:4 portrait",
+  "4:3": "4:3 landscape",
+} as const
+
+export type PromptAspect = keyof typeof CANVAS
+
 export function buildPrompt(input: {
   idea: string
   style: StylePreset
@@ -72,28 +113,52 @@ export function buildPrompt(input: {
   text: string | null
   /** The line under the illustration. Illustrated styles only. */
   quote?: string | null
+  /** Must match what the API is asked for. Defaults to the house portrait. */
+  aspectRatio?: PromptAspect
+  direction?: PromptDirection | null
 }): string {
-  const { idea, style, text, quote = null } = input
+  const {
+    idea,
+    style,
+    text,
+    quote = null,
+    aspectRatio = "3:4",
+    direction = null,
+  } = input
   const trimmedIdea = idea.trim()
+
+  const canvas = CANVAS[aspectRatio] ?? CANVAS["3:4"]
+  const subject = direction?.subject?.trim() || trimmedIdea
+  const linework = direction?.artDirection?.trim() || style.linework
+
+  /** Optional blocks. Absent rather than empty — a labelled line with nothing
+   *  after it reads to the model as a field it should invent. */
+  const optional = (label: string, value: string | null | undefined) =>
+    value?.trim() ? [`${label}: ${value.trim()}`, ""] : []
 
   const backdrop = `Backdrop: ${FIELD_PHRASE[style.cutField]} — no glow, no gradient, no texture, no scenery.`
   const palette = `Palette of ${style.palette.join(", ")}.`
 
   if (style.family === "illustrated") {
     return [
-      `A ${style.aesthetic}, 3:4 portrait, as ${ARTIFACT}.`,
+      `A ${style.aesthetic}, ${canvas}, as ${ARTIFACT}.`,
       "",
-      "Composition: an arched display title across the top, a single hero illustration filling the centre, and the line set in two balanced centred rows beneath it. Title, illustration and line lock together as one designed plate, symmetrical, with generous margin on all four sides.",
+      `Composition: ${
+        direction?.composition?.trim() ||
+        "an arched display title across the top, a single hero illustration filling the centre, and the line set in two balanced centred rows beneath it. Title, illustration and line lock together as one designed plate, symmetrical, with generous margin on all four sides."
+      }`,
       "",
-      `Subject: ${trimmedIdea}`,
+      `Subject: ${subject}`,
       "",
+      ...optional("Materials", direction?.materials),
+      ...optional("Lighting", direction?.lighting),
       backdrop,
       "",
       "Exact typography:",
       `- Title (large display capitals, arched across the full width): ${literal(text ?? "")}`,
       `- Line (smaller capitals, two balanced centred rows): ${literal(quote ?? "")}`,
       "",
-      `Art direction: ${style.linework}. ${palette} High contrast, crisp linework, print-ready, no CGI tell. ${negatives(
+      `Art direction: ${linework}. ${palette} High contrast, crisp linework, print-ready, no CGI tell. ${negatives(
         [
           "any word, letter or numeral that is not part of the exact typography above",
           "misspelling, duplicating or reordering those words",
@@ -107,16 +172,21 @@ export function buildPrompt(input: {
 
   if (style.family === "typographic") {
     return [
-      `A ${style.aesthetic}, 3:4 portrait, as ${ARTIFACT}.`,
+      `A ${style.aesthetic}, ${canvas}, as ${ARTIFACT}.`,
       "",
-      "Composition: the words are the entire artwork, centred and filling the frame, with generous margin on all four sides. No illustration, no mascot, no scenery.",
+      `Composition: ${
+        direction?.composition?.trim() ||
+        "the words are the entire artwork, centred and filling the frame, with generous margin on all four sides. No illustration, no mascot, no scenery."
+      }`,
       "",
+      ...optional("Materials", direction?.materials),
+      ...optional("Lighting", direction?.lighting),
       backdrop,
       "",
       "Exact typography:",
       `- The only text in the image: ${literal(text ?? "")}`,
       "",
-      `Art direction: ${style.linework}. ${palette} ${trimmedIdea}. High contrast, crisp linework, print-ready, no CGI tell. ${negatives(
+      `Art direction: ${linework}. ${palette} ${subject}. High contrast, crisp linework, print-ready, no CGI tell. ${negatives(
         [
           "any word, letter or numeral that is not the exact text above",
           "misspelling, duplicating or reordering those words",
@@ -128,15 +198,20 @@ export function buildPrompt(input: {
   }
 
   return [
-    `A ${style.aesthetic}, 3:4 portrait, as ${ARTIFACT}.`,
+    `A ${style.aesthetic}, ${canvas}, as ${ARTIFACT}.`,
     "",
-    `Subject: ${trimmedIdea}`,
+    `Subject: ${subject}`,
     "",
-    "Composition: a single centred hero subject, symmetrical, with generous margin on all four sides.",
+    `Composition: ${
+      direction?.composition?.trim() ||
+      "a single centred hero subject, symmetrical, with generous margin on all four sides."
+    }`,
     "",
+    ...optional("Materials", direction?.materials),
+    ...optional("Lighting", direction?.lighting),
     backdrop,
     "",
-    `Art direction: ${style.linework}. ${palette} High contrast, crisp linework, print-ready, no CGI tell. ${negatives(
+    `Art direction: ${linework}. ${palette} High contrast, crisp linework, print-ready, no CGI tell. ${negatives(
       [
         "any words, letters, numerals or letterforms anywhere in the image",
         "photographic realism or a mockup of a physical shirt",

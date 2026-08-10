@@ -3,8 +3,6 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-
-import { Button } from "@/components/ui/button";
 import { toggleFollow } from "@/app/(public)/creator/[handle]/actions";
 
 export function FollowButton({
@@ -27,15 +25,18 @@ export function FollowButton({
 
   if (!isLoggedIn) {
     return (
-      <Button variant="ember" render={<Link href="/login" />}>
+      <Link
+        href="/login"
+        className="inline-flex items-center justify-center rounded-md bg-[#a3e635] px-4 py-2 text-caption font-semibold text-[#262626] border border-[#262626] shadow-[2px_2px_0px_0px_#262626] hover:bg-[#b2f042] transition-all flex-1 text-center"
+      >
         Follow
-      </Button>
+      </Link>
     );
   }
 
   return (
-    <Button
-      variant={isFollowing ? "outline" : "ember"}
+    <button
+      type="button"
       disabled={isPending}
       onClick={() => {
         const optimisticNext = !isFollowing;
@@ -45,6 +46,11 @@ export function FollowButton({
           setIsFollowing(result.isFollowing);
         });
       }}
+      className={`inline-flex items-center justify-center rounded-md px-4 py-2 text-caption font-semibold border border-[#262626] shadow-[2px_2px_0px_0px_#262626] transition-all flex-1 cursor-pointer disabled:opacity-50 ${
+        isFollowing
+          ? "bg-white text-[#262626] hover:bg-[#fcfff7]"
+          : "bg-[#a3e635] text-[#262626] hover:bg-[#b2f042]"
+      }`}
     >
       <AnimatePresence mode="popLayout" initial={false}>
         <motion.span
@@ -59,6 +65,6 @@ export function FollowButton({
           {isFollowing ? "Following" : "Follow"}
         </motion.span>
       </AnimatePresence>
-    </Button>
+    </button>
   );
 }

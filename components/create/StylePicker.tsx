@@ -1,11 +1,9 @@
 "use client"
 
+import { motion } from "framer-motion"
 import { STYLE_PRESETS, type StyleFamily } from "@/lib/generation/styles"
 import { cn } from "@/lib/utils"
 
-/** Chips, not a `<select>`: 24 options in a dropdown is unbrowsable, and the
- *  family split has to be visible because picking a text style changes what
- *  the form asks next. */
 const GROUPS: { family: StyleFamily; label: string; hint: string }[] = [
   { family: "pictorial", label: "Picture", hint: "A drawn subject. No words." },
   { family: "typographic", label: "Words", hint: "Your text is the design." },
@@ -30,10 +28,10 @@ export function StylePicker({
       {GROUPS.map((group) => (
         <div key={group.family} className="flex flex-col gap-2">
           <div className="flex items-baseline gap-2">
-            <span className="text-body-sm font-medium text-foreground">
+            <span className="text-body-sm font-semibold text-foreground">
               {group.label}
             </span>
-            <span className="text-caption text-muted-foreground">
+            <span className="text-caption text-muted-ink">
               {group.hint}
             </span>
           </div>
@@ -42,21 +40,22 @@ export function StylePicker({
               (preset) => {
                 const active = value === preset.slug
                 return (
-                  <button
+                  <motion.button
                     key={preset.slug}
                     type="button"
                     aria-pressed={active}
                     disabled={disabled}
                     onClick={() => onChange(preset.slug)}
+                    whileTap={{ scale: 0.95 }}
                     className={cn(
-                      "rounded-full border border-ink px-3 py-1.5 text-caption font-medium whitespace-nowrap transition-colors disabled:opacity-50",
+                      "relative rounded-full border px-3 py-1.5 text-caption font-medium whitespace-nowrap transition-all disabled:opacity-50",
                       active
-                        ? "bg-ink text-white"
-                        : "bg-transparent text-ink hover:bg-secondary",
+                        ? "bg-foreground text-background border-foreground shadow-[2px_2px_0px_0px_#262626]"
+                        : "bg-background text-foreground border-foreground/30 hover:border-foreground hover:bg-card",
                     )}
                   >
                     {preset.label}
-                  </button>
+                  </motion.button>
                 )
               },
             )}

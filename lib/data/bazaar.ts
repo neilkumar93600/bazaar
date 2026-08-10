@@ -115,7 +115,7 @@ export async function getBazaarData(query: BazaarQuery): Promise<BazaarData> {
   let designQuery = supabase
     .from("designs")
     .select(
-      "id, image_url, mockup_url, is_claimed, price_cents, prompt, is_prompt_hidden, created_at, vibe_id, claimed_by",
+      "id, image_url, mockup_url, is_claimed, price_cents, title, prompt, is_prompt_hidden, created_at, vibe_id, claimed_by",
       { count: "exact" }
     )
     .eq("moderation_status", "approved")
@@ -154,6 +154,7 @@ export async function getBazaarData(query: BazaarQuery): Promise<BazaarData> {
       mockupUrl: d.mockup_url ?? null,
       isClaimed: d.is_claimed,
       priceCents: d.price_cents,
+      title: d.title ?? null,
       prompt: d.prompt,
       isPromptHidden: Boolean(d.is_prompt_hidden),
       createdAt: d.created_at,

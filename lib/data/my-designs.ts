@@ -3,7 +3,14 @@ import type { Placement } from "@/lib/printify/print-areas"
 
 export type MakerDesign = {
   id: string
+  /** The AI-generated artwork flat image. */
   imageUrl: string
+  /** The uncut artwork, once the maker has removed a background. Null means
+   *  `imageUrl` is still exactly what the model drew. */
+  originalImageUrl: string | null
+  /** Printify's real product photo, available once the design is minted. Null
+   *  for unlisted designs that haven't been through Printify yet. */
+  mockupUrl: string | null
   vibeName: string | null
   createdAt: string
   /** Null means listed free, or never priced. */
@@ -45,7 +52,7 @@ export async function getMyDesigns(): Promise<MyDesigns | null> {
   const { data: rows } = await supabase
     .from("designs")
     .select(
-      "id, image_url, vibe_id, created_at, price_cents, is_prompt_hidden, listed_at, claimed_by, printify_product_id, garment_slug, featured_variant_id, placement"
+      "id, image_url, original_image_url, mockup_url, vibe_id, created_at, price_cents, is_prompt_hidden, listed_at, claimed_by, printify_product_id, garment_slug, featured_variant_id, placement"
     )
     .eq("creator_id", user.id)
     .order("created_at", { ascending: false })
@@ -93,6 +100,8 @@ export async function getMyDesigns(): Promise<MyDesigns | null> {
   const base = (d: (typeof designs)[number]): MakerDesign => ({
     id: d.id,
     imageUrl: d.image_url,
+    originalImageUrl: d.original_image_url ?? null,
+    mockupUrl: d.mockup_url ?? null,
     vibeName: d.vibe_id ? (vibeNameById.get(d.vibe_id) ?? null) : null,
     createdAt: d.created_at,
     priceCents: d.price_cents,

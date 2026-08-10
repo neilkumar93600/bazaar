@@ -26,7 +26,8 @@ export const ASPECT_RATIOS: AspectRatio[] = ["1:1", "3:4", "4:3"]
 export const QUALITIES: Quality[] = ["low", "medium", "high"]
 
 export type GeneratedImage = {
-  /** Raw PNG bytes, background already cut. Persisting them is the caller's job. */
+  /** Raw PNG bytes, exactly as the model drew them — background included.
+   *  Persisting them is the caller's job. */
   bytes: Uint8Array
   contentType: string
 }
@@ -36,21 +37,19 @@ const BACKGROUND_REMOVER = "/ai-background-remover"
 
 const RESOLUTION = "2K"
 
+/** Draws the artwork. Nothing else.
+ *
+ *  Background removal used to run here, automatically, on every generation.
+ *  It doesn't any more — see `removeBackground`. The prompt still keys the
+ *  artwork against one flat field (`StylePreset.cutField`), because that flat
+ *  field is exactly what gives the remover a clean edge whenever the maker
+ *  decides to use it.
+ */
 export async function generate(input: {
   prompt: string
   references: string[]
   aspectRatio: AspectRatio
   quality: Quality
-  /** Which flat field the prompt keyed the artwork against. The remover needs
-   *  to know what it is cutting, so this is not purely a prompt concern. */
-  cutField: "black" | "white"
-  /** Skip background removal and keep the artwork exactly as generated.
-   *
-   *  Set for full-bleed plates. `ai-background-remover` isolates a *subject*,
-   *  and a poster has no single subject — asked to cut one, it keeps the
-   *  character and deletes the title, the line and the scenery. The plate has
-   *  to survive whole, and the garment matches its ground instead. */
-  keepBackground?: boolean
 }): Promise<GeneratedImage> {
   if (input.references.length > 0) {
     throw new Error("Reference images are not supported yet")
@@ -64,32 +63,33 @@ export async function generate(input: {
   })
 
   return {
-    bytes: await fetchOutput(
-      input.keepBackground ? generated : await cutBackground(generated)
-    ),
+    bytes: await fetchOutput(generated),
     contentType: "image/png",
   }
 }
 
-/** Artwork goes on cloth, so it cannot carry a background: an opaque field
- *  prints as a rectangle of ink and reads as a sticker on every mockup, drawn or
- *  photographic.
+/** Cuts the flat field off a finished design, on demand.
  *
- *  This is a second call rather than a flag because MuAPI's gpt-image-2 endpoint
+ *  Artwork that goes on cloth generally shouldn't carry a background: an opaque
+ *  field prints as a rectangle of ink and reads as a sticker on the mockup. But
+ *  it is the maker's call, not the pipeline's — `ai-background-remover`
+ *  isolates a *subject*, and on a poster with a title and a line it keeps the
+ *  character and deletes everything else. Run automatically it silently
+ *  destroyed those; run from a button, the maker sees the result and can decide.
+ *
+ *  A second model call rather than a flag because MuAPI's gpt-image-2 endpoint
  *  takes only prompt / aspect_ratio / resolution / quality — there is no
- *  transparency option to set. The prompt keys the artwork against one flat
- *  field precisely so this model has a clean edge to cut against. Which colour
- *  is per style (`StylePreset.cutField`): black for most, white for the
- *  black-ink styles that would otherwise be cut away along with the field.
+ *  transparency option to set.
  *
- *  Falls back to the opaque original on failure. A design with a white block
- *  behind it is worse than one without, but it is much better than a create flow
- *  that fails after the expensive call has already been paid for. */
-async function cutBackground(imageUrl: string): Promise<string> {
-  try {
-    return await runModel(BACKGROUND_REMOVER, { image_url: imageUrl })
-  } catch (error) {
-    console.error("[generate] background removal failed, keeping opaque art:", error)
-    return imageUrl
+ *  Throws on failure. Unlike the old inline version there is nothing to salvage
+ *  by returning the original: the caller is a button press, and a maker who
+ *  asked for this needs to be told it didn't happen.
+ */
+export async function removeBackground(imageUrl: string): Promise<GeneratedImage> {
+  const cut = await runModel(BACKGROUND_REMOVER, { image_url: imageUrl })
+
+  return {
+    bytes: await fetchOutput(cut),
+    contentType: "image/png",
   }
 }

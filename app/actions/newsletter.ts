@@ -1,6 +1,10 @@
 "use server";
 
+import { after } from "next/server";
+
 import { createClient } from "@/lib/supabase/server";
+import { newsletterWelcomeEmail } from "@/lib/email/templates";
+import { sendEmail } from "@/lib/email/send";
 
 export type SubscribeState = { error?: string; success?: boolean };
 
@@ -22,6 +26,16 @@ export async function subscribeToNewsletter(
   if (error && error.code !== "23505") {
     // 23505 = unique_violation — already subscribed, treat as success.
     return { error: "Could not subscribe. Try again." };
+  }
+
+  // Only on a genuinely new row. Re-submitting the form with an address that
+  // is already on the list is treated as success above, and welcoming the same
+  // person every time they touch the footer is how a signup form becomes spam.
+  if (!error) {
+    after(async () => {
+      const { subject, html } = newsletterWelcomeEmail();
+      await sendEmail({ to: email, subject, html });
+    });
   }
 
   return { success: true };

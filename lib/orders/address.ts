@@ -27,8 +27,14 @@ export type AddressValidation =
   | { ok: true; address: ShippingAddress }
   | { ok: false; error: string }
 
-const clean = (value: unknown) =>
+/** Exported because buyer.ts validates the same two things the same way. */
+export const clean = (value: unknown) =>
   typeof value === "string" ? value.trim().replace(/\s+/g, " ") : ""
+
+/** Not RFC-complete on purpose — enough to catch a typo, not enough to reject
+ *  a real address someone actually owns. */
+export const isValidEmail = (email: string) =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 
 export function validateAddress(raw: Record<string, unknown>): AddressValidation {
   const address: ShippingAddress = {
@@ -64,9 +70,7 @@ export function validateAddress(raw: Record<string, unknown>): AddressValidation
     return { ok: false, error: "Use a two-letter country code, like US or GB." }
   }
 
-  // Not RFC-complete on purpose — enough to catch a typo, not enough to reject
-  // a real address someone actually owns.
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address.email)) {
+  if (!isValidEmail(address.email)) {
     return { ok: false, error: "That email address doesn't look right." }
   }
 

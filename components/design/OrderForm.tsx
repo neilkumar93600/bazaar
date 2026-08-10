@@ -64,12 +64,12 @@ export function OrderForm({
   const sizes = options.sizesByColour[colour] ?? []
 
   return (
-    <div className="glass-surface flex flex-col gap-5 rounded-xl border bg-card p-6 text-card-foreground">
+    <div className="flex flex-col gap-5 rounded-xl border border-ink bg-card p-6 text-card-foreground shadow-[var(--shadow-xl-2)]">
       <div className="flex items-baseline justify-between gap-3">
         <span className="text-body-sm font-medium text-foreground">
           {options.garmentLabel}
         </span>
-        <span className="font-mono text-heading-sm text-gold-leaf">
+        <span className="font-mono text-heading-sm text-ink font-semibold">
           {formatCents(options.priceCents)}
         </span>
       </div>
@@ -99,8 +99,8 @@ export function OrderForm({
                 className={cn(
                   "size-7 rounded-full border transition disabled:opacity-50",
                   active
-                    ? "border-primary ring-2 ring-primary"
-                    : "border-border hover:border-primary/60",
+                    ? "border-ink ring-2 ring-ink/30"
+                    : "border-border hover:border-ink",
                   !swatch && "bg-secondary text-caption text-muted-foreground"
                 )}
               >
@@ -122,10 +122,10 @@ export function OrderForm({
               disabled={isPending}
               onClick={() => setVariantId(option.variantId)}
               className={cn(
-                "rounded-full border border-ink px-3 py-1 text-caption font-medium transition-colors disabled:opacity-50",
+                "rounded-lg border border-ink px-3 py-1.5 text-caption font-medium transition-colors disabled:opacity-50",
                 option.variantId === variantId
-                  ? "bg-ink text-white"
-                  : "bg-transparent text-ink hover:bg-secondary"
+                  ? "bg-depth text-paper-white border-depth"
+                  : "bg-paper-white text-ink hover:bg-accent"
               )}
             >
               {option.size}

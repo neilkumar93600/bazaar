@@ -27,8 +27,16 @@ const POLL_INTERVAL_MS = 2_000
  *  raising this further means raising maxDuration too. */
 const POLL_TIMEOUT_MS = 180_000
 
-/** Per HTTP request. A hung socket must not eat the whole poll budget. */
+/** Per API request. A hung socket must not eat the whole poll budget. Submits
+ *  and polls both return small JSON, so 30s is already generous. */
 const REQUEST_TIMEOUT_MS = 30_000
+
+/** Downloading the finished image is not an API request — it is several
+ *  megabytes of 2K PNG off a CDN, and it shared the 30s budget above until a
+ *  generation failed on `TimeoutError` with the image already rendered and
+ *  paid for. The model run is the expensive part; refusing to wait 30 seconds
+ *  for its output throws that money away. */
+const DOWNLOAD_TIMEOUT_MS = 120_000
 
 type SubmitResponse = { request_id?: string }
 
@@ -101,8 +109,13 @@ export async function runModel(
 
     if (result.status === "completed") {
       const url = firstOutputUrl(result)
-      if (!url) throw new Error(`MuAPI ${path} completed with no output URL`)
-      return url
+      // `completed` with an empty `outputs` array is a real state MuAPI
+      // returns — the status flips a moment before the outputs are written.
+      // Treating it as terminal threw away a finished, paid-for model run;
+      // observed on kimi-k3 and there is nothing model-specific about it. Keep
+      // polling and let the deadline below be the only thing that gives up.
+      if (url) return url
+      continue
     }
 
     if (result.status === "failed") {
@@ -116,7 +129,9 @@ export async function runModel(
 /** Downloads a MuAPI output. Its URLs are short-lived CDN links, so callers
  *  persist the bytes rather than storing the URL. */
 export async function fetchOutput(url: string): Promise<Uint8Array> {
-  const response = await fetch(url, { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) })
+  const response = await fetch(url, {
+    signal: AbortSignal.timeout(DOWNLOAD_TIMEOUT_MS),
+  })
   if (!response.ok) {
     throw new Error(`Could not download MuAPI output (${response.status}): ${url}`)
   }

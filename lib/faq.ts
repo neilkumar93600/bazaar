@@ -1,4 +1,4 @@
-import { DAILY_CAP, DAILY_IMAGE_CAP } from "@/lib/generation/quota"
+import { DAILY_IMAGE_CAP } from "@/lib/generation/quota"
 import { ROYALTY_RATE_PERCENT } from "@/lib/royalty"
 
 export type FaqEntry = { q: string; a: string }
@@ -46,7 +46,11 @@ export const FAQ_GROUPS: FaqGroup[] = [
     entries: [
       {
         q: "How many designs can I generate?",
-        a: `${DAILY_CAP} generations a day per account, and each one gives you ${DAILY_IMAGE_CAP / DAILY_CAP} images to pick from — ${DAILY_IMAGE_CAP} images a day in total. Generation costs real money to run, so the cap keeps it open to everyone without a queue.`,
+        a: `${DAILY_IMAGE_CAP} a day per account. One generation, one design — if it isn't what you wanted, generating again costs one of the ${DAILY_IMAGE_CAP}. Generation costs real money to run, so the cap keeps it open to everyone without a queue.`,
+      },
+      {
+        q: "Why does my design have a background?",
+        a: "Because we no longer take it off without being asked. Background removal isolates a subject, so on a design with a title or a border it would delete everything that wasn't the main figure — and the original was gone. Now the artwork arrives exactly as it was drawn, and \"Remove background\" is a button on it in My designs. If the cut comes out wrong, restore the original in one click.",
       },
       {
         q: "Do I have to list what I generate?",

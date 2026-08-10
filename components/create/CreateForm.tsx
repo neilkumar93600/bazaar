@@ -2,47 +2,45 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import Image from "next/image"
+import { motion, AnimatePresence } from "framer-motion"
+import {
+  Sparkles,
+  Sliders,
+  CheckCircle2,
+  Shirt,
+  Wand2,
+  AlertCircle,
+  Info,
+  UserCheck,
+} from "lucide-react"
 
 import { createClient } from "@/lib/supabase/client"
 import { MAX_PROMPT_LENGTH, MIN_PROMPT_LENGTH } from "@/lib/generation/prompt"
-import {
-  findStyle,
-  validateStyleText,
-  validateQuote,
-  MAX_TEXT_CHARS,
-  MAX_TEXT_WORDS,
-  MAX_TITLE_CHARS,
-  MAX_QUOTE_CHARS,
-  DEFAULT_STYLE_SLUG,
-} from "@/lib/generation/styles"
+import { findStyle, DEFAULT_STYLE_SLUG } from "@/lib/generation/styles"
 import type { AspectRatio, Quality } from "@/lib/generation/adapter"
 import { clearHeroDraft, readHeroDraft } from "@/lib/hero-draft"
 import { cn } from "@/lib/utils"
 import type { GarmentOption } from "@/app/dashboard/designs/garment-options"
 import { ListingForm } from "@/components/dashboard/ListingForm"
-import { StylePicker } from "@/components/create/StylePicker"
-import { Button } from "@/components/ui/button"
+import { StylePopoverPicker } from "@/components/create/StylePopoverPicker"
 import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
 import { NativeSelect } from "@/components/ui/native-select"
 import { Textarea } from "@/components/ui/textarea"
 import { Skeleton } from "@/components/ui/skeleton"
 
 const POLL_INTERVAL_MS = 2000
-/** Give up rather than spin forever. The platform can kill the background work
- *  mid-flight, which leaves the row on `generating` with nothing coming. */
 const POLL_CEILING_MS = 240_000
 
 const ASPECT_OPTIONS: { value: AspectRatio; label: string }[] = [
-  { value: "1:1", label: "Square" },
-  { value: "3:4", label: "Portrait" },
-  { value: "4:3", label: "Wide" },
+  { value: "1:1", label: "Square (1:1)" },
+  { value: "3:4", label: "Portrait (3:4)" },
+  { value: "4:3", label: "Wide (4:3)" },
 ]
 
 const QUALITY_OPTIONS: { value: Quality; label: string }[] = [
-  { value: "low", label: "Low" },
-  { value: "medium", label: "Medium" },
-  { value: "high", label: "High" },
+  { value: "low", label: "Draft (Low)" },
+  { value: "medium", label: "Balanced (Medium)" },
+  { value: "high", label: "Ultra (High)" },
 ]
 
 type Landed = { id: string; imageUrl: string }
@@ -53,8 +51,6 @@ type Phase =
   | { step: "done"; designs: Landed[] }
   | { step: "failed"; message: string }
 
-/** Chip row shared by aspect and quality — two tiny single-select controls that
- *  would otherwise be two near-identical blocks of markup. */
 function ChipRow<T extends string>({
   options,
   value,
@@ -67,25 +63,26 @@ function ChipRow<T extends string>({
   disabled?: boolean
 }) {
   return (
-    <div className="flex flex-wrap gap-1.5">
+    <div className="flex flex-wrap gap-2">
       {options.map((option) => {
         const active = value === option.value
         return (
-          <button
+          <motion.button
             key={option.value}
             type="button"
             aria-pressed={active}
             disabled={disabled}
             onClick={() => onChange(option.value)}
+            whileTap={{ scale: 0.95 }}
             className={cn(
-              "rounded-full border border-ink px-3 py-1.5 text-caption font-medium whitespace-nowrap transition-colors disabled:opacity-50",
+              "rounded-full border px-3.5 py-1.5 text-caption font-medium whitespace-nowrap transition-all disabled:opacity-50",
               active
-                ? "bg-ink text-white"
-                : "bg-transparent text-ink hover:bg-secondary",
+                ? "bg-foreground text-background border-foreground shadow-[2px_2px_0px_0px_#262626]"
+                : "bg-background text-foreground border-foreground/30 hover:border-foreground hover:bg-card",
             )}
           >
             {option.label}
-          </button>
+          </motion.button>
         )
       })}
     </div>
@@ -99,17 +96,10 @@ export function CreateForm({
   dailyImageCap,
   garmentOptions,
 }: {
-  /** From `?prompt=` — the home hero's handoff for a signed-in visitor. */
   initialPrompt?: string | null
-  /** From `?vibe=`, translated to a style server-side. Ignored unless it names
-   *  a real preset, so a stale or edited value can't select nothing. */
   initialStyleSlug?: string | null
-  /** Both come from the server rather than being imported: `quota.ts` reads a
-   *  server-only env var, and a client bundle would silently see the default. */
   imagesPerJob: number
   dailyImageCap: number
-  /** Passed straight through to the listing panel. Read server-side because
-   *  Printify's catalogue needs the API token. */
   garmentOptions: GarmentOption[]
 }) {
   const [prompt, setPrompt] = useState(
@@ -120,45 +110,21 @@ export function CreateForm({
       ? initialStyleSlug
       : DEFAULT_STYLE_SLUG,
   )
-  const [text, setText] = useState("")
-  const [quote, setQuote] = useState("")
-  const [aspectRatio, setAspectRatio] = useState<AspectRatio>("3:4")
+  const [aspectRatio, setAspectRatio] = useState<AspectRatio>("1:1")
   const [quality, setQuality] = useState<Quality>("medium")
+  const [persona, setPersona] = useState("standard")
   const [picked, setPicked] = useState<string | null>(null)
   const [phase, setPhase] = useState<Phase>({ step: "idle" })
 
   const style = findStyle(styleSlug)
-  const isTypographic = style?.family === "typographic"
-  const isIllustrated = style?.family === "illustrated"
-  // Both families need words; only the poster styles need a second line.
-  const needsWords = isTypographic || isIllustrated
 
-  // A signed-out visitor who submitted the hero form was bounced through
-  // /login, which dropped the query string. The draft rode along in
-  // sessionStorage instead; pick it up once, then clear it so a later visit to
-  // this page starts empty. Skipped entirely when the URL already carried a
-  // prompt.
-  //
-  // Only the prompt is restored. The draft also carries a vibe id, but the form
-  // no longer takes a vibe — a style carries its own — and translating an id to
-  // a slug needs the vibes table, which this component does not have. The
-  // signed-in path (?vibe=) does that translation server-side.
-  //
-  // Mount-only, and it has to be an effect: sessionStorage doesn't exist during
-  // the server render, so seeding this in `useState` would make the server and
-  // the first client pass disagree.
   useEffect(() => {
     const draft = readHeroDraft()
     clearHeroDraft()
     if (initialPrompt || !draft) return
-
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPrompt(draft.prompt.slice(0, MAX_PROMPT_LENGTH))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [initialPrompt])
 
-  // Held in a ref so the unmount cleanup can always cancel the in-flight poll,
-  // whatever the current phase is.
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(
@@ -182,9 +148,6 @@ export function CreateForm({
         return
       }
 
-      // Both reads every tick: the job carries the terminal state, the designs
-      // carry what has actually landed. Four images finish at different times,
-      // so the grid fills in as they arrive rather than all at once.
       const [{ data: job }, { data: designs }] = await Promise.all([
         supabase
           .from("generation_jobs")
@@ -213,6 +176,10 @@ export function CreateForm({
 
       if (job?.status === "done") {
         setPhase({ step: "done", designs: landed })
+        // One image per job now, so there is nothing to choose between — the
+        // listing panel opens on the design that landed instead of asking the
+        // maker to pick it out of a grid of one.
+        if (landed.length === 1) setPicked(landed[0].id)
         return
       }
 
@@ -227,20 +194,6 @@ export function CreateForm({
     event.preventDefault()
     if (!style) return
 
-    // Client-side only to save a round trip — /api/generate re-validates, and
-    // that is the boundary that counts.
-    const textCheck = validateStyleText(style, text)
-    if (!textCheck.ok) {
-      setPhase({ step: "failed", message: textCheck.error })
-      return
-    }
-
-    const quoteCheck = validateQuote(style, quote)
-    if (!quoteCheck.ok) {
-      setPhase({ step: "failed", message: quoteCheck.error })
-      return
-    }
-
     setPicked(null)
     setPhase({ step: "generating", partial: [] })
 
@@ -250,8 +203,8 @@ export function CreateForm({
       body: JSON.stringify({
         prompt,
         styleSlug,
-        text: textCheck.text ?? "",
-        quote: quoteCheck.text ?? "",
+        text: "",
+        quote: "",
         aspectRatio,
         quality,
       }),
@@ -283,215 +236,259 @@ export function CreateForm({
         ? phase.partial
         : []
 
-  // Placeholders only while work is still in flight. On `done` the grid shows
-  // exactly what landed — fewer than four is a normal outcome, not an error.
   const slots =
     phase.step === "generating"
       ? Math.max(imagesPerJob, landed.length)
       : landed.length
 
-  const wordCount = text.trim() === "" ? 0 : text.trim().split(/\s+/).length
-
-  // The listing panel needs the artwork for its preview, not just the id.
   const pickedDesign = landed.find((design) => design.id === picked) ?? null
 
   return (
-    <div className="flex flex-col gap-8 lg:flex-row lg:gap-12">
-      <form onSubmit={onSubmit} className="flex w-full flex-col gap-6 lg:max-w-md">
+    <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-10">
+      {/* Studio Controls Card Column */}
+      <form
+        onSubmit={onSubmit}
+        className="flex flex-col gap-6 rounded-2xl border-2 border-foreground bg-card p-6 md:p-8 shadow-[2px_2px_0px_0px_#262626] lg:col-span-6"
+      >
+        <div className="flex items-center justify-between border-b border-border pb-4">
+          <div className="flex items-center gap-2">
+            <Sliders className="h-5 w-5 text-foreground" />
+            <h2 className="text-body-sm font-semibold text-foreground">
+              Design Parameters
+            </h2>
+          </div>
+          <span className="text-caption font-mono text-muted-ink">
+            Studio v2.0
+          </span>
+        </div>
+
+        {/* 1. Prompt / Idea Input */}
         <div className="flex flex-col gap-2">
-          <Label htmlFor="prompt">Your idea</Label>
+          <Label htmlFor="prompt" className="text-body-sm font-semibold text-foreground">
+            1. Your Idea / Concept
+          </Label>
           <Textarea
             id="prompt"
             value={prompt}
             onChange={(e) => setPrompt(e.target.value.slice(0, MAX_PROMPT_LENGTH))}
-            placeholder={
-              isIllustrated
-                ? "What the picture shows — a chained titan holding fire"
-                : isTypographic
-                  ? "How the words should feel — chunky, stacked, hand-drawn…"
-                  : "A hooded elder weighing two planets on a golden scale"
-            }
-            rows={3}
+            placeholder="Describe what you want to render — e.g. a cybernetic panther perched on a neon pagoda in Tokyo rain, vibrant linework, dramatic rim lighting..."
+            rows={4}
+            disabled={busy}
+            className="rounded-xl border-2 border-border bg-background p-3.5 text-body-sm transition-colors focus-visible:border-foreground focus-visible:ring-0 resize-y"
+          />
+          <div className="flex items-center justify-between text-caption text-muted-ink">
+            <span>Describe your concept in detail</span>
+            <span className="font-mono font-medium">
+              {prompt.trim().length}/{MAX_PROMPT_LENGTH}
+            </span>
+          </div>
+        </div>
+
+        {/* 2. Style Popover Picker */}
+        <div className="flex flex-col gap-2 border-t border-border pt-4">
+          <Label className="text-body-sm font-semibold text-foreground">
+            2. Art Direction & Style
+          </Label>
+          <StylePopoverPicker
+            value={styleSlug}
+            onChange={setStyleSlug}
             disabled={busy}
           />
-          <p className="text-caption text-muted-foreground">
-            {prompt.trim().length}/{MAX_PROMPT_LENGTH} ·{" "}
-            {isIllustrated
-              ? "this is the illustration between the title and the line"
-              : isTypographic
-                ? "this directs how your words are set"
-                : "we handle the art direction"}
-          </p>
         </div>
 
-        <div className="flex flex-col gap-2">
-          <Label>Style</Label>
-          <StylePicker value={styleSlug} onChange={setStyleSlug} disabled={busy} />
-        </div>
-
-        {needsWords && (
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="text">
-              {isIllustrated ? "Title" : "Your words"}
-            </Label>
-            <Input
-              id="text"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder={isIllustrated ? "PROMETHEUS" : "stay weird"}
-              disabled={busy}
-            />
-            <p
-              className={cn(
-                "text-caption",
-                (isIllustrated
-                  ? text.trim().length > MAX_TITLE_CHARS
-                  : wordCount > MAX_TEXT_WORDS ||
-                    text.trim().length > MAX_TEXT_CHARS)
-                  ? "text-destructive"
-                  : "text-muted-foreground",
-              )}
-            >
-              {isIllustrated
-                ? `${text.trim().length}/${MAX_TITLE_CHARS} characters · one or two words reads best`
-                : `${wordCount}/${MAX_TEXT_WORDS} words · ${text.trim().length}/${MAX_TEXT_CHARS} characters`}
-              {" · spelling can miss, so pick the one that got it right"}
-            </p>
-          </div>
-        )}
-
-        {isIllustrated && (
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="quote">The line underneath</Label>
-            <Input
-              id="quote"
-              value={quote}
-              onChange={(e) => setQuote(e.target.value)}
-              placeholder="THEY CHAINED THE BODY THE FIRE SPREAD"
-              disabled={busy}
-            />
-            <p
-              className={cn(
-                "text-caption",
-                quote.trim().length > MAX_QUOTE_CHARS
-                  ? "text-destructive"
-                  : "text-muted-foreground",
-              )}
-            >
-              {quote.trim().length}/{MAX_QUOTE_CHARS} characters
-            </p>
-          </div>
-        )}
-
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="persona">Persona</Label>
-          <NativeSelect id="persona" className="w-full" disabled>
-            <option>No personas yet</option>
+        {/* 3. Persona Selector */}
+        <div className="flex flex-col gap-2 border-t border-border pt-4">
+          <Label htmlFor="persona" className="text-body-sm font-semibold text-foreground">
+            3. Brand Persona
+          </Label>
+          <NativeSelect
+            id="persona"
+            value={persona}
+            onChange={(e) => setPersona(e.target.value)}
+            disabled={busy}
+            className="w-full rounded-xl border-2 border-border bg-background px-4 py-3 text-body-sm"
+          >
+            <option value="standard">Standard / Raw Concept — Direct prompt translation</option>
+            <option value="broadsheet">Editorial Broadsheet — Paper white, ink linework, & lime accents</option>
+            <option value="cyberpunk">Cyberpunk & High-Tech — Vivid neon glows & dark ink depth</option>
+            <option value="streetwear">Underground Streetwear — Bold graphic prints & heavy lines</option>
           </NativeSelect>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        {/* 4. Aspect Ratio & Quality Dropdowns */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 border-t border-border pt-4">
           <div className="flex flex-col gap-2">
-            <Label>Shape</Label>
-            <ChipRow
-              options={ASPECT_OPTIONS}
+            <Label htmlFor="aspect-select" className="text-body-sm font-semibold text-foreground">
+              4. Canvas Shape
+            </Label>
+            <NativeSelect
+              id="aspect-select"
               value={aspectRatio}
-              onChange={setAspectRatio}
+              onChange={(e) => setAspectRatio(e.target.value as AspectRatio)}
+              className="w-full rounded-xl border-2 border-border bg-background px-3.5 py-2.5 text-body-sm"
               disabled={busy}
-            />
+            >
+              <option value="1:1">Square (1:1)</option>
+              <option value="3:4">Portrait (3:4)</option>
+              <option value="4:3">Wide (4:3)</option>
+            </NativeSelect>
           </div>
+
           <div className="flex flex-col gap-2">
-            <Label>Quality</Label>
-            <ChipRow
-              options={QUALITY_OPTIONS}
+            <Label htmlFor="quality-select" className="text-body-sm font-semibold text-foreground">
+              5. Print Quality
+            </Label>
+            <NativeSelect
+              id="quality-select"
               value={quality}
-              onChange={setQuality}
+              onChange={(e) => setQuality(e.target.value as Quality)}
+              className="w-full rounded-xl border-2 border-border bg-background px-3.5 py-2.5 text-body-sm"
               disabled={busy}
-            />
+            >
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </NativeSelect>
           </div>
         </div>
 
-        <div className="flex flex-col gap-2">
-          <Button
+        {/* Submit & Quota */}
+        <div className="flex flex-col gap-3 border-t border-border pt-6">
+          <motion.button
+            whileTap={{ scale: 0.98 }}
+            whileHover={{ scale: 1.01 }}
             type="submit"
             disabled={busy || tooShort}
-            className="btn-ember w-fit rounded-full"
+            className="btn-ember relative flex w-full items-center justify-center gap-2.5 !rounded-full border-2 border-foreground px-6 py-3.5 text-body-sm font-semibold shadow-[2px_2px_0px_0px_#262626] transition-all hover:shadow-[3px_3px_0px_0px_#262626] disabled:opacity-50"
           >
-            {busy ? "Generating…" : `Generate ${imagesPerJob} designs`}
-          </Button>
-          <p className="text-caption text-muted-foreground">
-            Up to {dailyImageCap} images a day.
-          </p>
+            <Sparkles className="h-5 w-5 text-foreground" />
+            <span>
+              {busy
+                ? imagesPerJob === 1
+                  ? "Rendering your design…"
+                  : `Rendering ${imagesPerJob} designs…`
+                : imagesPerJob === 1
+                  ? "Generate design"
+                  : `Generate ${imagesPerJob} designs`}
+            </span>
+          </motion.button>
+
+          <div className="flex items-center justify-between text-caption text-muted-ink">
+            <span className="flex items-center gap-1.5">
+              <Info className="h-3.5 w-3.5" />
+              Up to {dailyImageCap} images per day
+            </span>
+            <span>Private until listed</span>
+          </div>
         </div>
 
         {phase.step === "failed" && (
-          <p className="text-body-sm text-destructive">{phase.message}</p>
+          <div className="flex items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-body-sm font-medium text-destructive">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <span>{phase.message}</span>
+          </div>
         )}
-
-        <p className="text-caption text-muted-foreground">
-          Designs are private to you until you list them. Once someone claims
-          one, it&apos;s theirs — you can&apos;t relist or resell it.
-        </p>
       </form>
 
-      <div className="flex w-full flex-col gap-4 lg:max-w-lg">
+      {/* Artwork Showcase & Results Column */}
+      <div className="flex flex-col gap-4 lg:col-span-6">
+        {slots === 0 && (
+          <div className="flex min-h-[440px] flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed border-foreground/30 bg-card/60 p-8 text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-foreground bg-accent shadow-[2px_2px_0px_0px_#262626]">
+              <Wand2 className="h-7 w-7 text-foreground" />
+            </div>
+            <div className="flex flex-col gap-1.5 max-w-sm">
+              <h3 className="text-body font-semibold text-foreground">
+                Artwork Showcase
+              </h3>
+              <p className="text-body-sm text-muted-ink leading-relaxed">
+                Your 1-of-1 print renders here. Background stays on until you
+                take it off — the cut is a button on your designs, not something
+                that happens to your artwork automatically.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* One design gets the whole column; a fan-out tiles two up. */}
         {slots > 0 && (
-          <div className="grid grid-cols-2 gap-3">
+          <div className={cn("grid gap-4", slots > 1 ? "grid-cols-2" : "grid-cols-1")}>
             {Array.from({ length: slots }, (_, index) => {
               const design = landed[index]
 
               if (!design) {
                 return (
-                  <Skeleton key={index} className="aspect-[4/5] w-full rounded-2xl" />
+                  <Skeleton
+                    key={index}
+                    className="aspect-[4/5] w-full rounded-2xl border-2 border-foreground/20 bg-card animate-pulse"
+                  />
                 )
               }
 
               const isPicked = picked === design.id
               return (
-                <button
+                <motion.button
                   key={design.id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3 }}
+                  whileTap={{ scale: 0.96 }}
                   type="button"
                   aria-pressed={isPicked}
                   onClick={() => setPicked(design.id)}
                   className={cn(
-                    "relative aspect-[4/5] w-full overflow-hidden rounded-2xl border bg-card outline-none transition",
+                    "group relative aspect-[4/5] w-full overflow-hidden rounded-2xl border-2 bg-card text-left transition-all outline-none",
                     isPicked
-                      ? "border-primary ring-2 ring-primary"
-                      : "border-border hover:border-primary/60",
+                      ? "border-foreground shadow-[3px_3px_0px_0px_#262626] ring-2 ring-foreground"
+                      : "border-foreground/40 hover:border-foreground hover:shadow-[2px_2px_0px_0px_#262626]",
                   )}
                 >
                   <Image
                     src={design.imageUrl}
                     alt=""
                     fill
-                    sizes="(min-width: 1024px) 256px, 45vw"
-                    className="object-cover"
+                    sizes="(min-width: 1024px) 280px, 45vw"
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
                   />
-                </button>
+                  {isPicked && (
+                    <div className="absolute top-3 right-3 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-foreground bg-[#a3e635] text-foreground shadow-sm">
+                      <CheckCircle2 className="h-4 w-4" />
+                    </div>
+                  )}
+                </motion.button>
               )
             })}
           </div>
         )}
 
         {phase.step === "generating" && (
-          <p className="text-body-sm text-muted-foreground">
-            Drawing {imagesPerJob} designs. This takes up to a couple of minutes
-            — they appear as they finish.
+          <p className="text-body-sm text-muted-ink text-center">
+            {imagesPerJob === 1
+              ? "Rendering your design… this takes about a minute."
+              : `Rendering ${imagesPerJob} designs… Variations appear as they finish.`}
           </p>
         )}
 
         {phase.step === "done" && !picked && (
-          <p className="text-body-sm text-muted-foreground">
-            Pick the one you want to list. The rest stay private in your
-            designs.
+          <p className="text-body-sm font-medium text-foreground text-center">
+            Select your favorite artwork variant above to list it in the Bazaar.
           </p>
         )}
 
         {pickedDesign && (
-          <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4">
-            <p className="text-body-sm text-muted-foreground">
-              Pick what it prints on, then list it — or leave it and decide
-              later.
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col gap-4 rounded-2xl border-2 border-foreground bg-card p-6 shadow-[2px_2px_0px_0px_#262626]"
+          >
+            <div className="flex items-center gap-2 border-b border-border pb-3">
+              <Shirt className="h-5 w-5 text-foreground" />
+              <h3 className="text-body-sm font-semibold text-foreground">
+                List Artwork to Bazaar
+              </h3>
+            </div>
+            <p className="text-caption text-muted-ink">
+              Choose the garment, placement, and set your price to list this 1-of-1 design.
             </p>
             <ListingForm
               designId={pickedDesign.id}
@@ -499,7 +496,6 @@ export function CreateForm({
               isListed={false}
               priceCents={null}
               garmentOptions={garmentOptions}
-              // Freshly generated: nothing has been minted for it yet.
               frozen={false}
               initialConfig={{
                 garmentSlug: null,
@@ -507,7 +503,7 @@ export function CreateForm({
                 placement: null,
               }}
             />
-          </div>
+          </motion.div>
         )}
       </div>
     </div>

@@ -384,37 +384,29 @@
      pixel into its own shadow and active closes the gap; the offset shrinks by
      exactly what the block travels, so the shadow's outer edge stays put and
      only the block appears to move. */
-  .btn-ember,
-  .press-block {
-    box-shadow: var(--shadow-glow);
+  .btn-ember {
+    background-color: #a3e635;
+    background-image: none;
+    color: #262626;
+    border: 1px solid #262626;
+    border-radius: var(--radius);
+    box-shadow: 2px 2px 0px 0px #262626;
     transition:
-      background-image 150ms ease,
+      background-color 150ms ease,
       box-shadow 150ms ease,
       transform 150ms ease;
   }
 
-  .btn-ember:hover,
-  .press-block:hover,
-  .group\/card:hover .press-block {
-    box-shadow: var(--shadow-hard-half);
+  .btn-ember:hover {
+    background-color: #b2ec4b;
+    background-image: none;
+    box-shadow: 1px 1px 0px 0px #262626;
     transform: translate(1px, 1px);
   }
 
-  .btn-ember:active,
-  .press-block:active,
-  .group\/card:active .press-block {
-    box-shadow: var(--shadow-button);
+  .btn-ember:active {
+    box-shadow: 0 0 #0000;
     transform: translate(2px, 2px);
-  }
-
-  .btn-ember {
-    background-image: var(--background-image-ember-flow);
-    color: var(--color-ink);
-    border: 1px solid var(--color-ink);
-  }
-
-  .btn-ember:hover {
-    background-image: var(--background-image-ember-flow-hot);
   }
 
   /* Ruled content card. Deliberately sets no background: the surface colour

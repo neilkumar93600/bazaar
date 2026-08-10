@@ -13,6 +13,8 @@ export type SettingsData = {
   handle: string
   displayName: string | null
   avatarUrl: string | null
+  bannerUrl: string | null
+  bio: string | null
   totalEarnedCents: number
   pendingCents: number
   paidOutCents: number
@@ -26,18 +28,33 @@ export async function getSettingsData(): Promise<SettingsData | null> {
   } = await supabase.auth.getUser()
   if (!user) return null
 
-  const [{ data: profile }, { data: royalties }] = await Promise.all([
-    supabase
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("handle, display_name, avatar_url, bio")
+    .eq("id", user.id)
+    .single()
+
+  if (!profile) return null
+
+  let bannerUrl: string | null = null
+  try {
+    const { data: bannerData } = await supabase
       .from("profiles")
-      .select("handle, display_name, avatar_url")
+      .select("banner_url")
       .eq("id", user.id)
-      .single(),
-    supabase
-      .from("royalty_ledger")
-      .select("id, amount_cents, paid_at, created_at")
-      .eq("original_claimant_id", user.id)
-      .order("created_at", { ascending: false }),
-  ])
+      .single()
+    if (bannerData && "banner_url" in bannerData) {
+      bannerUrl = (bannerData as { banner_url?: string | null }).banner_url ?? null
+    }
+  } catch {
+    bannerUrl = null
+  }
+
+  const { data: royalties } = await supabase
+    .from("royalty_ledger")
+    .select("id, amount_cents, paid_at, created_at")
+    .eq("original_claimant_id", user.id)
+    .order("created_at", { ascending: false })
 
   const royaltyList = royalties ?? []
   const totalEarnedCents = royaltyList.reduce(
@@ -51,9 +68,11 @@ export async function getSettingsData(): Promise<SettingsData | null> {
 
   return {
     email: user.email ?? "",
-    handle: profile?.handle ?? "",
-    displayName: profile?.display_name ?? null,
-    avatarUrl: profile?.avatar_url ?? null,
+    handle: profile.handle ?? "",
+    displayName: profile.display_name ?? null,
+    avatarUrl: profile.avatar_url ?? null,
+    bannerUrl,
+    bio: (profile as Record<string, unknown>).bio as string | null ?? null,
     totalEarnedCents,
     pendingCents,
     paidOutCents,

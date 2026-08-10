@@ -4,9 +4,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { formatDistanceToNowStrict } from "date-fns"
 
-import { cn } from "@/lib/utils"
-import { useDesignDialog } from "@/components/design/DesignDialogProvider"
-import { ShirtMockup } from "@/components/shared/ShirtMockup"
+import { cn, designLabel } from "@/lib/utils"
 
 /** The one design card. Home feed, /shop and creator storefronts all render
  *  this — each data module maps its rows into this shape rather than growing
@@ -21,7 +19,10 @@ export type DesignCardData = {
   isClaimed: boolean
   /** Null means free. */
   priceCents: number | null
-  /** The maker's idea, and the only per-design label that exists. */
+  /** The design's name, written by the composer. Null on anything generated
+   *  before designs.title existed, which falls back to the prompt. */
+  title?: string | null
+  /** The maker's idea. Shown as the caption, and the label of last resort. */
   prompt: string | null
   isPromptHidden?: boolean | null
   vibeName: string | null
@@ -61,35 +62,26 @@ export function DesignCard({
    *  to land here or they'd outline the text too. */
   frameClassName?: string
 }) {
-  const dialog = useDesignDialog()
-
-  const promptDisplay = design.isPromptHidden
-    ? "Prompt hidden by creator"
-    : design.prompt
-      ? design.prompt
-      : design.vibeName
-        ? `${design.vibeName} Design`
-        : "Prompt not available"
+  // The name if it has one, the prompt if it doesn't. A hidden prompt still
+  // shows the title — hiding the prompt hides the recipe, not the design.
+  const label = designLabel({
+    title: design.title,
+    prompt: design.isPromptHidden ? null : design.prompt,
+    vibeName: design.vibeName,
+  })
 
   return (
+    // A plain link to a real page. This used to intercept the click and open a
+    // modal instead, which meant the URL you were looking at and the design you
+    // were looking at disagreed.
     <Link
       href={`/design/${design.id}`}
-      onClick={(e) => {
-        // Plain left-click opens the dialog in place, no URL change. Any
-        // modified click (new tab, new window, save-as, etc.) falls through
-        // to the real link so /design/[id] still works for those — as does a
-        // card rendered outside the provider, which has no dialog to open.
-        if (!dialog) return
-        if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
-        e.preventDefault()
-        dialog.openDesign(design.id)
-      }}
       className={cn(
         "group/card block outline-none transition-transform duration-300 hover:-translate-y-1",
         index !== undefined && "animate-card-rise",
         index !== undefined &&
-          index < STAGGER_CLASSES.length &&
-          STAGGER_CLASSES[index],
+        index < STAGGER_CLASSES.length &&
+        STAGGER_CLASSES[index],
         className
       )}
     >
@@ -102,18 +94,14 @@ export function DesignCard({
       >
         {/* The card sells a shirt, so it shows a shirt: the real product photo
             where one exists, the drawn stand-in everywhere else. */}
-        {design.mockupUrl ? (
-          <Image
-            src={design.mockupUrl}
-            alt=""
-            fill
-            sizes="(min-width: 1280px) 280px, (min-width: 768px) 30vw, 45vw"
-            priority={priority}
-            className="object-cover transition-transform duration-500 group-hover/card:scale-105"
-          />
-        ) : (
-          <ShirtMockup imageUrl={design.imageUrl} priority={priority} />
-        )}
+        <Image
+          src={design.mockupUrl ?? design.imageUrl}
+          alt=""
+          fill
+          sizes="(min-width: 1280px) 280px, (min-width: 768px) 30vw, 45vw"
+          priority={priority}
+          className="object-cover transition-transform duration-500 group-hover/card:scale-105"
+        />
 
         {design.isClaimed ? (
           // Status Pill Badge — mint wash inside a mint edge, ink label.
@@ -144,19 +132,18 @@ export function DesignCard({
       </div>
 
       <div className="mt-3 flex items-baseline justify-between gap-3">
-        {/* One line, clipped — a prompt is a sentence, not a headline */}
+        {/* One line, clipped. A title is a headline; a prompt standing in for
+            one is a sentence, so both get truncated the same way. */}
         <span
           className={cn(
             "truncate text-body font-medium transition-colors group-hover/card:text-primary",
-            design.isPromptHidden
-              ? "italic text-muted-foreground"
-              : !design.prompt
-                ? "text-muted-foreground"
-                : "text-foreground"
+            design.title || design.prompt
+              ? "text-foreground"
+              : "text-muted-foreground"
           )}
-          title={promptDisplay}
+          title={label}
         >
-          {promptDisplay}
+          {label}
         </span>
         <span className="shrink-0 font-mono text-body-sm font-semibold text-gold-leaf">
           {design.priceCents === null

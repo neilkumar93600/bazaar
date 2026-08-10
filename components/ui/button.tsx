@@ -10,8 +10,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: "bg-primary text-primary-foreground hover:brightness-110",
-        ember:
-          "btn-ember border-transparent shadow-[var(--shadow-button)] hover:shadow-[var(--shadow-glow)] hover:brightness-105",
+        ember: "btn-ember shadow-none",
         outline:
           "border-input bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:bg-transparent dark:hover:bg-input/30",
         secondary:

@@ -2,8 +2,8 @@ import type { ReactNode } from "react";
 
 import { Footer } from "@/components/layout/Footer";
 import { Navbar } from "@/components/layout/Navbar";
+import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { PageTransition } from "@/components/ui/motion";
-import { DesignDialogProvider } from "@/components/design/DesignDialogProvider";
 import { getNotifications } from "@/lib/data/notifications";
 import { createClient } from "@/lib/supabase/server";
 
@@ -30,14 +30,14 @@ export default async function PublicLayout({ children }: { children: ReactNode }
   }
 
   return (
-    <DesignDialogProvider>
-      <div className="flex min-h-svh flex-col">
-        <Navbar user={navbarUser} notifications={notifications} />
-        <main className="flex-1">
-          <PageTransition>{children}</PageTransition>
-        </main>
-        <Footer />
-      </div>
-    </DesignDialogProvider>
+    <div className="relative flex min-h-svh flex-col pb-20 lg:pb-0">
+      <Navbar user={navbarUser} notifications={notifications} />
+      <main className="flex-1">
+        <PageTransition>{children}</PageTransition>
+      </main>
+      <Footer />
+      <MobileBottomNav isLoggedIn={Boolean(user)} />
+    </div>
   );
 }
+

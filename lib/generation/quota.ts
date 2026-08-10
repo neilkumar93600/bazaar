@@ -12,10 +12,15 @@ export const DAILY_CAP = Number(process.env.GENERATION_DAILY_CAP ?? 5)
  *  two numbers together are the spend ceiling: DAILY_CAP × IMAGES_PER_JOB is
  *  what one user can cost per day.
  *
+ *  One, not four. Four existed so the maker could pick a favourite, but it
+ *  spent four model runs on three images nobody kept and made every generation
+ *  four times slower and four times dearer. A maker who dislikes the one they
+ *  get regenerates, and that costs a quarter of what a fan-out did.
+ *
  *  The cap counts *jobs*, deliberately. Counting design rows instead would stop
  *  charging for failed generations — which is the abuse case the cap exists
  *  for, since a broken prompt retried forever still costs money. */
-export const IMAGES_PER_JOB = 4
+export const IMAGES_PER_JOB = 1
 export const DAILY_IMAGE_CAP = DAILY_CAP * IMAGES_PER_JOB
 
 const WINDOW_MS = 24 * 60 * 60 * 1000

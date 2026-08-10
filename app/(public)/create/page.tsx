@@ -39,18 +39,22 @@ export default async function CreatePage({
     : null;
 
   return (
-    <div className="mx-auto flex max-w-page flex-col gap-8 px-6 py-16 md:px-16 sm:py-24">
-      <div className="flex flex-col gap-3">
-        <h1 className="text-heading-lg text-foreground">Create a design</h1>
-        <p className="text-body max-w-xl text-muted-foreground">
-          Describe an idea, pick how it should look. You get four to choose
-          from — they stay private until you list one.
+    <div className="mx-auto flex max-w-page flex-col gap-10 px-6 py-12 md:px-16 sm:py-16">
+      {/* Studio Hero Header */}
+      <div className="flex flex-col gap-3 max-w-2xl">
+        <div className="inline-flex w-fit items-center gap-2 rounded-full border border-foreground/20 bg-card px-3.5 py-1 text-caption font-semibold tracking-wider text-foreground uppercase shadow-[1px_1px_0px_0px_#262626]">
+          <span className="h-2 w-2 rounded-full bg-[#a3e635] animate-pulse" />
+          Creative Studio
+        </div>
+        <h1 className="text-heading-lg md:text-display font-semibold text-foreground tracking-tight leading-tight">
+          Turn your idea into a <em className="font-serif italic font-normal text-foreground">statement</em>.
+        </h1>
+        <p className="text-body text-muted-ink max-w-xl leading-relaxed">
+          Describe a concept, select an art direction, and render 4 unique 1-of-1 shirt prints. Private until you choose to list.
         </p>
       </div>
 
-      {/* The caps are read here, not imported by the form: `quota.ts` reads a
-          server-only env var, so a client bundle would silently see the code
-          default instead of the configured number. */}
+      {/* Main Studio Form */}
       <CreateForm
         initialPrompt={prompt ?? null}
         initialStyleSlug={initialStyleSlug}

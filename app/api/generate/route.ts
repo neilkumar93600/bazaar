@@ -9,11 +9,8 @@ import {
   type AspectRatio,
   type Quality,
 } from "@/lib/generation/adapter"
-import {
-  buildPrompt,
-  MAX_PROMPT_LENGTH,
-  MIN_PROMPT_LENGTH,
-} from "@/lib/generation/prompt"
+import { MAX_PROMPT_LENGTH, MIN_PROMPT_LENGTH } from "@/lib/generation/prompt"
+import { composeDesign } from "@/lib/generation/compose"
 import {
   findStyle,
   validateStyleText,
@@ -198,7 +195,16 @@ async function runGeneration(
 
   await admin.from("generation_jobs").update({ status: "generating" }).eq("id", jobId)
 
-  const prompt = buildPrompt({ idea, style, text, quote })
+  // One composer call for the whole job, not one per image: the four images
+  // are variations of a single design, so they share its name and its prompt.
+  // Falls back to the template on its own, so this never throws.
+  const { title, prompt } = await composeDesign({
+    idea,
+    style,
+    text,
+    quote,
+    aspectRatio,
+  })
 
   // Four model runs, not one call for four images: MuAPI's endpoint has no `n`
   // parameter. In parallel because each image is two sequential model runs
@@ -212,6 +218,7 @@ async function runGeneration(
         idea,
         vibeId,
         prompt,
+        title,
         style,
         aspectRatio,
         quality,
@@ -251,18 +258,20 @@ async function generateOne(
   idea: string,
   vibeId: string,
   prompt: string,
+  title: string,
   style: StylePreset,
   aspectRatio: AspectRatio,
   quality: Quality,
   index: number,
 ): Promise<string> {
+  // Aspect ratio and quality come straight from the create form; the prompt
+  // comes from the composer. Nothing is cut here — the maker removes the
+  // background afterwards if they want it removed at all.
   const image = await generate({
     prompt,
     references: [],
     aspectRatio,
     quality,
-    cutField: style.cutField,
-    keepBackground: style.fullBleed === true,
   })
 
   // Indexed: four images share one job, and `upsert: true` would silently
@@ -286,6 +295,7 @@ async function generateOne(
       creator_id: userId,
       image_url: publicUrl,
       prompt: idea,
+      title,
       // Private until the maker lists it. Generation is not publication —
       // see docs/superpowers/specs/2026-08-09-design-ownership-listing-design.md
       listed_at: null,

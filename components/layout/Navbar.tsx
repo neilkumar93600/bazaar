@@ -15,15 +15,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
-import { MenuToggle } from "@/components/layout/MenuToggle";
 import { UserMenu } from "@/components/layout/UserMenu";
 import type { NotificationItem } from "@/lib/data/notifications";
 
@@ -97,7 +89,6 @@ export function Navbar({
   notifications?: { items: NotificationItem[]; unreadCount: number } | null;
 }) {
   const shouldReduceMotion = useReducedMotion();
-  const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
   const isLoggedIn = Boolean(user);
 
@@ -197,84 +188,21 @@ export function Navbar({
             )}
           </div>
 
-          {/* Mobile Toggle */}
+          {/* Mobile Right Actions */}
           <div className="flex lg:hidden items-center gap-2">
-            <SearchPopover />
-            {/* Controlled, so the trigger can animate to a close mark while
-                the panel is open rather than sitting on a static icon. */}
-            <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-              <SheetTrigger
-                render={
-                  <button
-                    aria-label={menuOpen ? "Close menu" : "Open menu"}
-                    aria-expanded={menuOpen}
-                    className="flex items-center justify-center rounded-md border border-border p-2.5 text-foreground transition-colors hover:bg-accent lg:hidden"
-                  >
-                    <MenuToggle open={menuOpen} />
-                  </button>
-                }
+            {isLoggedIn ? (
+              <NotificationBell
+                items={notifications?.items ?? []}
+                unreadCount={notifications?.unreadCount ?? 0}
               />
-              <SheetContent side="right" className="flex flex-col gap-1 p-0 border-border text-foreground">
-                <SheetHeader className="border-b border-border p-4">
-                  <SheetTitle>
-                    <Logo textClassName="text-foreground" />
-                  </SheetTitle>
-                </SheetHeader>
-                <nav className="flex flex-col gap-1 p-4">
-                  {NAV_LINKS.map((link) => (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      onClick={() => setMenuOpen(false)}
-                      className="rounded-md px-3 py-2.5 text-muted-foreground hover:text-foreground hover:bg-accent"
-                    >
-                      {link.label}
-                    </Link>
-                  ))}
-                </nav>
-                <div className="mt-auto flex flex-col gap-2 border-t border-border p-4">
-                  {isLoggedIn ? (
-                    <>
-                      <Link
-                        href="/dashboard"
-                        onClick={() => setMenuOpen(false)}
-                        className="rounded-md px-3 py-2.5 text-muted-foreground hover:text-foreground"
-                      >
-                        Dashboard
-                      </Link>
-                      {/* A signed-in visitor on a phone had no create action in
-                          here at all — the desktop bar's CTA is hidden at this
-                          width. */}
-                      <Button
-                        render={<Link href="/create" />}
-                        onClick={() => setMenuOpen(false)}
-                        className="btn-ember"
-                      >
-                        Start creating
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button
-                        variant="ghost"
-                        render={<Link href="/login" />}
-                        onClick={() => setMenuOpen(false)}
-                        className="text-foreground hover:bg-accent"
-                      >
-                        Sign in
-                      </Button>
-                      <Button
-                        render={<Link href="/signup" />}
-                        onClick={() => setMenuOpen(false)}
-                        className="btn-ember"
-                      >
-                        Get started
-                      </Button>
-                    </>
-                  )}
-                </div>
-              </SheetContent>
-            </Sheet>
+            ) : (
+              <Link
+                href="/login"
+                className="text-body-sm font-medium text-foreground transition-opacity hover:opacity-60"
+              >
+                Sign in
+              </Link>
+            )}
           </div>
         </nav>
       </div>

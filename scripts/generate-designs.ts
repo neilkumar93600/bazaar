@@ -20,7 +20,7 @@
  */
 import { readFileSync } from "node:fs"
 
-import { generate } from "../lib/generation/adapter.ts"
+import { generate, removeBackground } from "../lib/generation/adapter.ts"
 import { buildPrompt, MAX_PROMPT_LENGTH } from "../lib/generation/prompt.ts"
 import { findStyle, requiredColourFor } from "../lib/generation/styles.ts"
 import {
@@ -622,10 +622,22 @@ for (const [i, concept] of plan.entries()) {
       references: [],
       aspectRatio: "3:4",
       quality: "medium",
-      cutField: style.cutField,
-      keepBackground: style.fullBleed === true,
     })
-    const imageUrl = await db.upload(`${job.id}.png`, image.bytes)
+
+    // House stock is generated and listed in one pass, with no maker to press
+    // the button, so the cut that the create flow now leaves to the user still
+    // happens here. Full-bleed plates are exempt for the same reason as ever:
+    // the remover keeps the character and deletes the title and the line.
+    const finished = style.fullBleed
+      ? image
+      : await removeBackground(await db.upload(`${job.id}-raw.png`, image.bytes)).catch(
+          (error: unknown) => {
+            console.error(`[seed] background removal failed for ${job.id}:`, error)
+            return image
+          }
+        )
+
+    const imageUrl = await db.upload(`${job.id}.png`, finished.bytes)
 
     const design = await db.insert<{ id: string }>("designs", {
       vibe_id: vibe.id,

@@ -15,17 +15,15 @@ export async function generateMetadata(
 
   const name = data.profile.displayName ?? `@${data.profile.handle}`;
   const count = data.designs.length;
-  const title = `${name} — 1-of-1 AI Designs`;
+  const title = `${name} — 1-of-1 AI Apparel Storefront`;
   const description =
     count > 0
-      ? `${name} owns ${count} one-of-one AI apparel ${count === 1 ? "design" : "designs"} on Shirt Bazaar. Browse the storefront and claim your own 1-of-1.`
+      ? `${name} owns ${count} one-of-one AI apparel ${count === 1 ? "design" : "designs"} on Shirt Bazaar. Browse their broadsheet storefront and claim your own 1-of-1.`
       : `${name} on Shirt Bazaar. Follow this storefront to see their 1-of-1 AI apparel the moment they claim it.`;
 
   return {
     title,
     description,
-    // Quality gate: an empty storefront is a thin page. Keep it reachable for
-    // people, keep it out of the index until it has something to show.
     robots: count > 0 ? undefined : { index: false, follow: true },
     alternates: { canonical: `/creator/${data.profile.handle}` },
     openGraph: {
@@ -52,8 +50,8 @@ export default async function CreatorStorefrontPage(
   if (!data) notFound();
 
   return (
-    <div className="bg-background">
-      <div className="mx-auto flex max-w-page flex-col gap-8 px-4 py-8 sm:px-6 lg:flex-row lg:items-start lg:px-8 lg:py-12">
+    <div className="bg-[#ffffff] min-h-screen py-8 sm:py-12">
+      <div className="mx-auto max-w-page px-4 sm:px-6 lg:px-8 flex flex-col gap-6">
         <StorefrontHeader data={data} />
         <StorefrontGrid data={data} />
       </div>

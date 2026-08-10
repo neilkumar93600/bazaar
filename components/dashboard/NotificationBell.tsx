@@ -8,7 +8,6 @@ import { formatDistanceToNowStrict } from "date-fns";
 
 import { markAllNotificationsRead } from "@/app/dashboard/notifications/actions";
 import type { NotificationItem } from "@/lib/data/notifications";
-import { Button } from "@/components/ui/button";
 import {
   Popover,
   PopoverContent,
@@ -50,13 +49,13 @@ export function NotificationBell({
     >
       <PopoverTrigger
         render={
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell />
+          <button className="btn-ember relative flex size-9 items-center justify-center text-ink">
+            <Bell className="size-4.5" />
             {unreadCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-primary ring-2 ring-background" />
+              <span className="absolute top-1 right-1 size-2 rounded-full bg-ink ring-2 ring-lime-sprint" />
             )}
             <span className="sr-only">Notifications</span>
-          </Button>
+          </button>
         }
       />
       <PopoverContent align="end" className="w-80 gap-3">

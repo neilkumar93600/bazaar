@@ -13,9 +13,9 @@ import {
   PLACEMENT_LABELS,
   type Placement,
 } from "@/lib/printify/print-areas"
+import Image from "next/image"
 import { toneForColourName } from "@/lib/printify/tones"
 import { cn } from "@/lib/utils"
-import { ShirtMockup } from "@/components/shared/ShirtMockup"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
@@ -35,6 +35,8 @@ export function ListingForm({
   garmentOptions,
   frozen,
   initialConfig,
+  onSuccess,
+  hideInlineThumbnail = false,
 }: {
   designId: string
   /** The artwork, for the live preview. */
@@ -55,6 +57,8 @@ export function ListingForm({
     variantId: number | null
     placement: Placement | null
   }
+  onSuccess?: () => void
+  hideInlineThumbnail?: boolean
 }) {
   const [free, setFree] = useState(priceCents === null && isListed)
   const [dollars, setDollars] = useState(
@@ -98,11 +102,11 @@ export function ListingForm({
   return (
     <div className="flex flex-col gap-4">
       {showGarment && (
-        <div className="flex gap-4">
+        <div className="flex gap-4 items-start">
           <div className="flex min-w-0 flex-1 flex-col gap-3">
             {frozen ? (
-              <div className="flex flex-col gap-1">
-                <span className="text-caption font-medium text-foreground">
+              <div className="flex flex-col gap-1 rounded-xl border border-border bg-muted/40 p-3">
+                <span className="text-body-sm font-semibold text-foreground">
                   {garment?.label ?? "Garment"}
                   {colour ? ` · ${colour}` : ""} ·{" "}
                   {PLACEMENT_LABELS[placement]}
@@ -115,7 +119,7 @@ export function ListingForm({
               <>
                 {garmentOptions.length > 1 && (
                   <div className="flex flex-col gap-1.5">
-                    <Label className="text-caption">Garment</Label>
+                    <Label className="text-caption font-semibold text-muted-foreground uppercase tracking-wider">Garment</Label>
                     <div className="flex flex-wrap gap-1.5">
                       {garmentOptions.map((option) => (
                         <button
@@ -128,10 +132,10 @@ export function ListingForm({
                             setVariantId(option.colours[0]?.variantId ?? null)
                           }}
                           className={cn(
-                            "rounded-full border border-ink px-3 py-1 text-caption font-medium transition-colors disabled:opacity-50",
+                            "rounded-full border px-3 py-1 text-caption font-medium transition-all disabled:opacity-50",
                             option.slug === garmentSlug
-                              ? "bg-ink text-white"
-                              : "bg-transparent text-ink hover:bg-secondary"
+                              ? "border-primary bg-primary text-primary-foreground shadow-xs"
+                              : "border-border bg-secondary text-foreground hover:bg-accent"
                           )}
                         >
                           {option.label}
@@ -143,7 +147,7 @@ export function ListingForm({
 
                 {garment && garment.colours.length > 0 && (
                   <div className="flex flex-col gap-1.5">
-                    <Label className="text-caption">
+                    <Label className="text-caption font-semibold text-muted-foreground uppercase tracking-wider">
                       Colour{colour ? ` · ${colour}` : ""}
                     </Label>
                     <div className="flex flex-wrap gap-1.5">
@@ -165,7 +169,7 @@ export function ListingForm({
                             className={cn(
                               "size-6 rounded-full border transition disabled:opacity-50",
                               active
-                                ? "border-primary ring-2 ring-primary"
+                                ? "border-primary ring-2 ring-primary/40 scale-110"
                                 : "border-border hover:border-primary/60",
                               // An unmapped colour has no swatch to paint, so it
                               // shows its initial rather than a blank hole.
@@ -182,7 +186,7 @@ export function ListingForm({
                 )}
 
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-caption">Print</Label>
+                  <Label className="text-caption font-semibold text-muted-foreground uppercase tracking-wider">Print Placement</Label>
                   <div className="flex flex-wrap gap-1.5">
                     {PLACEMENTS.map((option) => (
                       <button
@@ -192,10 +196,10 @@ export function ListingForm({
                         disabled={isPending}
                         onClick={() => setPlacement(option)}
                         className={cn(
-                          "rounded-full border border-ink px-3 py-1 text-caption font-medium transition-colors disabled:opacity-50",
+                          "rounded-full border px-3 py-1 text-caption font-medium transition-all disabled:opacity-50",
                           option === placement
-                            ? "bg-ink text-white"
-                            : "bg-transparent text-ink hover:bg-secondary"
+                            ? "border-primary bg-primary text-primary-foreground shadow-xs"
+                            : "border-border bg-secondary text-foreground hover:bg-accent"
                         )}
                       >
                         {PLACEMENT_LABELS[option]}
@@ -207,53 +211,69 @@ export function ListingForm({
             )}
           </div>
 
-          {/* Drawn, not a Printify render: the real product photo only exists
-              after minting, and minting only happens at listing. */}
-          <div className="w-24 shrink-0">
-            <ShirtMockup imageUrl={imageUrl} tone={tone ?? undefined} />
-          </div>
+          {!hideInlineThumbnail && (
+            <div className="relative aspect-square w-24 shrink-0 overflow-hidden rounded-xl border border-border bg-card shadow-xs">
+              <Image
+                src={imageUrl}
+                alt=""
+                fill
+                sizes="96px"
+                className="object-cover"
+              />
+            </div>
+          )}
         </div>
       )}
 
-      <div className="flex flex-col gap-2.5">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-3 rounded-xl border border-border/70 bg-card/50 p-3.5 shadow-xs">
+        <div className="flex items-center gap-2.5">
           <Checkbox
             id={freeFieldId}
             checked={free}
             onCheckedChange={(checked) => setFree(checked === true)}
             disabled={isPending}
           />
-          <Label htmlFor={freeFieldId} className="text-caption">
+          <Label htmlFor={freeFieldId} className="text-body-sm font-medium text-foreground cursor-pointer select-none">
             Free to claim
           </Label>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-start gap-2.5">
           <Checkbox
             id={hidePromptFieldId}
             checked={hidePrompt}
             onCheckedChange={(checked) => setHidePrompt(checked === true)}
             disabled={isPending}
+            className="mt-0.5"
           />
-          <Label htmlFor={hidePromptFieldId} className="text-caption text-muted-foreground">
-            Hide prompt publicly (shows &quot;Prompt hidden by creator&quot;)
-          </Label>
+          <div className="flex flex-col gap-0.5">
+            <Label htmlFor={hidePromptFieldId} className="text-body-sm font-medium text-foreground cursor-pointer select-none">
+              Hide prompt publicly
+            </Label>
+            <span className="text-caption text-muted-foreground">
+              Shows &quot;Prompt hidden by creator&quot; in the bazaar.
+            </span>
+          </div>
         </div>
       </div>
 
       {!free && (
-        <div className="flex flex-col gap-1">
-          <Label htmlFor={priceFieldId} className="sr-only">
-            Price in dollars
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor={priceFieldId} className="text-body-sm font-medium text-foreground">
+            Listing Price
           </Label>
-          <Input
-            id={priceFieldId}
-            inputMode="decimal"
-            placeholder="29.00"
-            value={dollars}
-            onChange={(event) => setDollars(event.target.value)}
-            disabled={isPending}
-          />
+          <div className="relative flex items-center">
+            <span className="absolute left-3.5 text-body-sm font-semibold text-muted-foreground">$</span>
+            <Input
+              id={priceFieldId}
+              inputMode="decimal"
+              placeholder="29.00"
+              value={dollars}
+              onChange={(event) => setDollars(event.target.value)}
+              disabled={isPending}
+              className="pl-7 bg-background font-mono text-body-sm font-semibold text-foreground border-border focus:border-primary"
+            />
+          </div>
         </div>
       )}
 
@@ -268,7 +288,11 @@ export function ListingForm({
             setError(null)
             startTransition(async () => {
               const result = await listDesign(designId, config(), free, dollars, hidePrompt)
-              if (result.error) setError(result.error)
+              if (result.error) {
+                setError(result.error)
+              } else {
+                onSuccess?.()
+              }
             })
           }}
         >
@@ -284,7 +308,11 @@ export function ListingForm({
               setError(null)
               startTransition(async () => {
                 const result = await delistDesign(designId)
-                if (result.error) setError(result.error)
+                if (result.error) {
+                  setError(result.error)
+                } else {
+                  onSuccess?.()
+                }
               })
             }}
           >

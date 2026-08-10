@@ -4,14 +4,12 @@ import { useState } from "react";
 import { Check, Share2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
-import { Button } from "@/components/ui/button";
-
 export function ShareButton({ handle }: { handle: string }) {
   const [copied, setCopied] = useState(false);
 
   return (
-    <Button
-      variant="outline"
+    <button
+      type="button"
       onClick={() => {
         navigator.clipboard.writeText(
           `${window.location.origin}/creator/${handle}`,
@@ -19,6 +17,7 @@ export function ShareButton({ handle }: { handle: string }) {
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
       }}
+      className="inline-flex items-center justify-center gap-1.5 rounded-md bg-white px-4 py-2 text-caption font-semibold text-[#262626] border border-[#262626] shadow-[2px_2px_0px_0px_#262626] hover:bg-[#fcfff7] transition-all cursor-pointer"
     >
       <AnimatePresence mode="popLayout" initial={false}>
         <motion.span
@@ -32,15 +31,15 @@ export function ShareButton({ handle }: { handle: string }) {
         >
           {copied ? (
             <>
-              <Check /> Copied
+              <Check className="size-3.5" /> Copied
             </>
           ) : (
             <>
-              <Share2 /> Share
+              <Share2 className="size-3.5" /> Share
             </>
           )}
         </motion.span>
       </AnimatePresence>
-    </Button>
+    </button>
   );
 }

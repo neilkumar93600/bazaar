@@ -8,6 +8,8 @@ export type StorefrontProfile = {
   handle: string
   displayName: string | null
   avatarUrl: string | null
+  bannerUrl: string | null
+  bio: string | null
 }
 
 export type StorefrontDesign = DesignCardData & { claimedAt: string }
@@ -34,13 +36,32 @@ export const getStorefrontData = cache(async function getStorefrontData(
     data: { user },
   } = await supabase.auth.getUser()
 
-  const { data: profile } = await supabase
+  const { data: stdProfile } = await supabase
     .from("profiles")
-    .select("id, handle, display_name, avatar_url")
+    .select("id, handle, display_name, avatar_url, bio")
     .eq("handle", handle)
     .maybeSingle()
 
-  if (!profile) return null
+  if (!stdProfile) return null
+
+  let bannerUrl: string | null = null
+  try {
+    const { data: bannerData } = await supabase
+      .from("profiles")
+      .select("banner_url")
+      .eq("id", stdProfile.id)
+      .single()
+    if (bannerData && "banner_url" in bannerData) {
+      bannerUrl = (bannerData as { banner_url?: string | null }).banner_url ?? null
+    }
+  } catch {
+    bannerUrl = null
+  }
+
+  const profile = {
+    ...stdProfile,
+    banner_url: bannerUrl,
+  }
 
   const followRowPromise =
     user && user.id !== profile.id
@@ -72,7 +93,7 @@ export const getStorefrontData = cache(async function getStorefrontData(
   const { data: designRows } = designIds.length
     ? await supabase
         .from("designs")
-        .select("id, image_url, mockup_url, vibe_id, price_cents, prompt, is_prompt_hidden, created_at")
+        .select("id, image_url, mockup_url, vibe_id, price_cents, title, prompt, is_prompt_hidden, created_at")
         .in("id", designIds)
         .eq("moderation_status", "approved")
         // An owner who delists a design they own stops showing it publicly.
@@ -104,6 +125,7 @@ export const getStorefrontData = cache(async function getStorefrontData(
       claimedAt: claimedAtByDesignId.get(d.id)!,
       createdAt: d.created_at,
       priceCents: d.price_cents,
+      title: d.title ?? null,
       prompt: d.prompt,
       isPromptHidden: Boolean(d.is_prompt_hidden),
       vibeName: (d.vibe_id ? vibeById.get(d.vibe_id)?.name : null) ?? null,
@@ -119,7 +141,7 @@ export const getStorefrontData = cache(async function getStorefrontData(
   // the old two-step hop through generation_jobs.
   const { data: createdRows } = await supabase
     .from("designs")
-    .select("id, image_url, mockup_url, vibe_id, price_cents, prompt, is_prompt_hidden, created_at, is_claimed, claimed_by")
+    .select("id, image_url, mockup_url, vibe_id, price_cents, title, prompt, is_prompt_hidden, created_at, is_claimed, claimed_by")
     .eq("creator_id", profile.id)
     .eq("moderation_status", "approved")
     // A public storefront shows what this maker put in the bazaar, never their
@@ -176,6 +198,8 @@ export const getStorefrontData = cache(async function getStorefrontData(
       handle: profile.handle,
       displayName: profile.display_name,
       avatarUrl: profile.avatar_url,
+      bannerUrl: (profile as Record<string, unknown>).banner_url as string | null ?? null,
+      bio: (profile as Record<string, unknown>).bio as string | null ?? null,
     },
     followerCount: followerCount ?? 0,
     designs,

@@ -5,6 +5,9 @@ import { createClient as createServiceClient } from "@supabase/supabase-js";
 
 import { createClient } from "@/lib/supabase/server";
 import { charge } from "@/lib/payments/checkout";
+import { garmentOrderEmail } from "@/lib/email/templates";
+import { sendEmail } from "@/lib/email/send";
+import { designLabel } from "@/lib/utils";
 import { validateAddress } from "@/lib/orders/address";
 import { orderEligibility } from "@/lib/orders/eligibility";
 import {
@@ -91,7 +94,7 @@ export async function placeGarmentOrder(
   // Re-read server-side: the client's idea of this design is a suggestion.
   const { data: design } = await supabase
     .from("designs")
-    .select("id, claimed_by, printify_product_id, garment_slug")
+    .select("id, claimed_by, printify_product_id, garment_slug, prompt")
     .eq("id", designId)
     .eq("moderation_status", "approved")
     .maybeSingle();
@@ -152,12 +155,24 @@ export async function placeGarmentOrder(
     return { error: "Could not place the order." };
   }
 
-  // Past the response: Printify is several network hops and the order is
-  // already recorded. Swallows its own failures — an unsubmitted order is
-  // recoverable from the row, a 500 after taking payment is not.
+  // Past the response: Printify is several network hops, the confirmation is
+  // another, and the order is already recorded. Both swallow their own
+  // failures — an unsubmitted order or an unsent receipt is recoverable from
+  // the row, a 500 after taking payment is not.
   //
-  // A no-op unless PRINTIFY_SUBMIT_ORDERS is on.
+  // The Printify half is a no-op unless PRINTIFY_SUBMIT_ORDERS is on.
   after(async () => {
+    const { subject, html } = garmentOrderEmail({
+      orderId: order.id,
+      buyerName: address.address.firstName,
+      designLabel: designLabel({ prompt: design.prompt }, 60),
+      garmentLabel: garment.label,
+      priceCents: garment.priceCents,
+      placedAt: new Date(),
+    })
+
+    await sendEmail({ to: address.address.email, subject, html })
+
     try {
       const submitted = await submitPrintifyOrder({
         orderId: order.id,
