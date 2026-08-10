@@ -9,7 +9,7 @@
  */
 
 import { getDesignDetail } from "@/lib/data/design"
-import { purchaseReceiptEmail } from "@/lib/email/templates"
+import { designFileEmail, purchaseReceiptEmail } from "@/lib/email/templates"
 import { sendEmail } from "@/lib/email/send"
 import type { Buyer } from "@/lib/orders/buyer"
 import { siteUrl } from "@/lib/site"
@@ -49,23 +49,38 @@ export async function deliverDesignPurchase(delivery: Delivery): Promise<boolean
 
     const label = designLabel(design)
 
-    const { subject, html } = purchaseReceiptEmail({
+    const storefrontUrl = delivery.handle
+      ? `${siteUrl}/creator/${delivery.handle}`
+      : `${siteUrl}/dashboard/designs`
+
+    const receipt = purchaseReceiptEmail({
       orderId: delivery.orderId,
       buyerName: delivery.buyer.name,
       designLabel: label,
       priceCents: design.priceCents,
       purchasedAt: new Date(),
-      storefrontUrl: delivery.handle
-        ? `${siteUrl}/creator/${delivery.handle}`
-        : `${siteUrl}/dashboard/designs`,
+      storefrontUrl,
     })
 
-    return await sendEmail({
-      to: delivery.buyer.email,
-      subject,
-      html,
-      attachments: [attachmentFor(design.imageUrl, label)],
+    const file = designFileEmail({
+      buyerName: delivery.buyer.name,
+      designLabel: label,
+      storefrontUrl,
     })
+
+    // Two emails, sent together: the receipt is the record, the file is the
+    // product. Not `&&` — the file must still go out if the receipt bounces,
+    // since one of these is the thing they actually paid for.
+    const [receiptSent, fileSent] = await Promise.all([
+      sendEmail({ to: delivery.buyer.email, ...receipt }),
+      sendEmail({
+        to: delivery.buyer.email,
+        ...file,
+        attachments: [attachmentFor(design.imageUrl, label)],
+      }),
+    ])
+
+    return receiptSent && fileSent
   } catch (error) {
     console.error("[purchase] delivery failed", error)
     return false

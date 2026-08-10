@@ -23,9 +23,9 @@ const shortId = (id: string) => id.slice(0, 8).toUpperCase()
 
 /** A design bought outright — the claim that makes the buyer its owner.
  *
- *  The artwork file rides along as an attachment (see lib/purchase/deliver.ts),
- *  which is why the copy is explicit that it is the flat design and not a
- *  photo of a shirt. */
+ *  Paperwork only. The artwork travels in its own email (designFileEmail), so
+ *  this one stays small enough to survive a strict inbox and can be forwarded
+ *  to an accountant without the file attached. */
 export function purchaseReceiptEmail(input: {
   orderId: string
   buyerName: string
@@ -45,17 +45,45 @@ export function purchaseReceiptEmail(input: {
   return {
     subject: `Your ${siteName} receipt — ${input.designLabel}`,
     html: renderEmail({
-      preheader: `${input.designLabel} is yours. The artwork file is attached.`,
+      preheader: `${input.designLabel} is yours. The artwork file follows separately.`,
       eyebrow: "Receipt",
       heading: { before: "It's", emphasis: "yours", after: "now." },
       paragraphs: [
         `${input.buyerName}, this design has one owner and it's you — a 1-of-1, never minted again.`,
-        "The artwork file is attached to this email. It's the flat design itself, not a shirt photo, so it prints, posts and layers wherever you want it.",
+        "The artwork file is on its way in a second email, attached and ready to use.",
       ],
       meta,
       cta: { label: "View your storefront", href: input.storefrontUrl },
       footnote:
-        "Keep this email — the attachment is your copy of the file, and the order number above is what support will ask for.",
+        "Keep this email — the order number above is what support will ask for.",
+    }),
+  }
+}
+
+/** The artwork itself, sent on its own so the file and the paperwork never
+ *  share a fate: a receipt is worth keeping, an attachment is worth finding,
+ *  and one email doing both is the one people can't search for later.
+ *
+ *  The attachment is added at the send point (lib/purchase/deliver.ts) — it is
+ *  the flat design, not a shirt photo, which is why the copy says so. */
+export function designFileEmail(input: {
+  buyerName: string
+  designLabel: string
+  storefrontUrl: string
+}): Email {
+  return {
+    subject: `Your design file — ${input.designLabel}`,
+    html: renderEmail({
+      preheader: `${input.designLabel}, attached and print-ready.`,
+      eyebrow: "Your file",
+      heading: { before: "The", emphasis: "artwork", after: "itself." },
+      paragraphs: [
+        `${input.buyerName}, here it is — attached to this email.`,
+        "It's the flat design on a transparent background, not a photo of a shirt, so it prints, posts and layers wherever you want it.",
+      ],
+      cta: { label: "View your storefront", href: input.storefrontUrl },
+      footnote:
+        "Keep this email: the attachment is your copy of the file. Your receipt came separately.",
     }),
   }
 }

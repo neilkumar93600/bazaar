@@ -8,6 +8,7 @@
  *  of the shape below.
  */
 
+import { resolveBuyerId } from "@/lib/purchase/buyer-account"
 import { deliverDesignPurchase } from "@/lib/purchase/deliver"
 import { stripe } from "@/lib/payments/stripe"
 import { syncDesignProduct } from "@/lib/printify/sync"
@@ -40,12 +41,11 @@ export async function fulfilCheckoutSession(
   }
 
   const designId = session.metadata?.designId
-  const buyerId = session.metadata?.buyerId
   const buyerName = session.metadata?.buyerName ?? ""
   const buyerEmail = session.metadata?.buyerEmail ?? session.customer_email ?? ""
   const expectedCents = Number(session.metadata?.expectedCents)
 
-  if (!designId || !buyerId || !buyerEmail) {
+  if (!designId || !buyerEmail) {
     console.error(`[fulfil] session ${sessionId} is missing metadata`)
     return { ok: false, error: "We couldn't match that payment to a design." }
   }
@@ -59,6 +59,19 @@ export async function fulfilCheckoutSession(
       : (session.payment_intent?.id ?? session.id)
 
   const admin = createServiceClient()
+
+  // No buyerId means the buyer was a guest, so the account is minted now —
+  // after the money moved, not when they were sent to Stripe, which keeps an
+  // abandoned checkout from leaving an empty account behind. Idempotent, so the
+  // webhook and the success page racing each other resolve the same id.
+  const buyerId =
+    session.metadata?.buyerId ||
+    (await resolveBuyerId({ name: buyerName, email: buyerEmail }, admin.auth.admin))
+
+  if (!buyerId) {
+    console.error(`[fulfil] no account for ${buyerEmail} on session ${sessionId}`)
+    return { ok: false, error: "We couldn't set up an account for that email." }
+  }
 
   // Already fulfilled — a webhook retry, a refreshed success page, or the
   // other path getting here first. Return the same answer, send no second

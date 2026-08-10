@@ -86,7 +86,6 @@ export default async function DesignDetailPage(props: PageProps<"/design/[id]">)
     ]);
 
   const title = designLabel(design);
-  const isFree = design.priceCents === null;
 
   return (
     <div className="mx-auto flex max-w-page flex-col gap-14 px-6 py-8 md:px-16 sm:py-12">
@@ -171,21 +170,16 @@ export default async function DesignDetailPage(props: PageProps<"/design/[id]">)
                 )
               ) : null}
             </>
-          ) : user ? (
+          ) : (
+            // No account required. The form's name and email are all a
+            // purchase needs — an account is made from that email behind it,
+            // so a stranger can claim a design without stopping to sign up.
             <BuyForm
               designId={design.id}
               priceCents={design.priceCents}
               defaultName={profile?.display_name ?? ""}
-              defaultEmail={user.email ?? ""}
-            />
-          ) : (
-            <SignInPanel
-              message={
-                isFree
-                  ? "Sign in to claim this design."
-                  : "Sign in to buy this design."
-              }
-              label={isFree ? "Log in to claim" : "Log in to buy"}
+              defaultEmail={user?.email ?? ""}
+              isGuest={!user}
             />
           )}
 

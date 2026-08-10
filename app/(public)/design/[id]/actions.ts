@@ -3,8 +3,9 @@
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { stripe, stripeConfigured } from "@/lib/payments/stripe";
+import { resolveBuyerId } from "@/lib/purchase/buyer-account";
 import { deliverDesignPurchase } from "@/lib/purchase/deliver";
 import { validateBuyer } from "@/lib/orders/buyer";
 import { syncDesignProduct } from "@/lib/printify/sync";
@@ -86,10 +87,6 @@ export async function buyDesign(
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    return { error: "Sign in to buy this design." };
-  }
-
   const buyer = validateBuyer(rawBuyer);
   if (!buyer.ok) return { error: buyer.error };
 
@@ -136,9 +133,12 @@ export async function buyDesign(
       ],
       // Everything fulfilment needs, because the webhook that finishes this
       // purchase arrives with no session, no cookie and no form post.
+      //
+      // A guest carries no buyerId: the account is minted at fulfilment, not
+      // here, so an abandoned checkout leaves no empty account behind.
       metadata: {
         designId,
-        buyerId: user.id,
+        ...(user ? { buyerId: user.id } : {}),
         buyerName: buyer.buyer.name,
         buyerEmail: buyer.buyer.email,
         expectedCents: String(design.price_cents),
@@ -154,10 +154,21 @@ export async function buyDesign(
     return { checkoutUrl: session.url };
   }
 
+  // A guest gets an account made from the email they just typed. Same door the
+  // Stripe webhook uses, for the same reason: the buyer is established by this
+  // trusted server code rather than by a session that may not exist.
+  const admin = createServiceClient();
+  const buyerId = user?.id ?? (await resolveBuyerId(buyer.buyer, admin.auth.admin));
+
+  if (!buyerId) {
+    return { error: "We couldn't set up an account for that email. Try another." };
+  }
+
   // Free: no payment ref at all, rather than a zero-amount charge. Stripe
   // rejects a zero charge, and inventing a reference for money that never
   // moved makes the orders table lie.
-  const { data, error } = await supabase.rpc("claim_design", {
+  const { data, error } = await admin.rpc("claim_design_for", {
+    p_buyer_id: buyerId,
     p_design_id: designId,
     p_expected_cents: null,
     p_payment_ref: null,

@@ -20,12 +20,16 @@ export function BuyForm({
   priceCents,
   defaultName = "",
   defaultEmail = "",
+  isGuest = false,
 }: {
   designId: string
   /** Null means the maker listed it free. */
   priceCents: number | null
   defaultName?: string
   defaultEmail?: string
+  /** Nobody signed in. The email below becomes the account the design is
+   *  owned by, which is worth saying out loud before they type it. */
+  isGuest?: boolean
 }) {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState(defaultName)
@@ -92,6 +96,9 @@ export function BuyForm({
             />
             <span className="text-caption text-muted-ink">
               Your receipt and the design file go here.
+              {isGuest
+                ? " No account needed — this address becomes yours, and you can set a password later."
+                : ""}
             </span>
           </div>
         </div>
