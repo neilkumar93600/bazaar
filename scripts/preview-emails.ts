@@ -8,16 +8,26 @@
  *  not a dependency. The output directory is gitignored.
  */
 
+// First, and before anything that reads the environment: siteUrl is read once,
+// when lib/site.ts is evaluated.
+import "./load-env.ts"
+
 import { mkdirSync, writeFileSync } from "node:fs"
 
 import {
+  designFileEmail,
   garmentOrderEmail,
   newsletterWelcomeEmail,
   notificationEmail,
   purchaseReceiptEmail,
 } from "../lib/email/templates.ts"
+import { siteUrl } from "../lib/site.ts"
 
 const now = new Date("2026-08-10T12:00:00Z")
+
+// Whatever origin the env is pointed at, so a preview shows the links a buyer
+// would actually get rather than a hardcoded localhost.
+const storefrontUrl = `${siteUrl}/creator/ada`
 
 const EMAILS = {
   "purchase-receipt-paid": purchaseReceiptEmail({
@@ -26,7 +36,7 @@ const EMAILS = {
     designLabel: "Skull in bloom",
     priceCents: 2900,
     purchasedAt: now,
-    storefrontUrl: "http://localhost:3000/creator/ada",
+    storefrontUrl,
   }),
   "purchase-receipt-free": purchaseReceiptEmail({
     orderId: "8f2c1a34-0000-4000-8000-000000000001",
@@ -34,7 +44,12 @@ const EMAILS = {
     designLabel: "Quiet riot",
     priceCents: null,
     purchasedAt: now,
-    storefrontUrl: "http://localhost:3000/creator/ada",
+    storefrontUrl,
+  }),
+  "design-file": designFileEmail({
+    buyerName: "Ada Lovelace",
+    designLabel: "Quiet riot",
+    storefrontUrl,
   }),
   "garment-order": garmentOrderEmail({
     orderId: "1a2b3c4d-0000-4000-8000-000000000002",
