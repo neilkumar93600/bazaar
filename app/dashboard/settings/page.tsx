@@ -238,7 +238,7 @@ export default async function SettingsPage() {
               </div>
               <div className="flex flex-col gap-0.5">
                 <span className="text-body-sm font-semibold text-[#262626]">
-                  Direct Payout & Stripe Account
+                  Direct Payout Account
                 </span>
                 <span className="text-caption text-[#525252]">
                   Resale royalties are automatically transferred to your connected payout account.

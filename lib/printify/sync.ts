@@ -4,6 +4,7 @@ import { printifyConfig } from "./client.ts"
 import { defaultGarment, findGarment } from "./garments.ts"
 import { type Placement } from "./print-areas.ts"
 import { createDesignProduct } from "./products.ts"
+import { FALLBACK_DESCRIPTION } from "../generation/compose.ts"
 
 /** Service-role client. This runs after the user's response has been sent, with
  *  no session attached, and `designs` has no client-side update policy for these
@@ -41,7 +42,7 @@ export async function syncDesignProduct(designId: string): Promise<void> {
   const { data: design } = await admin
     .from("designs")
     .select(
-      "id, image_url, print_ready_front_url, printify_product_id, vibe_id, garment_slug, featured_variant_id, placement"
+      "id, image_url, print_ready_front_url, printify_product_id, vibe_id, garment_slug, featured_variant_id, placement, description"
     )
     .eq("id", designId)
     .maybeSingle()
@@ -68,8 +69,10 @@ export async function syncDesignProduct(designId: string): Promise<void> {
       designId: design.id,
       garment,
       title: `${vibe?.name ?? "Shirt Bazaar"} — 1 of 1`,
-      description:
-        "A one-of-a-kind AI design, claimed by a single owner and never reprinted for anyone else.",
+      // Composed alongside the title at generation time (lib/generation/compose.ts
+      // composeListing). Null on designs generated before that column existed,
+      // or when the composer call failed — same generic line either way.
+      description: design.description ?? FALLBACK_DESCRIPTION,
       imageUrl: design.print_ready_front_url ?? design.image_url,
       placement: (design.placement as Placement | null) ?? "front",
       featuredVariantId: design.featured_variant_id ?? null,

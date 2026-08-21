@@ -4,22 +4,32 @@ import { redirect } from "next/navigation";
 import { after } from "next/server";
 
 import { createClient, createServiceClient } from "@/lib/supabase/server";
-import { stripe, stripeConfigured } from "@/lib/payments/stripe";
+import { boltConfigured, createOrderToken } from "@/lib/payments/bolt";
+import { fulfilBoltTransaction } from "@/lib/payments/fulfil";
 import { resolveBuyerId } from "@/lib/purchase/buyer-account";
 import { deliverDesignPurchase } from "@/lib/purchase/deliver";
 import { validateBuyer } from "@/lib/orders/buyer";
 import { syncDesignProduct } from "@/lib/printify/sync";
 import { getDesignDetail, type DesignDetail } from "@/lib/data/design";
-import { siteUrl } from "@/lib/site";
+import { envValue } from "@/lib/site";
 import { designLabel } from "@/lib/utils";
 import {
   getOrderOptions,
   type OrderOptions,
 } from "@/app/(public)/design/[id]/order-actions";
 
-/** `checkoutUrl` means the purchase isn't finished: the buyer has to go to
- *  Stripe. A free purchase redirects instead and returns nothing. */
-export type BuyState = { error?: string; checkoutUrl?: string };
+/** `boltToken` means the purchase isn't finished: the browser still has to
+ *  open Bolt's modal with it. A free purchase redirects instead and returns
+ *  nothing.
+ *
+ *  Bolt is a modal, not a hosted page, so there is no URL to send the buyer to
+ *  — the token and the publishable key travel back to the client together and
+ *  the checkout happens without leaving the design. */
+export type BuyState = {
+  error?: string;
+  boltToken?: string;
+  boltPublishableKey?: string;
+};
 
 export type DesignDialogData = {
   design: DesignDetail | null;
@@ -69,9 +79,9 @@ export async function getDesignDialogData(
  *
  *  Free splits from priced here and stays split all the way down. A free
  *  design is claimed inside this call and the receipt goes out behind the
- *  response. A priced one only gets a Stripe Checkout session; the claim
- *  happens in lib/payments/fulfil.ts once Stripe says the money moved, which
- *  is the only moment it is true.
+ *  response. A priced one only gets a Bolt order token; the claim happens in
+ *  lib/payments/fulfil.ts once Bolt says the money moved, which is the only
+ *  moment it is true.
  */
 export async function buyDesign(
   designId: string,
@@ -110,52 +120,57 @@ export async function buyDesign(
   }
 
   if (design.price_cents !== null) {
-    if (!stripeConfigured()) {
+    const publishableKey = envValue("NEXT_PUBLIC_BOLT_PUBLISHABLE_KEY");
+
+    if (!boltConfigured() || !publishableKey) {
       return { error: "Card payments aren't switched on yet." };
     }
 
-    const session = await stripe().checkout.sessions.create({
-      mode: "payment",
-      customer_email: buyer.buyer.email,
-      line_items: [
-        {
-          quantity: 1,
-          price_data: {
-            currency: "usd",
-            unit_amount: design.price_cents,
-            product_data: {
-              name: designLabel({ prompt: design.prompt }, 80),
-              description: "1-of-1 design, yours permanently.",
-              images: [design.image_url],
-            },
-          },
-        },
-      ],
-      // Everything fulfilment needs, because the webhook that finishes this
-      // purchase arrives with no session, no cookie and no form post.
-      //
-      // A guest carries no buyerId: the account is minted at fulfilment, not
-      // here, so an abandoned checkout leaves no empty account behind.
-      metadata: {
-        designId,
-        ...(user ? { buyerId: user.id } : {}),
-        buyerName: buyer.buyer.name,
-        buyerEmail: buyer.buyer.email,
-        expectedCents: String(design.price_cents),
-      },
-      success_url: `${siteUrl}/purchase/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${siteUrl}/design/${designId}`,
-    });
+    // Ours, and unique per attempt. Bolt requires uniqueness per *successful*
+    // transaction, but minting a fresh one per attempt is simpler and means an
+    // abandoned checkout can never collide with the retry that follows it.
+    const orderReference = `design_${crypto.randomUUID()}`;
 
-    if (!session.url) {
-      return { error: "Stripe didn't return a checkout page. Try again." };
+    // Written before the token exists. If Bolt fails on the next line the row
+    // is a few bytes of litter; if it were written after, a shopper who paid
+    // in the gap would land in fulfilment with nothing to match against.
+    //
+    // A guest carries no buyer_id: the account is minted at fulfilment, not
+    // here, so an abandoned checkout leaves no empty account behind.
+    const { error: intentError } = await createServiceClient()
+      .from("checkout_intents")
+      .insert({
+        order_reference: orderReference,
+        design_id: designId,
+        buyer_id: user?.id ?? null,
+        buyer_name: buyer.buyer.name,
+        buyer_email: buyer.buyer.email,
+        expected_cents: design.price_cents,
+      });
+
+    if (intentError) {
+      console.error("[buy] could not record checkout intent", intentError);
+      return { error: "We couldn't start checkout. Try again." };
     }
 
-    return { checkoutUrl: session.url };
+    try {
+      const boltToken = await createOrderToken({
+        orderReference,
+        designId,
+        designLabel: designLabel({ prompt: design.prompt }, 80),
+        imageUrl: design.image_url,
+        priceCents: design.price_cents,
+      });
+
+      return { boltToken, boltPublishableKey: publishableKey };
+    } catch (error) {
+      console.error("[buy] Bolt order token failed", error);
+      return { error: "We couldn't reach checkout. Try again." };
+    }
   }
 
   // A guest gets an account made from the email they just typed. Same door the
-  // Stripe webhook uses, for the same reason: the buyer is established by this
+  // Bolt webhook uses, for the same reason: the buyer is established by this
   // trusted server code rather than by a session that may not exist.
   const admin = createServiceClient();
   const buyerId = user?.id ?? (await resolveBuyerId(buyer.buyer, admin.auth.admin));
@@ -164,9 +179,9 @@ export async function buyDesign(
     return { error: "We couldn't set up an account for that email. Try another." };
   }
 
-  // Free: no payment ref at all, rather than a zero-amount charge. Stripe
-  // rejects a zero charge, and inventing a reference for money that never
-  // moved makes the orders table lie.
+  // Free: no payment ref at all, rather than a zero-amount charge. No
+  // processor accepts a zero charge, and inventing a reference for money that
+  // never moved makes the orders table lie.
   const { data, error } = await admin.rpc("claim_design_for", {
     p_buyer_id: buyerId,
     p_design_id: designId,
@@ -196,4 +211,22 @@ export async function buyDesign(
   });
 
   redirect(`/creator/${claim.handle}`);
+}
+
+/** Finishes a card purchase the moment Bolt's modal reports success.
+ *
+ *  The webhook is the authoritative half and arrives whether or not the buyer
+ *  stays on the page; this is the fast half, so the buyer isn't left watching
+ *  a spinner while a webhook queue drains. fulfilBoltTransaction is idempotent
+ *  and re-reads the transaction from Bolt, so a browser that invents a
+ *  reference here gets exactly nothing.
+ */
+export async function completeBoltPurchase(
+  reference: string
+): Promise<{ error?: string; handle?: string | null }> {
+  if (!reference) return { error: "That payment is missing its reference." };
+
+  const result = await fulfilBoltTransaction(reference);
+
+  return result.ok ? { handle: result.handle } : { error: result.error };
 }

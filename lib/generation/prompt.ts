@@ -9,11 +9,19 @@
  *  in that gallery is prose in the same order:
  *
  *    1. an opening line naming the artifact, the style and the aspect ratio
- *    2. `Composition:` — what is where
- *    3. `Backdrop:` — the ground, as its own element
- *    4. `Exact typography:` — a dash list, each line quoting the literal string
- *    5. `Art direction:` — technique vocabulary, then `Palette of …`, then the
+ *    2. `Composition:` — what is where, before anything else is described
+ *    3. `Subject:` — what the layout above is holding
+ *    4. `Backdrop:` — the ground, as its own element
+ *    5. `Exact typography:` — a dash list, each line quoting the literal string
+ *    6. `Art direction:` — technique vocabulary, then `Palette of …`, then the
  *       negative constraints inline at the end
+ *
+ *  Composition comes before Subject, not after: `references/craft.md` §2 is
+ *  explicit that layout has to be stated before surface detail or "the model
+ *  spends detail budget on the object and improvises the layout." All three
+ *  families follow this now — it used to be Subject-then-Composition for
+ *  `pictorial` alone, which meant the model had already half-composed the
+ *  shot around the subject before it was told where anything actually goes.
  *
  *  See `references/gallery-anime-and-manga.md` No. 1 and
  *  `references/gallery-typography-and-posters.md` No. 35. The gallery's own
@@ -63,6 +71,28 @@ const MERGE_WARNING = {
 const literal = (value: string) => JSON.stringify(value)
 
 const negatives = (items: string[]) => `Do not include ${items.join("; ")}.`
+
+/** Visual facts, not praise. The old tail read "High contrast, crisp linework,
+ *  print-ready, no CGI tell" — three of those four are adjectives the model
+ *  cannot measure, and fal's gpt-image-2 guide is explicit that vague praise
+ *  ("stunning, masterpiece, epic") is the single biggest source of generic
+ *  output. These are things that are either present in the file or not. */
+const INK_FACTS =
+  "Flat spot-colour separations with hard edges, no gradient inside a fill, no drop shadow, no bevel, no photographic depth of field."
+
+/** Spells a short string out letter by letter.
+ *
+ *  Straight from the guide's text-rendering section: "spell hard words letter
+ *  by letter when the model struggles". Titles are short, they are set at
+ *  display size where a dropped letter is the whole design, and they are the
+ *  strings most often mangled — so the title always gets this treatment. The
+ *  line does not: at ten words it would bury the instruction it is meant to
+ *  reinforce. */
+const spellOut = (value: string) =>
+  value
+    .split("")
+    .map((character) => (character === " " ? "space" : character))
+    .join("-")
 
 /** The creative half of a prompt, when a model has written it.
  *
@@ -140,11 +170,14 @@ export function buildPrompt(input: {
   const palette = `Palette of ${style.palette.join(", ")}.`
 
   if (style.family === "illustrated") {
+    const titleSpelling = text ? ` — spelled ${spellOut(text)}` : ""
+
     return [
       `A ${style.aesthetic}, ${canvas}, as ${ARTIFACT}.`,
       "",
       `Composition: ${
         direction?.composition?.trim() ||
+        style.composition?.trim() ||
         "an arched display title across the top, a single hero illustration filling the centre, and the line set in two balanced centred rows beneath it. Title, illustration and line lock together as one designed plate, symmetrical, with generous margin on all four sides."
       }`,
       "",
@@ -155,14 +188,33 @@ export function buildPrompt(input: {
       backdrop,
       "",
       "Exact typography:",
-      `- Title (large display capitals, arched across the full width): ${literal(text ?? "")}`,
-      `- Line (smaller capitals, two balanced centred rows): ${literal(quote ?? "")}`,
+      // The label describes the same layout the Composition line just asked
+      // for. When they disagree — "arched across the full width" against a
+      // composition that wants type filling the upper two thirds behind the
+      // subject — the model splits the difference and the plate comes out
+      // crooked. So the interlocking presets get their own wording.
+      //
+      // The title also gets spelled out letter by letter — it is set at
+      // display size where one dropped letter is the whole design, and it is
+      // the string most often mangled. The line doesn't: at ten words spelling
+      // it out would bury the instruction it's meant to reinforce.
+      style.interlockType
+        ? `- Title (enormous condensed capitals, set behind the subject): ${literal(text ?? "")}${titleSpelling}`
+        : `- Title (large display capitals, arched across the full width): ${literal(text ?? "")}${titleSpelling}`,
+      style.interlockType
+        ? `- Line (small capitals, one centred row along the bottom): ${literal(quote ?? "")}`
+        : `- Line (smaller capitals, two balanced centred rows): ${literal(quote ?? "")}`,
       "",
-      `Art direction: ${linework}. ${palette} High contrast, crisp linework, print-ready, no CGI tell. ${negatives(
+      `Art direction: ${linework}. ${palette} ${INK_FACTS} ${negatives(
         [
           "any word, letter or numeral that is not part of the exact typography above",
           "misspelling, duplicating or reordering those words",
-          "letting the illustration overlap or obscure the title or the line",
+          // A preset built around type *behind* a subject wants exactly the
+          // overlap this line forbids, so it opts out. Everything else keeps
+          // it: on a stacked plate an overlap reads as a printing mistake.
+          ...(style.interlockType
+            ? ["the subject sitting so low or so small that the title reads as a separate stacked block rather than one layered composition"]
+            : ["letting the illustration overlap or obscure the title or the line"]),
           "photographic realism or a mockup of a physical shirt",
           MERGE_WARNING[style.cutField],
         ],
@@ -186,7 +238,7 @@ export function buildPrompt(input: {
       "Exact typography:",
       `- The only text in the image: ${literal(text ?? "")}`,
       "",
-      `Art direction: ${linework}. ${palette} ${subject}. High contrast, crisp linework, print-ready, no CGI tell. ${negatives(
+      `Art direction: ${linework}. ${palette} ${subject}. ${INK_FACTS} ${negatives(
         [
           "any word, letter or numeral that is not the exact text above",
           "misspelling, duplicating or reordering those words",
@@ -200,18 +252,18 @@ export function buildPrompt(input: {
   return [
     `A ${style.aesthetic}, ${canvas}, as ${ARTIFACT}.`,
     "",
-    `Subject: ${subject}`,
-    "",
     `Composition: ${
       direction?.composition?.trim() ||
       "a single centred hero subject, symmetrical, with generous margin on all four sides."
     }`,
     "",
+    `Subject: ${subject}`,
+    "",
     ...optional("Materials", direction?.materials),
     ...optional("Lighting", direction?.lighting),
     backdrop,
     "",
-    `Art direction: ${linework}. ${palette} High contrast, crisp linework, print-ready, no CGI tell. ${negatives(
+    `Art direction: ${linework}. ${palette} ${INK_FACTS} ${negatives(
       [
         "any words, letters, numerals or letterforms anywhere in the image",
         "photographic realism or a mockup of a physical shirt",

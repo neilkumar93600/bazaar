@@ -30,8 +30,8 @@ export async function createClient() {
 
 /** Service-role client: no cookies, no RLS, no session. For trusted server
  *  code acting on a user's behalf where there is no user session to act
- *  under — a Stripe webhook is the extreme case, since it arrives from
- *  stripe.com with no browser attached at all.
+ *  under — a Bolt payment webhook is the extreme case, since it arrives from
+ *  the processor with no browser attached at all.
  *
  *  ponytail: order-actions.ts, app/api/generate and lib/printify/sync each
  *  still spell this out inline. Fold them in next time one is touched. */

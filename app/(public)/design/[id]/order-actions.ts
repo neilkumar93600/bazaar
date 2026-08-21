@@ -134,7 +134,7 @@ export async function placeGarmentOrder(
       design_id: designId,
       variant_id: variantId,
       amount_cents: garment.priceCents,
-      stripe_payment_intent_id: paymentRef,
+      payment_ref: paymentRef,
       status: "paid",
       ship_first_name: address.address.firstName,
       ship_last_name: address.address.lastName,

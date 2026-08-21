@@ -75,13 +75,20 @@ for (const style of STYLE_PRESETS.filter((s) => s.family === "illustrated")) {
   assert.match(out, /Exact typography:/, `${style.slug}`)
   assert.match(
     out,
-    /- Title \(large display capitals, arched across the full width\): "PROMETHEUS"/,
+    /- Title \([^)]+\): "PROMETHEUS"/,
     `${style.slug}: the title must be pinned`,
   )
   assert.match(
     out,
-    /- Line \(smaller capitals, two balanced centred rows\): "THEY CHAINED THE BODY THE FIRE SPREAD"/,
+    /- Line \([^)]+\): "THEY CHAINED THE BODY THE FIRE SPREAD"/,
     `${style.slug}: the line must be pinned`,
+  )
+  // The label and the Composition sentence must not describe different layouts.
+  const arched = /- Title \(large display capitals, arched/.test(out)
+  assert.equal(
+    arched,
+    !style.interlockType,
+    `${style.slug}: typography label must match the composition it was given`,
   )
   assert.match(
     out,
@@ -126,6 +133,27 @@ for (const style of STYLE_PRESETS.filter((s) => s.family === "illustrated")) {
 {
   assert.ok(MIN_PROMPT_LENGTH > 0)
   assert.ok(MAX_PROMPT_LENGTH > MIN_PROMPT_LENGTH)
+}
+
+// A preset may carry its own Composition sentence, and `interlockType` is what
+// decides whether the illustration is allowed to cross the letterforms. Both are
+// silent failures if they regress: the plate still renders, it just renders as
+// the wrong layout.
+{
+  const stacked = STYLE_PRESETS.find((s) => s.slug === "field-guide-plate")
+  const interlocked = STYLE_PRESETS.find((s) => s.slug === "editorial-overlay")
+  assert.ok(stacked && interlocked, "both layout presets must exist")
+
+  const args = { idea: "a heron in the reeds", text: "HERON", quote: "IT WAITED LONGER THAN YOU DID" }
+  const a = buildPrompt({ ...args, style: stacked })
+  const b = buildPrompt({ ...args, style: interlocked })
+
+  assert.match(a, /caption panel with a hairline border/, "the preset composition must reach the prompt")
+  assert.match(a, /Do not include[\s\S]*letting the illustration overlap/, "a stacked plate keeps the overlap ban")
+
+  assert.match(b, /the type clearly reads behind it/, "the interlocking composition must reach the prompt")
+  assert.doesNotMatch(b, /letting the illustration overlap/, "interlockType must lift the overlap ban")
+  assert.match(b, /reads as a separate stacked block/, "and must ban the stacked layout instead")
 }
 
 console.log("prompt.test.ts: all assertions passed")

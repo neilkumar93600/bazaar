@@ -341,6 +341,192 @@ const PLAN: Concept[] = [
     placement: "front",
     idea: "a great wave curling over a small boat, ukiyo-e keyblock and bokashi sky",
   },
+
+  // -------------------------------------------------------------------------
+  // Round two — drawn from the reference wall in public/design. Six clusters
+  // that wall keeps returning to: Japanese dark (oni, katana, koi), Indian
+  // myth in a Sanskrit register, the nature back-print with a wordmark and a
+  // quote panel, classical statuary subverted, the split serene/wrathful face,
+  // and the slogan plate where type and illustration are one lockup.
+  //
+  // The slogan pieces file as `illustrated`, never `typographic`: the wall's
+  // versions all put words *and* a picture on the same plate, and the
+  // typographic family bans illustration outright.
+  // -------------------------------------------------------------------------
+
+  // --- Japanese dark -------------------------------------------------------
+  {
+    style: "irezumi",
+    colour: "Black",
+    placement: "back",
+    idea: "a horned oni mask behind an upright katana, a serpent coiling the blade, wind bars and stylised clouds around them",
+  },
+  {
+    style: "ink-wash",
+    colour: "Ash",
+    placement: "back",
+    idea: "two koi circling nose to tail inside a whirlpool, trailing barbels, splashed ink around the rim",
+  },
+  {
+    style: "blackwork-tattoo",
+    colour: "Maroon",
+    placement: "front",
+    idea: "a chipped katana driven through a cracked stone, splinters and ink spatter thrown upward from the impact",
+  },
+  // --- The nature back-print ------------------------------------------------
+  // The wall's signature shape, and the reason field-guide-plate exists: arched
+  // wordmark, one animal drawn straight, the line boxed in its own panel. Every
+  // entry here is a premise first and an animal second — the wall's versions
+  // work because the caption reframes the picture, not because the animal is
+  // well drawn.
+  {
+    style: "field-guide-plate",
+    colour: "Black",
+    placement: "back",
+    title: "SLOW MOVER",
+    quote: "THE ONES IN NO HURRY WERE NEVER THE PREY",
+    idea: "a tiger asleep and sprawled along a mossy branch, one paw hanging, vines and a spiderweb slung beneath the limb",
+  },
+  {
+    style: "field-guide-plate",
+    colour: "Black",
+    placement: "back",
+    title: "STILL WATER",
+    quote: "NOTHING THAT FLOATS EVER HAD TO SWIM",
+    idea: "a crocodile surfacing through a raft of duckweed, only the eyes and the ridge of the back breaking the surface, reeds at the waterline",
+  },
+  {
+    style: "field-guide-plate",
+    colour: "Black",
+    placement: "back",
+    title: "THE WAIT",
+    quote: "IT OUTLASTED EVERY FISH THAT DOUBTED IT",
+    idea: "a heron standing on one leg in the shallows among cattails, head cocked, dragonflies over the water",
+  },
+  {
+    style: "field-guide-plate",
+    colour: "Black",
+    placement: "back",
+    title: "NO ADDRESS",
+    quote: "THEY NEVER ASKED A MAP FOR PERMISSION",
+    idea: "three barn swallows cutting across the plate one behind the other, rust throats and forked tails, telegraph wire below",
+  },
+
+  // --- Type behind the subject ---------------------------------------------
+  // editorial-overlay is the only preset that lets the illustration cross the
+  // letterforms. Reserved for the pieces where that overlap IS the design.
+  {
+    style: "editorial-overlay",
+    colour: "White",
+    placement: "back",
+    title: "UNSEEN",
+    quote: "COVERED BUT NEVER CONTAINED",
+    idea: "a figure whose head is wound in white cloth, red butterflies lifting off the wrapping one at a time",
+  },
+  {
+    style: "editorial-overlay",
+    colour: "White",
+    placement: "front",
+    title: "MONEY MAKER",
+    quote: "WAKE UP AND START MAKING MONEY",
+    idea: "two ringed fists crossed over a folded banknote, heavy gold bands on every finger",
+  },
+  {
+    style: "editorial-overlay",
+    colour: "White",
+    placement: "back",
+    title: "NO SIGNAL",
+    quote: "EVERYONE REACHABLE AND NOBODY AVAILABLE",
+    idea: "a person holding up a phone, their shoulders and arms coming apart into a flock of small birds",
+  },
+
+  // --- Engraved plates with a line -----------------------------------------
+  {
+    style: "occult-almanac",
+    colour: "White",
+    placement: "back",
+    title: "TWO FACES",
+    quote: "WHAT BLESSES YOU IS ALSO WHAT DESTROYS YOU",
+    idea: "one head split down the centre line, a serene meditating half and a snarling wrathful half, lotus petals beneath the chin",
+  },
+  {
+    style: "occult-almanac",
+    colour: "White",
+    placement: "back",
+    title: "THE COILED",
+    quote: "IT SLEEPS AT THE BASE OF THE SPINE",
+    idea: "a serpent rising through seven stacked lotus wheels, drawn as an anatomical plate with astrological marginalia",
+  },
+  {
+    style: "occult-almanac",
+    colour: "White",
+    placement: "back",
+    title: "THE HOST",
+    quote: "YOU ARE MOSTLY THINGS THAT ARE NOT YOU",
+    idea: "a human torso opened like a botanical plate, moths, bees and root systems where the organs should be, each one numbered",
+  },
+
+  // --- Indian myth ----------------------------------------------------------
+  {
+    style: "mythic-broadside",
+    colour: "Black",
+    placement: "back",
+    title: "KALA",
+    quote: "TIME DOES NOT KILL IT ONLY WATCHES",
+    idea: "a stern lord of endings seated on a buffalo, a noose coiled in one hand, a burning wheel turning behind him",
+  },
+  {
+    style: "mythic-broadside",
+    colour: "Black",
+    placement: "back",
+    title: "TANDAVA",
+    quote: "THE DANCE THAT ENDS A WORLD BEGINS ONE",
+    idea: "a four-armed dancer mid-step inside a ring of flame, hair loose and thrown wide, a small drum in one raised hand",
+  },
+  {
+    style: "mythic-broadside",
+    colour: "Black",
+    placement: "front",
+    title: "CALM-A-SUTRA",
+    quote: "THE ART OF NOT GIVING A DAMN",
+    idea: "a cross-legged ascetic in a turban and dark sunglasses, palms turned up, a hexagonal mandala behind him",
+  },
+
+  // --- Anime key visuals ----------------------------------------------------
+  {
+    style: "anime-villain",
+    colour: "Black",
+    placement: "back",
+    title: "THE OATH",
+    quote: "I KEPT THE PROMISE THAT COST ME EVERYTHING",
+    idea: "a swordsman lowering a notched blade, half his face lost to shadow, embers drifting across the frame",
+  },
+  {
+    style: "anime-poster",
+    colour: "Black",
+    placement: "back",
+    title: "LAST BUS",
+    quote: "HE LET IT GO AND WALKED HOME INSTEAD",
+    idea: "a boy at a rain-lit bus stop watching the taillights pull away, puddles holding the light",
+  },
+
+  // --- No type at all -------------------------------------------------------
+  // The wall is not all lockups. These two are the pieces that carry a joke or
+  // a contradiction in the picture alone, so adding a caption would flatten it.
+  // Both keyed against black and cut out, so the garment is free — light stock
+  // chosen because both palettes are mid-tone and would sink into a dark tee.
+  {
+    style: "vintage-riso",
+    colour: "White",
+    placement: "front",
+    idea: "a bearded marble philosopher bust in round sunglasses, drinking from a takeaway cup through a straw",
+  },
+  {
+    style: "surreal-collage",
+    colour: "Ash",
+    placement: "front",
+    idea: "a cracked marble head with a torn band across the eyes, an anatomical skull showing through the tear, magnolia sprigs at the neck",
+  },
 ]
 
 const IDEAS = [

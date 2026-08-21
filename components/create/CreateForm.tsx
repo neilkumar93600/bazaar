@@ -16,6 +16,7 @@ import {
 import { createClient } from "@/lib/supabase/client"
 import { MAX_PROMPT_LENGTH, MIN_PROMPT_LENGTH } from "@/lib/generation/prompt"
 import { findStyle, DEFAULT_STYLE_SLUG } from "@/lib/generation/styles"
+import { PERSONA_PRESETS, DEFAULT_PERSONA_SLUG } from "@/lib/generation/personas"
 import type { AspectRatio, Quality } from "@/lib/generation/adapter"
 import { clearHeroDraft, readHeroDraft } from "@/lib/hero-draft"
 import { cn } from "@/lib/utils"
@@ -67,7 +68,7 @@ export function CreateForm({
   )
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>("1:1")
   const [quality, setQuality] = useState<Quality>("medium")
-  const [persona, setPersona] = useState("standard")
+  const [persona, setPersona] = useState(DEFAULT_PERSONA_SLUG)
   const [picked, setPicked] = useState<string | null>(null)
   const [phase, setPhase] = useState<Phase>({ step: "idle" })
 
@@ -155,6 +156,7 @@ export function CreateForm({
         quote: "",
         aspectRatio,
         quality,
+        persona,
       }),
     })
 
@@ -256,10 +258,11 @@ export function CreateForm({
             disabled={busy}
             className="w-full rounded-xl border-2 border-border bg-background px-4 py-3 text-body-sm"
           >
-            <option value="standard">Standard / Raw Concept — Direct prompt translation</option>
-            <option value="broadsheet">Editorial Broadsheet — Paper white, ink linework, & lime accents</option>
-            <option value="cyberpunk">Cyberpunk & High-Tech — Vivid neon glows & dark ink depth</option>
-            <option value="streetwear">Underground Streetwear — Bold graphic prints & heavy lines</option>
+            {PERSONA_PRESETS.map((preset) => (
+              <option key={preset.slug} value={preset.slug}>
+                {preset.label} — {preset.hint}
+              </option>
+            ))}
           </NativeSelect>
         </div>
 

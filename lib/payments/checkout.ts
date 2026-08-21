@@ -1,5 +1,6 @@
-// Mock payment adapter — same shape a real Stripe integration would have,
-// so swapping one in later only touches this file. The last stub standing:
+// Mock payment adapter, still standing in for garment orders — same shape a
+// real processor integration has, so swapping one in only touches this file.
+// Design purchases charge through Bolt (lib/payments/bolt.ts) for real. The last stub standing:
 // generation and fulfilment (lib/printify) are both wired to real services now.
 
 export type ChargeInput = {

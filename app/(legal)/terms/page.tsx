@@ -87,7 +87,7 @@ export default function TermsPage() {
           heading: "Payments and fulfillment",
           body: (
             <p>
-              Payments are processed by Stripe. Physical orders are produced
+              Payments are processed by Bolt. Physical orders are produced
               and shipped by a print-on-demand partner; production and
               shipping times vary by product and location. Print-quality
               tiers are described to you by feel and price, not by

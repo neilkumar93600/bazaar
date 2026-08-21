@@ -38,6 +38,15 @@ export type StylePreset = {
   linework: string
   palette: string[]
   cutField: "black" | "white"
+  /** Overrides the stock `Composition:` sentence for this preset. Only the
+   *  `illustrated` family reads it. A per-design `direction.composition` still
+   *  wins — this is the preset's own default, not a lock. */
+  composition?: string
+  /** Lets the illustration cross the letterforms instead of sitting under
+   *  them. Off by default: the stacked title/art/line plate is the shape the
+   *  broadside presets want, and an overlap there reads as a mistake. On for
+   *  presets whose whole point is type *behind* a subject. */
+  interlockType?: boolean
   /** True when the artwork is a full-bleed plate rather than an isolated
    *  subject — a poster with a title and a line, or a bordered broadside.
    *
@@ -582,6 +591,45 @@ export const STYLE_PRESETS: StylePreset[] = [
       "heavy block collegiate letterforms with a contrasting outline, the first line arched over a much larger second line, a small star and a horizontal rule beneath, tight and symmetrical",
     palette: ["team navy", "cream", "signal gold"],
     cutField: "black",
+    fullBleed: true,
+  },
+  {
+    slug: "field-guide-plate",
+    label: "Field Guide Plate",
+    family: "illustrated",
+    vibeSlug: "untamed-worldwide",
+    aesthetic:
+      "screen-printed nature back-print, storybook field-guide plate on dark stock",
+    // The shape the reference wall returns to more than any other: an arched
+    // wordmark, one animal drawn straight, and the line boxed off in its own
+    // small panel rather than floating under the art. None of the other
+    // illustrated presets do it — the two broadsides are engraved, and the
+    // anime pair are key visuals.
+    composition:
+      "an arched wordmark title across the top in condensed capitals, a single naturalistic animal filling the centre of the plate at a generous size, and a small rectangular caption panel with a hairline border set into the lower left corner with the line printed inside it. Foliage, branches or water crowd in from the edges behind the animal. Generous margin on all four sides.",
+    linework:
+      "warm hand-drawn storybook illustration, confident tapering outlines and flat layered fills with light stipple shading, botanical detail crowding the edges, the caption panel drawn as a taped-on paper label",
+    palette: ["moss green", "clay orange", "sap yellow", "faded denim"],
+    cutField: "black",
+    fullBleed: true,
+  },
+  {
+    slug: "editorial-overlay",
+    label: "Editorial Overlay",
+    family: "illustrated",
+    vibeSlug: "compound",
+    aesthetic:
+      "contemporary editorial fashion poster printed on pale stock",
+    // The only preset where type and picture interlock. Every other
+    // illustrated preset stacks them, and buildPrompt bans the overlap
+    // outright — `interlockType` is what lifts that ban for this one.
+    composition:
+      "the title set as enormous condensed capitals filling the upper two thirds edge to edge, the subject standing in front of those letterforms and overlapping them so the type clearly reads behind it, four small caption words set one near each corner around the subject, and the line small and centred along the bottom.",
+    interlockType: true,
+    linework:
+      "tight editorial layout, enormous condensed grotesque capitals in a single flat colour behind a crisply cut-out subject, small monospaced caption labels, thin rules and registration marks in the margins, a couple of narrow vertical bars as spacers",
+    palette: ["signal red", "deep crimson", "graphite", "dusty rose"],
+    cutField: "white",
     fullBleed: true,
   },
   {

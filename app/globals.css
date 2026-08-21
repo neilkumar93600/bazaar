@@ -502,9 +502,19 @@
     background-image: none;
   }
 
-  /* Softens the clipped top/bottom edge of a scrolling feed column. */
+  /* Softens the clipped top/bottom edge of a scrolling feed column.
+   *
+   * `will-change: transform` gives this its own compositing layer. Without
+   * it, iOS Safari has to re-rasterize the mask against the twelve
+   * simultaneously-animating marquee tracks underneath it (Feed.tsx) on the
+   * main thread — and under that load the swipe gesture recognizer can stall
+   * over exactly this region, which on the homepage is the entire first
+   * viewport a visitor's thumb lands on. Reported as "scroll doesn't work on
+   * mobile"; a real device is what would confirm it, not Chromium's emulator,
+   * which never reproduces this class of bug. */
   .mask-fade-y {
     mask-image: linear-gradient(180deg, transparent 0%, #000 7%, #000 93%, transparent 100%);
+    will-change: transform;
   }
 
   /* Concentrates the hero's contrast veil where the headline/copy actually

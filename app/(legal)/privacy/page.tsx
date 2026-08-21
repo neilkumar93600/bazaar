@@ -43,7 +43,7 @@ export default function PrivacyPage() {
                 shipping address, size/placement choices, and order status
                 when you purchase a design. We do not store your full card
                 details — payments are processed by our payment provider
-                (Stripe).
+                (Bolt).
               </li>
               <li>
                 <strong>Messages:</strong>{" "}
@@ -85,8 +85,8 @@ export default function PrivacyPage() {
               <ul>
                 <li>
                   <strong>Payment processing:</strong>{" "}
-                  Stripe (Stripe Connect), which handles your payment details
-                  directly — we never see or store your full card number.
+                  Bolt, which handles your payment details directly — we
+                  never see or store your full card number.
                 </li>
                 <li>
                   <strong>Fulfillment:</strong>{" "}

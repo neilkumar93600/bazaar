@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 
-import { fulfilCheckoutSession } from "@/lib/payments/fulfil"
+import { fulfilBoltTransaction } from "@/lib/payments/fulfil"
 import { Button } from "@/components/ui/button"
 
 export const metadata: Metadata = {
@@ -9,26 +9,31 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
 
-/** Where Stripe sends the buyer back to.
+/** The fallback landing for a card purchase.
+ *
+ *  Bolt's checkout is a modal, so the ordinary path never comes here — the
+ *  buyer finishes on the design page and is sent to their storefront. This
+ *  page is what a shopper reaches from a link that carries a reference: a
+ *  support hand-off, or a modal that closed before its callback ran.
  *
  *  It fulfils rather than merely reporting: the webhook is authoritative but
  *  can be seconds behind, or absent entirely in an environment where nobody
- *  has wired one up. fulfilCheckoutSession is idempotent, so whichever of the
- *  two gets here first wins and the other finds the work done.
+ *  has wired one up. fulfilBoltTransaction is idempotent, so whichever path
+ *  gets here first wins and the others find the work done.
  *
- *  The session id is a URL parameter and therefore untrusted — which is fine.
- *  Fulfilment re-reads the session from Stripe and does nothing unless Stripe
- *  itself says the payment landed.
+ *  The reference is a URL parameter and therefore untrusted — which is fine.
+ *  Fulfilment re-reads the transaction from Bolt and does nothing unless Bolt
+ *  itself says the payment settled.
  */
 export default async function PurchaseSuccessPage(
   props: PageProps<"/purchase/success">
 ) {
   const searchParams = await props.searchParams
-  const sessionId =
-    typeof searchParams.session_id === "string" ? searchParams.session_id : ""
+  const reference =
+    typeof searchParams.reference === "string" ? searchParams.reference : ""
 
-  const result = sessionId
-    ? await fulfilCheckoutSession(sessionId)
+  const result = reference
+    ? await fulfilBoltTransaction(reference)
     : ({ ok: false, error: "That link is missing its payment reference." } as const)
 
   return (

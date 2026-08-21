@@ -10,7 +10,8 @@ import {
   type Quality,
 } from "@/lib/generation/adapter"
 import { MAX_PROMPT_LENGTH, MIN_PROMPT_LENGTH } from "@/lib/generation/prompt"
-import { composeDesign } from "@/lib/generation/compose"
+import { composeListing, composePrompt } from "@/lib/generation/compose"
+import { DEFAULT_PERSONA_SLUG, findPersona } from "@/lib/generation/personas"
 import {
   findStyle,
   validateStyleText,
@@ -48,6 +49,7 @@ export async function POST(request: Request) {
     quote?: unknown
     aspectRatio?: unknown
     quality?: unknown
+    persona?: unknown
   } | null
 
   const prompt = typeof body?.prompt === "string" ? body.prompt.trim() : ""
@@ -98,6 +100,12 @@ export async function POST(request: Request) {
   const quality = QUALITIES.includes(body?.quality as Quality)
     ? (body!.quality as Quality)
     : "medium"
+
+  // Unknown or missing slug falls back to no persona rather than 400 — same
+  // "stale client, not an attack" reasoning as aspect ratio and quality above.
+  const personaSlug =
+    typeof body?.persona === "string" ? body.persona : DEFAULT_PERSONA_SLUG
+  const personaVoice = findPersona(personaSlug)?.voice ?? null
 
   // The style decides the column — the form asks one question, not two.
   //
@@ -163,6 +171,7 @@ export async function POST(request: Request) {
       vibe.id,
       aspectRatio,
       quality,
+      personaVoice,
     )
   })
 
@@ -190,21 +199,21 @@ async function runGeneration(
   vibeId: string,
   aspectRatio: AspectRatio,
   quality: Quality,
+  personaVoice: string | null,
 ) {
   const admin = serviceClient()
 
   await admin.from("generation_jobs").update({ status: "generating" }).eq("id", jobId)
 
-  // One composer call for the whole job, not one per image: the four images
-  // are variations of a single design, so they share its name and its prompt.
-  // Falls back to the template on its own, so this never throws.
-  const { title, prompt } = await composeDesign({
-    idea,
-    style,
-    text,
-    quote,
-    aspectRatio,
-  })
+  // One composer pass for the whole job, not one per image: the four images
+  // are variations of a single design, so they share its name, description and
+  // prompt. Two independent calls, not one — listing copy and the image prompt
+  // have different audiences and either can fall back to its template on its
+  // own, so this never throws.
+  const [{ title, description }, { prompt }] = await Promise.all([
+    composeListing({ idea, style }),
+    composePrompt({ idea, style, text, quote, aspectRatio, persona: personaVoice }),
+  ])
 
   // Four model runs, not one call for four images: MuAPI's endpoint has no `n`
   // parameter. In parallel because each image is two sequential model runs
@@ -219,6 +228,7 @@ async function runGeneration(
         vibeId,
         prompt,
         title,
+        description,
         style,
         aspectRatio,
         quality,
@@ -259,6 +269,7 @@ async function generateOne(
   vibeId: string,
   prompt: string,
   title: string,
+  description: string,
   style: StylePreset,
   aspectRatio: AspectRatio,
   quality: Quality,
@@ -296,6 +307,7 @@ async function generateOne(
       image_url: publicUrl,
       prompt: idea,
       title,
+      description,
       // Private until the maker lists it. Generation is not publication —
       // see docs/superpowers/specs/2026-08-09-design-ownership-listing-design.md
       listed_at: null,

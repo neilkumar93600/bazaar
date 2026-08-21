@@ -9,7 +9,13 @@
 
 import assert from "node:assert/strict"
 
-import { cleanTitle, composeDesign, titleFromIdea } from "./compose.ts"
+import {
+  cleanTitle,
+  composeListing,
+  composePrompt,
+  FALLBACK_DESCRIPTION,
+  titleFromIdea,
+} from "./compose.ts"
 import { findStyle } from "./styles.ts"
 
 // Seven words, hard ceiling.
@@ -40,14 +46,19 @@ delete process.env.MUAPI_API_KEY
 const style = findStyle("woodcut-flash") ?? null
 assert.ok(style, "expected a known style preset to test against")
 
-const composition = await composeDesign({
+const listing = await composeListing({ idea: longIdea, style: style! })
+
+assert.equal(listing.composed, false)
+assert.equal(listing.title, titleFromIdea(longIdea))
+assert.equal(listing.description, FALLBACK_DESCRIPTION)
+
+const composition = await composePrompt({
   idea: longIdea,
   style: style!,
   text: null,
 })
 
 assert.equal(composition.composed, false)
-assert.equal(composition.title, titleFromIdea(longIdea))
 assert.match(composition.prompt, /Subject: a moth with cathedral windows/)
 // The invariants live in code, so they survive the model being absent.
 assert.match(composition.prompt, /Backdrop: one flat solid pure (black|white) field/)

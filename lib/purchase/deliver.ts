@@ -1,7 +1,7 @@
 /** Hands the buyer what they paid for: a receipt, and the design file itself.
  *
  *  Called from both purchase paths — the free claim's server action and
- *  Stripe fulfilment — so "what a buyer receives" is written down once.
+ *  Bolt fulfilment — so "what a buyer receives" is written down once.
  *
  *  Never throws. Every caller is downstream of a completed claim, and a mail
  *  provider having a bad minute must not turn a finished purchase into an
