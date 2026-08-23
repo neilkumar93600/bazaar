@@ -44,9 +44,10 @@
 
 import type { StylePreset } from "./styles"
 
-/** Longest idea we accept. Past this the user is writing the art direction,
- *  which is the model's drift failure mode, not a feature. */
-export const MAX_PROMPT_LENGTH = 500
+/** Longest idea we accept. With enhance on, the composer still condenses a
+ *  long idea into the template's dense fields; with enhance off the idea
+ *  *is* the art direction, so the ceiling has to fit one written by hand. */
+export const MAX_PROMPT_LENGTH = 1500
 export const MIN_PROMPT_LENGTH = 3
 
 const ARTIFACT =

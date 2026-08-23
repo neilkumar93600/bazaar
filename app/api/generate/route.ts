@@ -11,7 +11,7 @@ import {
 } from "@/lib/generation/adapter"
 import { MAX_PROMPT_LENGTH, MIN_PROMPT_LENGTH } from "@/lib/generation/prompt"
 import { composeListing, composePrompt } from "@/lib/generation/compose"
-import { DEFAULT_PERSONA_SLUG, findPersona } from "@/lib/generation/personas"
+import { DEFAULT_PERSONA_SLUG, findPersona, savedPersonaId } from "@/lib/generation/personas"
 import {
   findStyle,
   validateStyleText,
@@ -50,6 +50,7 @@ export async function POST(request: Request) {
     aspectRatio?: unknown
     quality?: unknown
     persona?: unknown
+    enhance?: unknown
   } | null
 
   const prompt = typeof body?.prompt === "string" ? body.prompt.trim() : ""
@@ -101,11 +102,29 @@ export async function POST(request: Request) {
     ? (body!.quality as Quality)
     : "medium"
 
-  // Unknown or missing slug falls back to no persona rather than 400 — same
+  // Unknown or missing value falls back to no persona rather than 400 — same
   // "stale client, not an attack" reasoning as aspect ratio and quality above.
-  const personaSlug =
+  const personaValue =
     typeof body?.persona === "string" ? body.persona : DEFAULT_PERSONA_SLUG
-  const personaVoice = findPersona(personaSlug)?.voice ?? null
+  const savedId = savedPersonaId(personaValue)
+
+  // A saved persona's voice is a row the maker owns, not a code constant —
+  // `.eq("owner_id", user.id)` is belt-and-suspenders on top of the table's
+  // own RLS, same reasoning as the delete action in dashboard/personas.
+  const personaVoice = savedId
+    ? (
+        await supabase
+          .from("personas")
+          .select("style_summary")
+          .eq("id", savedId)
+          .eq("owner_id", user.id)
+          .maybeSingle()
+      ).data?.style_summary ?? null
+    : (findPersona(personaValue)?.voice ?? null)
+
+  // Missing/non-boolean defaults to on — today's behaviour for every client
+  // that predates the toggle.
+  const enhance = body?.enhance !== false
 
   // The style decides the column — the form asks one question, not two.
   //
@@ -172,6 +191,7 @@ export async function POST(request: Request) {
       aspectRatio,
       quality,
       personaVoice,
+      enhance,
     )
   })
 
@@ -200,6 +220,7 @@ async function runGeneration(
   aspectRatio: AspectRatio,
   quality: Quality,
   personaVoice: string | null,
+  enhance: boolean,
 ) {
   const admin = serviceClient()
 
@@ -210,9 +231,13 @@ async function runGeneration(
   // prompt. Two independent calls, not one — listing copy and the image prompt
   // have different audiences and either can fall back to its template on its
   // own, so this never throws.
+  //
+  // `enhance` only gates the image-prompt call: the listing copy (title,
+  // description) is always composed. A maker who turns enhance off still
+  // wants a name for the thing, not their raw idea repeated as its title.
   const [{ title, description }, { prompt }] = await Promise.all([
     composeListing({ idea, style }),
-    composePrompt({ idea, style, text, quote, aspectRatio, persona: personaVoice }),
+    composePrompt({ idea, style, text, quote, aspectRatio, persona: personaVoice, enhance }),
   ])
 
   // Four model runs, not one call for four images: MuAPI's endpoint has no `n`

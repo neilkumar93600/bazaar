@@ -14,6 +14,7 @@ import {
   Crown,
   PanelLeftClose,
   PanelLeftOpen,
+  Palette,
 } from "lucide-react";
 
 import { signOut } from "@/app/dashboard/actions";
@@ -46,6 +47,7 @@ const MENU_ITEMS = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
   { href: "/create", label: "Create", icon: Sparkles },
   { href: "/dashboard/designs", label: "My Designs", icon: Shirt, showBadge: true },
+  { href: "/dashboard/personas", label: "Personas", icon: Palette },
   { href: "/dashboard/orders", label: "Orders", icon: Receipt },
 ];
 

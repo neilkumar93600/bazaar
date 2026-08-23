@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { stylesForVibeSlug } from "@/lib/generation/styles";
 import { DAILY_IMAGE_CAP, IMAGES_PER_JOB } from "@/lib/generation/quota";
 import { getGarmentOptions } from "@/app/dashboard/designs/garment-options";
+import { getUserPersonas } from "@/lib/data/personas";
 import { CreateForm } from "@/components/create/CreateForm";
 
 export const metadata: Metadata = { title: "Create" };
@@ -32,7 +33,10 @@ export default async function CreatePage({
     getGarmentOptions(),
   ]);
 
-  const { data: vibes } = await supabase.from("vibes").select("id, slug");
+  const [{ data: vibes }, userPersonas] = await Promise.all([
+    supabase.from("vibes").select("id, slug"),
+    getUserPersonas(supabase),
+  ]);
   const vibeSlug = vibe ? (vibes?.find((v) => v.id === vibe)?.slug ?? null) : null;
   const initialStyleSlug = vibeSlug
     ? (stylesForVibeSlug(vibeSlug)[0]?.slug ?? null)
@@ -61,6 +65,7 @@ export default async function CreatePage({
         imagesPerJob={IMAGES_PER_JOB}
         dailyImageCap={DAILY_IMAGE_CAP}
         garmentOptions={garmentOptions}
+        userPersonas={userPersonas}
       />
     </div>
   );

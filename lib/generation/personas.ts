@@ -49,3 +49,20 @@ export const DEFAULT_PERSONA_SLUG = "standard"
 export function findPersona(slug: string): PersonaPreset | null {
   return PERSONA_PRESETS.find((preset) => preset.slug === slug) ?? null
 }
+
+/** Marks a persona value as one of the maker's own saved personas
+ *  (lib/data/personas.ts) rather than a static slug above — the create
+ *  form's <select> mixes both in one value space, and this is how the
+ *  server tells them apart. Shared here so the form and the route agree on
+ *  the encoding without importing from each other. */
+export const SAVED_PERSONA_PREFIX = "saved:"
+
+export function savedPersonaValue(personaId: string): string {
+  return `${SAVED_PERSONA_PREFIX}${personaId}`
+}
+
+export function savedPersonaId(value: string): string | null {
+  return value.startsWith(SAVED_PERSONA_PREFIX)
+    ? value.slice(SAVED_PERSONA_PREFIX.length)
+    : null
+}

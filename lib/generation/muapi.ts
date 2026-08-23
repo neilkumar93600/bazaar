@@ -105,7 +105,18 @@ export async function runModel(
   while (Date.now() < deadline) {
     await sleep(POLL_INTERVAL_MS)
 
-    const result = await call<PollResponse>(`/predictions/${requestId}/result`)
+    let result: PollResponse
+    try {
+      result = await call<PollResponse>(`/predictions/${requestId}/result`)
+    } catch (error) {
+      // A single dropped or slow poll (REQUEST_TIMEOUT_MS aborts at 30s) must
+      // not fail a job that is still rendering behind it — the deadline above
+      // is what gets to give up, not one bad request in the middle. Observed:
+      // this killed a job with nothing wrong at MuAPI's end, and with
+      // IMAGES_PER_JOB=1 that means the maker's whole generation for nothing.
+      console.error(`[muapi] poll failed for ${path} (${requestId}), retrying`, error)
+      continue
+    }
 
     if (result.status === "completed") {
       const url = firstOutputUrl(result)

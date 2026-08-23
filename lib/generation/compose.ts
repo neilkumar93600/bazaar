@@ -351,10 +351,23 @@ export async function composePrompt(input: {
    *  default) means no persona was picked — the same output as before this
    *  existed. */
   persona?: string | null
+  /** The create form's toggle. False skips the Kimi call entirely — the idea
+   *  goes into `Subject:` exactly as typed, template scaffolding and all.
+   *  True (the default) is today's behaviour. This is not the same as Kimi
+   *  failing: a skipped call is a maker's choice, not a fallback. */
+  enhance?: boolean
 }): Promise<Composition> {
-  const { idea, style, text, quote = null, aspectRatio = "3:4", persona = null } = input
+  const {
+    idea,
+    style,
+    text,
+    quote = null,
+    aspectRatio = "3:4",
+    persona = null,
+    enhance = true,
+  } = input
 
-  const kimi = await askPromptDirection(idea, style, persona)
+  const kimi = enhance ? await askPromptDirection(idea, style, persona) : null
 
   // Each field is screened on its own, so one bad sentence costs that sentence
   // and the rest of the model's work still lands. A dropped field falls back

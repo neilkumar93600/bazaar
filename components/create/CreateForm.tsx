@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import Image from "next/image"
+import Link from "next/link"
 import { motion } from "framer-motion"
 import {
   Sparkles,
@@ -16,17 +17,24 @@ import {
 import { createClient } from "@/lib/supabase/client"
 import { MAX_PROMPT_LENGTH, MIN_PROMPT_LENGTH } from "@/lib/generation/prompt"
 import { findStyle, DEFAULT_STYLE_SLUG } from "@/lib/generation/styles"
-import { PERSONA_PRESETS, DEFAULT_PERSONA_SLUG } from "@/lib/generation/personas"
+import {
+  PERSONA_PRESETS,
+  DEFAULT_PERSONA_SLUG,
+  savedPersonaValue,
+} from "@/lib/generation/personas"
 import type { AspectRatio, Quality } from "@/lib/generation/adapter"
+import type { UserPersona } from "@/lib/data/personas"
 import { clearHeroDraft, readHeroDraft } from "@/lib/hero-draft"
 import { cn } from "@/lib/utils"
 import type { GarmentOption } from "@/app/dashboard/designs/garment-options"
 import { ListingForm } from "@/components/dashboard/ListingForm"
 import { StylePopoverPicker } from "@/components/create/StylePopoverPicker"
 import { Label } from "@/components/ui/label"
-import { NativeSelect } from "@/components/ui/native-select"
+import { NativeSelect, NativeSelectOptGroup } from "@/components/ui/native-select"
+import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 const POLL_INTERVAL_MS = 2000
 const POLL_CEILING_MS = 240_000
@@ -45,12 +53,14 @@ export function CreateForm({
   imagesPerJob,
   dailyImageCap,
   garmentOptions,
+  userPersonas = [],
 }: {
   initialPrompt?: string | null
   initialStyleSlug?: string | null
   imagesPerJob: number
   dailyImageCap: number
   garmentOptions: GarmentOption[]
+  userPersonas?: UserPersona[]
 }) {
   const [prompt, setPrompt] = useState(() => {
     if (initialPrompt) return initialPrompt.slice(0, MAX_PROMPT_LENGTH)
@@ -69,6 +79,7 @@ export function CreateForm({
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>("1:1")
   const [quality, setQuality] = useState<Quality>("medium")
   const [persona, setPersona] = useState(DEFAULT_PERSONA_SLUG)
+  const [enhance, setEnhance] = useState(true)
   const [picked, setPicked] = useState<string | null>(null)
   const [phase, setPhase] = useState<Phase>({ step: "idle" })
 
@@ -157,6 +168,7 @@ export function CreateForm({
         aspectRatio,
         quality,
         persona,
+        enhance,
       }),
     })
 
@@ -200,23 +212,46 @@ export function CreateForm({
         onSubmit={onSubmit}
         className="flex flex-col gap-6 rounded-2xl border-2 border-foreground bg-card p-6 md:p-8 shadow-[2px_2px_0px_0px_#262626] lg:col-span-6"
       >
-        <div className="flex items-center justify-between border-b border-border pb-4">
-          <div className="flex items-center gap-2">
-            <Sliders className="h-5 w-5 text-foreground" />
-            <h2 className="text-body-sm font-semibold text-foreground">
-              Design Parameters
-            </h2>
-          </div>
-          <span className="text-caption font-mono text-muted-ink">
-            Studio v2.0
-          </span>
+        <div className="flex items-center gap-2 border-b border-border pb-4">
+          <Sliders className="h-5 w-5 text-foreground" />
+          <h2 className="text-body-sm font-semibold text-foreground">
+            Design Parameters
+          </h2>
         </div>
 
         {/* 1. Prompt / Idea Input */}
         <div className="flex flex-col gap-2">
-          <Label htmlFor="prompt" className="text-body-sm font-semibold text-foreground">
-            1. Your Idea / Concept
-          </Label>
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+            <Label htmlFor="prompt" className="text-body-sm font-semibold text-foreground">
+              1. Your Idea / Concept
+            </Label>
+            <div className="flex shrink-0 items-center gap-1.5">
+              <Label htmlFor="enhance-toggle" className="text-caption font-medium text-muted-ink">
+                {enhance ? "Enhance on" : "Enhance off"}
+              </Label>
+              <Tooltip>
+                <TooltipTrigger
+                  type="button"
+                  className="text-muted-ink hover:text-foreground"
+                  aria-label="What enhance does"
+                >
+                  <Info className="h-3.5 w-3.5" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  Enhance lets the AI take creative liberties — the design can
+                  come out differently than what you pictured. Turn it off to
+                  keep exactly what you typed.
+                </TooltipContent>
+              </Tooltip>
+              <Switch
+                id="enhance-toggle"
+                size="sm"
+                checked={enhance}
+                onCheckedChange={setEnhance}
+                disabled={busy}
+              />
+            </div>
+          </div>
           <Textarea
             id="prompt"
             value={prompt}
@@ -227,7 +262,11 @@ export function CreateForm({
             className="rounded-xl border-2 border-border bg-background p-3.5 text-body-sm transition-colors focus-visible:border-foreground focus-visible:ring-0 resize-y"
           />
           <div className="flex items-center justify-between text-caption text-muted-ink">
-            <span>Describe your concept in detail</span>
+            <span>
+              {enhance
+                ? "AI expands your idea into full art direction."
+                : "Off — your words go to the model exactly as typed."}
+            </span>
             <span className="font-mono font-medium">
               {prompt.trim().length}/{MAX_PROMPT_LENGTH}
             </span>
@@ -248,9 +287,17 @@ export function CreateForm({
 
         {/* 3. Persona Selector */}
         <div className="flex flex-col gap-2 border-t border-border pt-4">
-          <Label htmlFor="persona" className="text-body-sm font-semibold text-foreground">
-            3. Brand Persona
-          </Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="persona" className="text-body-sm font-semibold text-foreground">
+              3. Brand Persona
+            </Label>
+            <Link
+              href="/dashboard/personas"
+              className="text-caption font-medium text-primary underline-offset-4 hover:underline"
+            >
+              {userPersonas.length > 0 ? "Manage personas" : "Create from your designs"}
+            </Link>
+          </div>
           <NativeSelect
             id="persona"
             value={persona}
@@ -258,11 +305,22 @@ export function CreateForm({
             disabled={busy}
             className="w-full rounded-xl border-2 border-border bg-background px-4 py-3 text-body-sm"
           >
-            {PERSONA_PRESETS.map((preset) => (
-              <option key={preset.slug} value={preset.slug}>
-                {preset.label} — {preset.hint}
-              </option>
-            ))}
+            {userPersonas.length > 0 && (
+              <NativeSelectOptGroup label="Your personas">
+                {userPersonas.map((saved) => (
+                  <option key={saved.id} value={savedPersonaValue(saved.id)}>
+                    {saved.name}
+                  </option>
+                ))}
+              </NativeSelectOptGroup>
+            )}
+            <NativeSelectOptGroup label="Presets">
+              {PERSONA_PRESETS.map((preset) => (
+                <option key={preset.slug} value={preset.slug}>
+                  {preset.label} — {preset.hint}
+                </option>
+              ))}
+            </NativeSelectOptGroup>
           </NativeSelect>
         </div>
 
