@@ -5,17 +5,16 @@
  *  it the token the server minted, and wait for a callback. There is no return
  *  trip through a success URL to hang fulfilment off.
  *
- *  ponytail: script host and element id are the two things that differ between
- *  Bolt's environments and their docs render badly enough that these are worth
- *  overriding without a code change. NEXT_PUBLIC_BOLT_CONNECT_URL wins if set;
- *  confirm the default against your merchant dashboard's install snippet.
+ *  ponytail: the CDN host is the one thing that differs between Bolt's
+ *  environments. NEXT_PUBLIC_BOLT_CDN_URL overrides it if the default ever
+ *  drifts from your merchant dashboard's install snippet.
  */
 
-const CONNECT_URL =
-  process.env.NEXT_PUBLIC_BOLT_CONNECT_URL ??
+const CDN_URL =
+  process.env.NEXT_PUBLIC_BOLT_CDN_URL ??
   (process.env.NEXT_PUBLIC_BOLT_ENV === "production"
-    ? "https://connect.boltapp.com/connect.js"
-    : "https://connect-sandbox.boltapp.com/connect.js")
+    ? "https://connect.boltapp.com"
+    : "https://connect-sandbox.boltapp.com")
 
 type BoltCheckout = {
   configure: (
@@ -37,29 +36,45 @@ declare global {
 
 let loading: Promise<BoltCheckout> | null = null
 
-/** One script tag, however many purchases. Cached as the promise rather than
- *  the result so two clicks in flight at once share a single load. */
+function loadScript(id: string, src: string, publishableKey: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement("script")
+    script.id = id
+    script.src = src
+    script.async = true
+    script.setAttribute("data-publishable-key", publishableKey)
+    script.onload = () => resolve()
+    script.onerror = () => reject(new Error(`Bolt's ${src} failed to load.`))
+    document.head.appendChild(script)
+  })
+}
+
+/** Two script tags, however many purchases. Cached as the promise rather than
+ *  the result so two clicks in flight at once share a single load.
+ *
+ *  track.js must load alongside connect.js — Bolt's install snippet requires
+ *  both, and without track.js connect.js loads fine but silently never
+ *  exposes window.BoltCheckout. */
 function loadBolt(publishableKey: string): Promise<BoltCheckout> {
   if (window.BoltCheckout) return Promise.resolve(window.BoltCheckout)
 
-  return (loading ??= new Promise((resolve, reject) => {
-    const script = document.createElement("script")
-    script.src = CONNECT_URL
-    script.async = true
-    script.setAttribute("data-publishable-key", publishableKey)
-
-    script.onload = () => {
-      if (window.BoltCheckout) resolve(window.BoltCheckout)
-      else reject(new Error("Bolt loaded but exposed no checkout."))
-    }
-    script.onerror = () => {
-      // Cleared so a network blip doesn't poison every later attempt.
+  return (loading ??= (async () => {
+    try {
+      await Promise.all([
+        loadScript("bolt-track", `${CDN_URL}/track.js`, publishableKey),
+        loadScript("bolt-connect", `${CDN_URL}/connect.js`, publishableKey),
+      ])
+    } catch (error) {
       loading = null
-      reject(new Error("Bolt's checkout script failed to load."))
+      throw error
     }
 
-    document.head.appendChild(script)
-  }))
+    if (!window.BoltCheckout) {
+      loading = null
+      throw new Error("Bolt loaded but exposed no checkout.")
+    }
+    return window.BoltCheckout
+  })())
 }
 
 export type BoltResult =

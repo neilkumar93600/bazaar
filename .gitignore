@@ -52,3 +52,5 @@ next-env.d.ts
 
 # Rendered email previews (scripts/preview-emails.ts)
 .email-preview
+
+.vercel
