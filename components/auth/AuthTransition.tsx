@@ -13,19 +13,12 @@ const ROUTE_ORDER = [
 ];
 
 const variants: Variants = {
-  enter: (direction: number) => ({
-    opacity: 0,
-    x: direction * 40,
-    scale: 0.96,
-    filter: "blur(8px)",
-  }),
-  center: { opacity: 1, x: 0, scale: 1, filter: "blur(0px)" },
-  exit: (direction: number) => ({
-    opacity: 0,
-    x: direction * -40,
-    scale: 0.96,
-    filter: "blur(8px)",
-  }),
+  // No blur filter. It was the only blur left on an otherwise printed surface,
+  // and it rasterises the whole subtree per frame for an effect that reads as
+  // a rendering fault at this size. Slide and fade carry the direction alone.
+  enter: (direction: number) => ({ opacity: 0, x: direction * 24 }),
+  center: { opacity: 1, x: 0 },
+  exit: (direction: number) => ({ opacity: 0, x: direction * -24 }),
 };
 
 /** Directional, spring-driven crossfade between auth steps (login/signup/otp/reset). */

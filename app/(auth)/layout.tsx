@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Logo } from "@/components/ui/logo";
-import { AuthHeroPanel, AuthTransition } from "@/components/auth";
+import { AuthHeroPanel } from "@/components/auth/AuthHeroPanel";
+import { AuthTransition } from "@/components/auth";
 import { FadeIn } from "@/components/ui/motion";
 
 export default function AuthLayout({ children }: { children: ReactNode }) {

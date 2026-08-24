@@ -190,6 +190,31 @@ async function toCards(rows: CardRow[]): Promise<DesignCardData[]> {
   }))
 }
 
+/** One listed design, for the auth panel.
+ *
+ *  Newest first and always the same one within a request, so the plate does not
+ *  change between /login and /signup mid-flow. Listed and approved only — RLS
+ *  enforces that independently, but an auth page is a stranger's first sight of
+ *  the product and must not be the thing that leaks a draft.
+ *
+ *  Null when the bazaar is empty, which the panel renders as type alone.
+ */
+export async function getShowcaseDesign(): Promise<DesignCardData | null> {
+  const supabase = await createClient()
+
+  const { data } = await supabase
+    .from("designs")
+    .select(CARD_COLUMNS)
+    .eq("moderation_status", "approved")
+    .not("listed_at", "is", null)
+    .not("mockup_url", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+
+  const cards = await toCards((data ?? []) as CardRow[])
+  return cards[0] ?? null
+}
+
 /** More work by the same maker.
  *
  *  Listed designs only, and RLS enforces that independently — an unlisted
