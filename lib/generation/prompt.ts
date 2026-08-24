@@ -168,7 +168,13 @@ export function buildPrompt(input: {
     value?.trim() ? [`${label}: ${value.trim()}`, ""] : []
 
   const backdrop = `Backdrop: ${FIELD_PHRASE[style.cutField]} — no glow, no gradient, no texture, no scenery.`
-  const palette = `Palette of ${style.palette.join(", ")}.`
+  // A preset with no fixed swatch (as-described) hands colour choice to the
+  // idea itself instead of naming one — see styles.ts's DEFAULT_STYLE_SLUG
+  // comment.
+  const palette =
+    style.palette.length > 0
+      ? `Palette of ${style.palette.join(", ")}.`
+      : "Palette: colours drawn from the subject and materials above, true to the idea."
 
   if (style.family === "illustrated") {
     const titleSpelling = text ? ` — spelled ${spellOut(text)}` : ""

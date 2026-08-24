@@ -307,7 +307,9 @@ function promptSystemPrompt(style: StylePreset, persona: string | null): string 
       ? [`- Brand voice: ${persona}. Let it colour word choice — it never overrides the style above.`]
       : []),
     "- Never mention the background, the backdrop, or any background colour. That is set elsewhere.",
-    "- Never mention a palette or specific colours. That is set elsewhere.",
+    style.palette.length > 0
+      ? "- Never mention a palette or specific colours. That is set elsewhere."
+      : "- No fixed palette is set for this style: name the actual colours the idea calls for, in materials or artDirection.",
     style.family === "pictorial"
       ? "- This design carries NO text. Never describe words, letters, numerals, lettering, banners with writing, or signage of any kind."
       : "- Any lettering in the artwork is fixed elsewhere. Do not invent, quote, or describe words.",
@@ -367,6 +369,12 @@ export async function composePrompt(input: {
 
   const kimi = enhance ? await askPromptDirection(idea, style, persona) : null
 
+  // namesAPalette() only guards against a SECOND palette contradicting the
+  // preset's own — a style with no fixed swatch (as-described) has nothing to
+  // contradict, so its materials/artDirection are the only place colour comes
+  // from and the filter stands down. promptSystemPrompt() told Kimi so above.
+  const hasFixedPalette = style.palette.length > 0
+
   // Each field is screened on its own, so one bad sentence costs that sentence
   // and the rest of the model's work still lands. A dropped field falls back
   // to the template's wording for that slot.
@@ -377,7 +385,7 @@ export async function composePrompt(input: {
           ? null
           : clampField(kimi.composition),
         materials:
-          violatesBackdropRule(kimi.materials) || namesAPalette(kimi.materials)
+          violatesBackdropRule(kimi.materials) || (hasFixedPalette && namesAPalette(kimi.materials))
             ? null
             : clampField(kimi.materials),
         lighting: violatesBackdropRule(kimi.lighting) ? null : clampField(kimi.lighting),
@@ -385,7 +393,8 @@ export async function composePrompt(input: {
         // sentence — `Art direction: {…}. Palette of …` — so the model's own
         // full stop lands as "passes..".
         artDirection:
-          violatesBackdropRule(kimi.artDirection) || namesAPalette(kimi.artDirection)
+          violatesBackdropRule(kimi.artDirection) ||
+          (hasFixedPalette && namesAPalette(kimi.artDirection))
             ? null
             : clampField(kimi.artDirection)?.replace(/\.\s*$/, "") ?? null,
       }

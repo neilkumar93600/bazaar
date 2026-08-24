@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { format } from "date-fns";
-import { User, Store, Wallet, Bell, ShieldCheck, CheckCircle2, ArrowUpRight } from "lucide-react";
+import { User, Store, Wallet, Bell, ShieldCheck, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 
 import { getSettingsData } from "@/lib/data/settings";
@@ -11,7 +11,6 @@ import { StorefrontPreferencesForm } from "@/components/dashboard/StorefrontPref
 import { StorefrontThemePrompt } from "@/components/dashboard/StorefrontThemePrompt";
 import { NotificationPreferencesForm } from "@/components/dashboard/NotificationPreferencesForm";
 import { SecuritySettingsForm } from "@/components/dashboard/SecuritySettingsForm";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Empty,
   EmptyDescription,
@@ -36,21 +35,6 @@ export const metadata: Metadata = { title: "Settings" };
  *  runs to muapi.ts's own 180s ceiling. Matches app/api/generate's budget. */
 export const maxDuration = 300;
 
-const AVATAR_COLOR_CLASSES = [
-  "bg-[#262626] text-[#a3e635]",
-  "bg-[#303030] text-white",
-  "bg-[#047857] text-[#a3e635]",
-  "bg-[#4338ca] text-[#e0e7ff]",
-  "bg-[#be185d] text-[#fce7f3]",
-  "bg-[#b45309] text-[#fef3c7]",
-];
-
-function getAvatarColor(str: string) {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) hash += str.charCodeAt(i);
-  return AVATAR_COLOR_CLASSES[hash % AVATAR_COLOR_CLASSES.length];
-}
-
 export default async function SettingsPage() {
   const [settings, preferences] = await Promise.all([
     getSettingsData(),
@@ -58,10 +42,6 @@ export default async function SettingsPage() {
   ]);
 
   if (!settings || !preferences) return null;
-
-  const displayName = settings.displayName || `@${settings.handle}`;
-  const initial = (settings.handle || settings.email).slice(0, 1).toUpperCase();
-  const avatarColorClass = getAvatarColor(settings.handle || "user");
 
   return (
     <div className="mx-auto flex max-w-page flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
@@ -85,54 +65,6 @@ export default async function SettingsPage() {
         >
           View Storefront <ArrowUpRight className="size-3.5" />
         </Link>
-      </div>
-
-      {/* Creator Summary & Banner Live Preview Card */}
-      <div className="rounded-2xl border border-[#262626] bg-[#fcfff7] shadow-[2px_2px_0px_0px_#262626] overflow-hidden flex flex-col">
-        {/* Live Banner Top Background */}
-        <div className="relative aspect-[4/1] sm:aspect-[6/1] w-full bg-[#262626] border-b border-[#262626] overflow-hidden">
-          {settings.bannerUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={settings.bannerUrl} alt="Storefront banner preview" className="size-full object-cover" />
-          ) : (
-            <div className="size-full bg-[#262626] bg-[radial-gradient(#a3e635_1.5px,transparent_1.5px)] [background-size:18px_18px] flex items-center justify-center p-4">
-              <span className="text-caption font-mono uppercase tracking-widest text-[#a3e635] bg-[#262626]/90 border border-[#a3e635]/40 px-3 py-1 rounded-md">
-                LIVE STOREFRONT COVER BANNER PREVIEW
-              </span>
-            </div>
-          )}
-        </div>
-
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 p-5 -mt-10 sm:-mt-12">
-          <div className="flex items-end gap-4">
-            <Avatar className="size-20 sm:size-22 border-4 border-[#fcfff7] shadow-[2px_2px_0px_0px_#262626]">
-              <AvatarImage src={settings.avatarUrl ?? undefined} alt="" className="object-cover" />
-              <AvatarFallback className={`${avatarColorClass} font-mono font-bold text-2xl`}>
-                {initial}
-              </AvatarFallback>
-            </Avatar>
-
-            <div className="flex flex-col gap-1 pb-1">
-              <div className="flex items-center gap-2">
-                <span className="text-heading-sm font-bold text-[#262626]">
-                  {displayName}
-                </span>
-                <span className="rounded-full border border-[#262626] bg-[#a3e635] px-2.5 py-0.5 text-caption font-mono font-semibold text-[#262626]">
-                  Creator Tier
-                </span>
-              </div>
-              <span className="text-caption font-mono text-[#525252]">
-                @{settings.handle} · {settings.email}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 self-start sm:self-end pb-1">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#7ee2b8] bg-[#dcfff1] px-3 py-1 text-caption font-mono font-medium text-[#262626]">
-              <CheckCircle2 className="size-3.5 text-emerald-700" /> Account Active
-            </span>
-          </div>
-        </div>
       </div>
 
       {/* Settings Navigation Tabs Container */}

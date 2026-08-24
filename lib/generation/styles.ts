@@ -79,12 +79,20 @@ export function requiredColourFor(style: StylePreset): string | null {
 
 /** The style a maker gets before they choose one.
  *
- *  Neo-traditional tattoo flash: the most forgiving preset in the library. It
- *  takes almost any subject, it is built from bold outlines and flat fills that
- *  survive both background removal and a screen print, and it is the single
- *  most tee-native thing in the reference gallery. A default has to be the
- *  style least likely to disappoint someone who never touched the picker. */
-export const DEFAULT_STYLE_SLUG = "neo-traditional"
+ *  Was neo-traditional tattoo flash. Every preset — that one included — locks
+ *  in its own aesthetic and its own fixed palette on purpose: picking one is
+ *  how a maker asks for a genre. But a maker who never opened the picker
+ *  never asked for a genre, and got Neo-Traditional's "symmetrical badge-like
+ *  composition" imposed on whatever they typed anyway — a moon-landing idea
+ *  came back inside a floral tattoo wreath nobody asked for.
+ *
+ *  "As Described" fixes that by being the one preset with no genre and no
+ *  fixed palette (`palette: []`, the sole exception `styles.test.ts` allows,
+ *  see its own comment): composition and colour come from the idea, or from
+ *  Kimi's read of it with Enhance on. It still keeps the one constraint that
+ *  isn't a style choice — a flat cuttable field behind the subject, because a
+ *  shirt print needs isolated art whatever the maker asked for. */
+export const DEFAULT_STYLE_SLUG = "as-described"
 
 export const MAX_TEXT_WORDS = 7
 export const MAX_TEXT_CHARS = 40
@@ -99,6 +107,23 @@ export const MAX_QUOTE_WORDS = 10
 export const MAX_QUOTE_CHARS = 60
 
 export const STYLE_PRESETS: StylePreset[] = [
+  // --- Default: no genre, no fixed palette ---------------------------------
+  {
+    slug: "as-described",
+    label: "As Described",
+    family: "pictorial",
+    vibeSlug: "dusk-atelier",
+    aesthetic: "clean illustrated artwork, rendered true to the idea rather than any one genre",
+    linework:
+      "confident, consistent line weight and clean shape edges — technique follows whatever the idea itself calls for, not a house style",
+    // Deliberately empty. buildPrompt() and askPromptDirection() (compose.ts)
+    // both branch on `palette.length === 0`: the model names colours drawn
+    // from the idea instead of a fixed swatch. The one intentional exception
+    // to styles.test.ts's "every preset has a palette" rule.
+    palette: [],
+    cutField: "black",
+  },
+
   // --- Riot ---------------------------------------------------------------
   {
     slug: "woodcut-flash",

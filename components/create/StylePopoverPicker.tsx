@@ -9,7 +9,7 @@ import {
   Palette,
 } from "lucide-react"
 
-import { STYLE_PRESETS, findStyle } from "@/lib/generation/styles"
+import { DEFAULT_STYLE_SLUG, STYLE_PRESETS, findStyle } from "@/lib/generation/styles"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
@@ -46,9 +46,15 @@ const STYLE_META: Record<
     accentColor: string
   }
 > = {
+  "as-described": {
+    category: "popular",
+    badge: "Default",
+    previewGradient: "from-stone-400 via-neutral-600 to-neutral-900",
+    accentColor: "#a3e635",
+  },
   "neo-traditional": {
     category: "popular",
-    badge: "Default / Tattoo",
+    badge: "Tattoo",
     previewGradient: "from-amber-600 via-teal-700 to-slate-900",
     accentColor: "#d97706",
   },
@@ -206,7 +212,7 @@ export function StylePopoverPicker({
   const [activeCategory, setActiveCategory] = useState<CategoryKey>("all")
 
   const selectedPreset = useMemo(
-    () => findStyle(value) ?? findStyle("neo-traditional")!,
+    () => findStyle(value) ?? findStyle(DEFAULT_STYLE_SLUG)!,
     [value],
   )
 
@@ -223,7 +229,7 @@ export function StylePopoverPicker({
       const matchesCategory =
         activeCategory === "all" ||
         (activeCategory === "popular"
-          ? ["neo-traditional", "anime-cel", "spray-stencil", "photoreal-render", "cyberpunk-neon", "blackwork-tattoo", "watercolour-bloom"].includes(preset.slug)
+          ? ["as-described", "neo-traditional", "anime-cel", "spray-stencil", "photoreal-render", "cyberpunk-neon", "blackwork-tattoo", "watercolour-bloom"].includes(preset.slug)
           : meta?.category === activeCategory)
 
       const searchLower = query.trim().toLowerCase()
@@ -236,10 +242,10 @@ export function StylePopoverPicker({
       return matchesCategory && matchesQuery
     })
 
-    // Always sort default style ('neo-traditional') to the top/first
+    // Always sort the default style to the top/first
     return list.sort((a, b) => {
-      if (a.slug === "neo-traditional") return -1
-      if (b.slug === "neo-traditional") return 1
+      if (a.slug === DEFAULT_STYLE_SLUG) return -1
+      if (b.slug === DEFAULT_STYLE_SLUG) return 1
       return 0
     })
   }, [activeCategory, query])

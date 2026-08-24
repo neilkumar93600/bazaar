@@ -85,6 +85,8 @@ export function CreateForm({
   const [phase, setPhase] = useState<Phase>({ step: "idle" })
 
   const router = useRouter()
+  /** Set the instant `listDesign` succeeds, before the redirect is attempted. */
+  const [listed, setListed] = useState(false)
 
   const style = findStyle(styleSlug)
 
@@ -241,9 +243,11 @@ export function CreateForm({
                   <Info className="h-3.5 w-3.5" />
                 </TooltipTrigger>
                 <TooltipContent>
-                  Enhance lets the AI take creative liberties — the design can
-                  come out differently than what you pictured. Turn it off to
-                  keep exactly what you typed.
+                  Enhance lets the AI take creative liberties with your
+                  wording — the design can come out differently than what you
+                  pictured. Turn it off to send your idea word-for-word. Your
+                  Art Direction Style still shapes composition and palette
+                  either way — that choice is separate from Enhance.
                 </TooltipContent>
               </Tooltip>
               <Switch
@@ -268,7 +272,7 @@ export function CreateForm({
             <span>
               {enhance
                 ? "AI expands your idea into full art direction."
-                : "Off — your words go to the model exactly as typed."}
+                : "Off — your idea goes in word-for-word; the Style still sets composition and palette."}
             </span>
             <span className="font-mono font-medium">
               {prompt.trim().length}/{MAX_PROMPT_LENGTH}
@@ -487,7 +491,21 @@ export function CreateForm({
           </p>
         )}
 
-        {pickedDesign && (
+        {listed && (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border-2 border-foreground bg-mint-wash p-4">
+            <span className="text-body-sm font-semibold text-foreground">
+              Listed. Your design is live in the Bazaar.
+            </span>
+            <Link
+              href="/dashboard/designs"
+              className="text-body-sm font-semibold text-foreground underline underline-offset-4"
+            >
+              Go to My Designs
+            </Link>
+          </div>
+        )}
+
+        {pickedDesign && !listed && (
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -515,6 +533,13 @@ export function CreateForm({
                 placement: null,
               }}
               onSuccess={() => {
+                // Confirm first, navigate second. The design is live the moment
+                // the action returns, so a navigation that does not happen —
+                // an RSC fetch that fails, a slow route — must not read as
+                // "nothing happened": the maker is left looking at the same
+                // form with a listed design behind it. The banner below is the
+                // receipt, and it carries its own link.
+                setListed(true)
                 router.push("/dashboard/designs")
               }}
             />

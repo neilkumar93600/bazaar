@@ -43,12 +43,22 @@ assert.ok(STYLE_PRESETS.length >= 20, "the form promises 20+ styles")
   assert.equal(new Set(slugs).size, slugs.length, "slugs must be unique")
 }
 
+// The one preset allowed an empty palette: "as-described" deliberately has no
+// fixed swatch, so the model names colours from the idea instead (see its own
+// comment in styles.ts). Every other preset still must name one — that is
+// what makes it a style rather than a blank slate.
+const EMPTY_PALETTE_ALLOWED = new Set(["as-described"])
+
 for (const preset of STYLE_PRESETS) {
   assert.ok(VIBE_SLUGS.has(preset.vibeSlug), `${preset.slug}: unknown vibe ${preset.vibeSlug}`)
-  assert.ok(preset.palette.length > 0, `${preset.slug}: empty palette`)
+  assert.ok(
+    preset.palette.length > 0 || EMPTY_PALETTE_ALLOWED.has(preset.slug),
+    `${preset.slug}: empty palette`,
+  )
 
   // The empty-PNG bug: artwork painted in the same colour as the field it is
-  // keyed against gets cut away by the background remover.
+  // keyed against gets cut away by the background remover. Nothing to check
+  // against an empty palette.
   const collides = preset.palette.filter((colour) =>
     READS_AS[preset.cutField].test(colour),
   )

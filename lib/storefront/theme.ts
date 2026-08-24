@@ -49,11 +49,17 @@ export const DEFAULT_THEME: StorefrontTheme = {
   border: "hairline",
 }
 
-/** Ceiling on the sentence a creator types. A theme is four colours and four
- *  enums — anything longer is an essay the model will ignore anyway. Lives
- *  here, not in theme-prompt.ts, so the settings form can enforce it without
- *  pulling a server-only module into the browser bundle. */
-export const MAX_PROMPT_CHARS = 300
+/** Ceiling on what a creator puts in the box. Was 300 — sized for a typed
+ *  sentence, and it silently ate the tail of anything longer: an HTML
+ *  `maxLength` (or an equivalent `.slice()`) truncates a paste with no
+ *  warning, so a creator pasting a few sentences back from their own ChatGPT
+ *  or Claude just watched the end of it vanish. 500 is still nowhere near an
+ *  essay — it is roughly what "2 to 3 sentences" from another LLM actually
+ *  runs when it doesn't hit the count exactly — and the settings form now
+ *  shows a live counter besides, so hitting the ceiling is visible rather
+ *  than silent. Lives here, not in theme-prompt.ts, so the settings form can
+ *  enforce it without pulling a server-only module into the browser bundle. */
+export const MAX_PROMPT_CHARS = 500
 
 const RADIUS: Record<StorefrontTheme["radius"], string> = {
   sharp: "0px",
