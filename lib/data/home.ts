@@ -75,9 +75,13 @@ export async function getHomeStats(): Promise<HomeStats> {
 
   const [designsCount, claimsCount, storefrontsCount, royaltyRows] =
     await Promise.all([
-      supabase.from("designs").select("*", { count: "exact", head: true }),
-      supabase.from("claims").select("*", { count: "exact", head: true }),
-      supabase.from("storefronts").select("*", { count: "exact", head: true }),
+      // `id`, not `*`: PostgREST expands `*` to every column and checks the
+      // privilege on each, so a head-only count still 403s on `designs` now
+      // that `prompt` is not granted to anon
+      // (20260824120000_hide_prompt_column.sql). A count needs one column.
+      supabase.from("designs").select("id", { count: "exact", head: true }),
+      supabase.from("claims").select("id", { count: "exact", head: true }),
+      supabase.from("storefronts").select("id", { count: "exact", head: true }),
       // ponytail: sums every paid royalty row in JS — fine at current scale,
       // move to a SQL sum/RPC if royalty_ledger grows large enough to matter.
       supabase

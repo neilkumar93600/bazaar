@@ -15,11 +15,21 @@
 -- back on. The list is built from the catalogue rather than typed out, so this
 -- cannot silently disagree with the schema it runs against.
 --
--- A COLUMN ADDED AFTER THIS MIGRATION IS NOT READABLE BY anon/authenticated
--- until it is granted. That is the safe direction — a new column is invisible
--- rather than public by default — but it is a real step to remember:
+-- TWO CONSEQUENCES, both of them load-bearing.
 --
---     grant select (new_column) on public.designs to anon, authenticated;
+-- 1. `select=*` NO LONGER WORKS on this table for anon/authenticated, not even
+--    for a head-only count: PostgREST expands the star to every column and
+--    checks the privilege on each, so it 401s. Every query has to name its
+--    columns. lib/data/home.ts counted designs with
+--    `.select("*", { count: "exact", head: true })` and was changed to
+--    `.select("id", …)` in the same change — a count needs one column.
+--
+-- 2. A COLUMN ADDED AFTER THIS MIGRATION IS NOT READABLE BY anon/authenticated
+--    until it is granted. That is the safe direction — a new column is
+--    invisible rather than public by default — but it is a real step to
+--    remember:
+--
+--        grant select (new_column) on public.designs to anon, authenticated;
 --
 -- The service role is unaffected; it bypasses grants, which is how
 -- app/api/generate/route.ts still writes the prompt and lib/printify/sync.ts
