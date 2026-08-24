@@ -14,7 +14,6 @@ import {
   composeListing,
   composePrompt,
   FALLBACK_DESCRIPTION,
-  titleFromIdea,
 } from "./compose.ts"
 import { findStyle } from "./styles.ts"
 
@@ -31,12 +30,8 @@ assert.equal(cleanTitle("**Neon Ronin**"), "Neon Ronin")
 assert.equal(cleanTitle("   spaced   out   words  "), "spaced out words")
 assert.equal(cleanTitle(""), "")
 
-// The fallback name is short too — it is the reason designs stopped being
-// titled with their entire prompt.
 const longIdea =
   "a moth with cathedral windows for wings, wings spread wide, symmetrical"
-assert.equal(titleFromIdea(longIdea).split(" ").length <= 7, true)
-assert.equal(titleFromIdea(""), "Untitled design")
 
 // No MUAPI_API_KEY: the transport throws, askKimi swallows it, the template
 // runs and the title comes from the idea. Generation is never blocked on a
@@ -49,7 +44,10 @@ assert.ok(style, "expected a known style preset to test against")
 const listing = await composeListing({ idea: longIdea, style: style! })
 
 assert.equal(listing.composed, false)
-assert.equal(listing.title, titleFromIdea(longIdea))
+// Null, NOT the first words of the idea: an unwritten title must never be the
+// maker's prompt wearing a hat, because a title is published as the h1, the
+// <title>, the card label, the checkout line and the receipt.
+assert.equal(listing.title, null)
 assert.equal(listing.description, FALLBACK_DESCRIPTION)
 
 const composition = await composePrompt({

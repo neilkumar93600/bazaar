@@ -39,7 +39,7 @@ export function ListingModal({
           </div>
           <DialogDescription className="text-body-sm text-muted-foreground">
             {isListed
-              ? "Update garment specifications, pricing, or prompt visibility for your live design."
+              ? "Update garment specifications, pricing, or placement for your live design."
               : "Select your garment options, set your listing price, and publish your design to the Bazaar."}
           </DialogDescription>
         </DialogHeader>
@@ -70,7 +70,6 @@ export function ListingModal({
               imageUrl={design.imageUrl}
               isListed={isListed}
               priceCents={design.priceCents}
-              initialHidePrompt={design.isPromptHidden}
               garmentOptions={garmentOptions}
               frozen={design.hasProduct}
               initialConfig={{

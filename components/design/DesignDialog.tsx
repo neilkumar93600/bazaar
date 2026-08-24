@@ -35,12 +35,22 @@ export function DesignDialog({
     if (!open || loadedFor === designId) return
 
     let cancelled = false
-    getDesignDialogData(designId).then((result) => {
-      if (!cancelled) {
-        setData(result)
-        setLoadedFor(designId)
-      }
-    })
+    getDesignDialogData(designId)
+      .then((result) => {
+        if (!cancelled) {
+          setData(result)
+          setLoadedFor(designId)
+        }
+      })
+      // Without this the skeleton spins forever: `loadedFor` never advances,
+      // so the effect's own guard stops it retrying too.
+      .catch((error) => {
+        console.error("[design] could not load the dialog", error)
+        if (!cancelled) {
+          setData(null)
+          setLoadedFor(designId)
+        }
+      })
 
     return () => {
       cancelled = true
@@ -68,17 +78,23 @@ export function DesignDialog({
                 imageUrl={design.imageUrl}
                 mockupUrl={design.mockupUrl}
                 alt={title}
+                colourMockups={data!.shirtColours}
+                featuredVariantId={design.featuredVariantId}
               />
               {design.creator && <CreatorCard creator={design.creator} />}
             </div>
 
-            <DesignDetailPanel
-              design={design}
-              orderOptions={data!.orderOptions}
-              isSignedIn={data!.viewerIsLoggedIn}
-              viewerEmail={data!.viewerEmail}
-              viewerDisplayName={data!.viewerName}
-            />
+            {/* pr-9 clears the dialog's own close button, which is pinned
+                top-right over exactly where the panel puts its edition badge. */}
+            <div className="pr-9">
+              <DesignDetailPanel
+                design={design}
+                orderOptions={data!.orderOptions}
+                isSignedIn={data!.viewerIsLoggedIn}
+                viewerEmail={data!.viewerEmail}
+                viewerDisplayName={data!.viewerName}
+              />
+            </div>
           </div>
         )}
       </DialogContent>

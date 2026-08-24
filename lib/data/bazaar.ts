@@ -11,7 +11,9 @@ export type BazaarQuery = {
   availability: BazaarAvailability
   sort: BazaarSort
   page: number
-  /** Free-text match against the maker's prompt. Empty string means no term —
+  /** Free-text match against the design's name and description. Never the
+   *  prompt: a filter you can probe a character at a time reads that column out
+   *  loud whether or not the page ever renders it. Empty string means no term —
    *  `/shop` never sets it, `/search` always does. */
   q: string
 }
@@ -75,6 +77,21 @@ export function likePattern(term: string): string {
   return `%${term.replace(/[\\%_]/g, "\\$&")}%`
 }
 
+/** The public search surface: what a design is called and what it says it is.
+ *  Both are written to be read.
+ *
+ *  Must stay in step with the column grants in
+ *  20260824120000_hide_prompt_column.sql — the browser's key cannot read
+ *  `prompt` any more, so a filter on it would 403 as well as leak. */
+export function searchFilter(term: string): string {
+  // Double-quoted: `or()` is a comma-separated grammar, so an unquoted term
+  // containing a comma splits into two half-filters and PostgREST rejects the
+  // lot. Inside the quotes only `"` needs escaping; `%` is still a LIKE
+  // wildcard, which is what likePattern is for.
+  const pattern = likePattern(term).replace(/"/g, '\\"')
+  return `title.ilike."${pattern}",description.ilike."${pattern}"`
+}
+
 export async function getBazaarData(query: BazaarQuery): Promise<BazaarData> {
   const supabase = await createClient()
 
@@ -104,7 +121,7 @@ export async function getBazaarData(query: BazaarQuery): Promise<BazaarData> {
         .not("listed_at", "is", null)
         .eq("vibe_id", vibe.id)
       if (claimedFilter !== null) q = q.eq("is_claimed", claimedFilter)
-      if (query.q) q = q.ilike("prompt", likePattern(query.q))
+      if (query.q) q = q.or(searchFilter(query.q))
 
       const { count } = await q
       return { name: vibe.name, slug: vibe.slug, count: count ?? 0 }
@@ -115,7 +132,7 @@ export async function getBazaarData(query: BazaarQuery): Promise<BazaarData> {
   let designQuery = supabase
     .from("designs")
     .select(
-      "id, image_url, mockup_url, is_claimed, price_cents, title, prompt, is_prompt_hidden, created_at, vibe_id, claimed_by",
+      "id, image_url, mockup_url, is_claimed, price_cents, title, created_at, vibe_id, claimed_by",
       { count: "exact" }
     )
     .eq("moderation_status", "approved")
@@ -125,7 +142,7 @@ export async function getBazaarData(query: BazaarQuery): Promise<BazaarData> {
     designQuery = designQuery.eq("is_claimed", claimedFilter)
   if (query.vibes.length > 0)
     designQuery = designQuery.in("vibe_id", selectedVibeIds)
-  if (query.q) designQuery = designQuery.ilike("prompt", likePattern(query.q))
+  if (query.q) designQuery = designQuery.or(searchFilter(query.q))
 
   const { data: designRows, count } = await designQuery
     .order("created_at", { ascending: query.sort === "oldest" })
@@ -155,8 +172,6 @@ export async function getBazaarData(query: BazaarQuery): Promise<BazaarData> {
       isClaimed: d.is_claimed,
       priceCents: d.price_cents,
       title: d.title ?? null,
-      prompt: d.prompt,
-      isPromptHidden: Boolean(d.is_prompt_hidden),
       createdAt: d.created_at,
       vibeName: (d.vibe_id ? vibeById.get(d.vibe_id)?.name : null) ?? null,
       claimantHandle: d.claimed_by

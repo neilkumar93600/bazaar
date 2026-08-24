@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "eslint",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "npx tsx lib/utils.test.ts && npx tsx lib/listing.test.ts && npx tsx lib/hero-draft.test.ts && npx tsx lib/data/bazaar.test.ts && npx tsx lib/email/templates.test.ts && npx tsx lib/generation/compose.test.ts && npx tsx lib/generation/prompt.test.ts && npx tsx lib/generation/styles.test.ts && npx tsx lib/orders/address.test.ts && npx tsx lib/orders/buyer.test.ts && npx tsx lib/orders/eligibility.test.ts && npx tsx lib/payments/bolt.test.ts && npx tsx lib/printify/garments.test.ts && npx tsx lib/printify/mockups.test.ts && npx tsx lib/printify/orders.test.ts && npx tsx lib/printify/print-areas.test.ts && npx tsx lib/purchase/buyer-account.test.ts && npx tsx components/home/MastheadLedger.test.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

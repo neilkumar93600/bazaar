@@ -49,7 +49,7 @@ export async function getFeedColumns(): Promise<FeedColumn[]> {
     supabase
       .from("designs")
       .select(
-        "id, vibe_id, image_url, mockup_url, is_claimed, price_cents, title, prompt, is_prompt_hidden, created_at, claimed_by"
+        "id, vibe_id, image_url, mockup_url, is_claimed, price_cents, title, created_at, claimed_by"
       )
       .eq("moderation_status", "approved")
       // RLS hides other people's unlisted designs; this hides the viewer's own.
@@ -103,8 +103,6 @@ export async function getFeedColumns(): Promise<FeedColumn[]> {
         isClaimed: d.is_claimed,
         priceCents: d.price_cents,
         title: d.title ?? null,
-        prompt: d.prompt,
-        isPromptHidden: Boolean(d.is_prompt_hidden),
         createdAt: d.created_at,
         vibeName: vibe.name,
         claimantHandle: d.claimed_by

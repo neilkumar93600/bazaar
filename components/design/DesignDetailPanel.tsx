@@ -63,6 +63,12 @@ export function DesignDetailPanel({
         {formatListingPrice(design.priceCents)}
       </span>
 
+      {/* Buyer-facing copy, never the prompt. The prompt is the recipe — it is
+          not selected, not serialised to the browser, and not shown. */}
+      {design.description && (
+        <p className="text-body text-muted-ink">{design.description}</p>
+      )}
+
       {design.isClaimed ? (
         <>
           {design.claimantHandle && (
@@ -105,36 +111,7 @@ export function DesignDetailPanel({
         />
       )}
 
-      <Accordion defaultValue={["prompt"]} className="mt-2">
-        <AccordionItem value="prompt">
-          <AccordionTrigger className="text-body font-semibold">
-            Prompt
-          </AccordionTrigger>
-          <AccordionContent>
-            {design.isPromptHidden ? (
-              <p className="text-body-sm text-muted-ink">
-                The creator kept this one private. Hiding the prompt hides
-                the recipe, not the design.
-              </p>
-            ) : design.prompt ? (
-              <>
-                <blockquote className="border-l-2 border-ink pl-3.5 py-1 font-mono text-body-sm break-words text-ink italic">
-                  &ldquo;{design.prompt}&rdquo;
-                </blockquote>
-                {design.quote && (
-                  <p className="mt-3 font-mono text-caption text-muted-ink">
-                    Line text: {design.quote}
-                  </p>
-                )}
-              </>
-            ) : (
-              <p className="text-body-sm text-muted-ink">
-                No prompt text was recorded for this design.
-              </p>
-            )}
-          </AccordionContent>
-        </AccordionItem>
-
+      <Accordion defaultValue={["details"]} className="mt-2">
         <AccordionItem value="details">
           <AccordionTrigger className="text-body font-semibold">
             Design details
@@ -153,6 +130,9 @@ export function DesignDetailPanel({
             />
             {design.vibeName && (
               <DetailRow label="Vibe" value={design.vibeName} />
+            )}
+            {design.quote && (
+              <DetailRow label="Printed line" value={design.quote} />
             )}
             <DetailRow
               label="Minted"

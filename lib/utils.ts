@@ -33,23 +33,23 @@ export function formatListingPrice(cents: number | null) {
 
 /** What to call a design.
  *
- *  Designs have no title column — nobody names them. The words printed on a
- *  typographic shirt are the closest thing, then the maker's prompt. `vibeName`
- *  is the last resort and used to be the first: heading every card and every
- *  <title> with it meant a grid of fourteen cards all reading "Riot", and
- *  fourteen product pages sharing one <title>.
+ *  `title` is written by the composer and backfilled for every older row, so it
+ *  is effectively always there. `vibeName` is the last resort and used to be the
+ *  first: heading every card and every <title> with it meant a grid of fourteen
+ *  cards all reading "Riot", and fourteen product pages sharing one <title>.
+ *
+ *  The prompt is deliberately NOT in this chain. It is the recipe, and the
+ *  recipe is never public — a card, a <title> or a receipt that falls back to it
+ *  publishes the exact words that made the design. Callers still pass it; it is
+ *  ignored.
  *
  *  `maxLength` clips for <title> and share cards, where CSS truncation can't
  *  reach. Cards pass nothing and clip with `truncate` instead. */
 export function designLabel(
-  design: { title?: string | null; prompt?: string | null; vibeName?: string | null },
+  design: { title?: string | null; vibeName?: string | null },
   maxLength?: number
 ) {
-  const label =
-    design.title?.trim() ||
-    design.prompt?.trim() ||
-    design.vibeName?.trim() ||
-    "Untitled design"
+  const label = design.title?.trim() || design.vibeName?.trim() || "Untitled design"
 
   if (!maxLength || label.length <= maxLength) return label
   // Clip on a word boundary where there is one close to the limit, so titles

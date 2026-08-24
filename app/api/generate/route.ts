@@ -293,7 +293,9 @@ async function generateOne(
   idea: string,
   vibeId: string,
   prompt: string,
-  title: string,
+  /** Null when the composer fell back. Stored as null rather than as words
+   *  lifted from the prompt — see composeListing. */
+  title: string | null,
   description: string,
   style: StylePreset,
   aspectRatio: AspectRatio,

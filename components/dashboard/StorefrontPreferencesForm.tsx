@@ -13,7 +13,6 @@ export function StorefrontPreferencesForm() {
 
   const [defaultGarment, setDefaultGarment] = useState("t-shirt")
   const [defaultPrice, setDefaultPrice] = useState("29.00")
-  const [hidePromptsDefault, setHidePromptsDefault] = useState(false)
   const [isPublicStorefront, setIsPublicStorefront] = useState(true)
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -48,21 +47,6 @@ export function StorefrontPreferencesForm() {
           <Switch
             checked={isPublicStorefront}
             onCheckedChange={setIsPublicStorefront}
-          />
-        </div>
-
-        <div className="flex items-center justify-between gap-4 rounded-lg border border-[#262626] bg-white p-4">
-          <div className="flex flex-col gap-0.5">
-            <Label className="text-body-sm font-semibold text-[#262626]">
-              Hide Prompts by Default
-            </Label>
-            <span className="text-caption text-[#525252]">
-              Keep AI prompts private when publishing new 1-of-1 apparel designs to the Bazaar.
-            </span>
-          </div>
-          <Switch
-            checked={hidePromptsDefault}
-            onCheckedChange={setHidePromptsDefault}
           />
         </div>
       </div>

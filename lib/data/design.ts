@@ -17,11 +17,13 @@ export type DesignDetail = {
   /** Printify's photo of the finished garment, once the design is claimed and
    *  synced. Null falls back to the drawn mockup. */
   mockupUrl: string | null
-  prompt: string | null
-  isPromptHidden?: boolean
-  /** The design's name — 5-7 words, written by the composer alongside the
-   *  prompt. Null on anything generated before designs.title existed, and
-   *  designLabel() falls back to the prompt for those. */
+  /** Buyer-facing copy, written by the composer. The prompt is deliberately
+   *  absent from this type: it is the recipe, it never reaches the browser, and
+   *  a field that exists is a field something eventually renders. */
+  description: string | null
+  /** The design's name — 5-7 words, written by the composer. Null when the
+   *  composer fell back: it stores no title at all rather than the first words
+   *  of the prompt, and designLabel() falls through to the vibe. */
   title: string | null
   /** The line printed under the illustration, for poster styles. Not a name —
    *  it is copy that appears in the artwork itself. */
@@ -51,7 +53,7 @@ export async function getDesignDetail(id: string): Promise<DesignDetail | null> 
   const { data: design } = await supabase
     .from("designs")
     .select(
-      "id, image_url, mockup_url, title, prompt, is_prompt_hidden, price_cents, vibe_id, is_claimed, claimed_by, created_at, generation_job_id, printify_product_id, garment_slug, featured_variant_id"
+      "id, image_url, mockup_url, title, description, price_cents, vibe_id, is_claimed, claimed_by, created_at, generation_job_id, printify_product_id, garment_slug, featured_variant_id"
     )
     .eq("id", id)
     .eq("moderation_status", "approved")
@@ -111,8 +113,7 @@ export async function getDesignDetail(id: string): Promise<DesignDetail | null> 
     id: design.id,
     imageUrl: design.image_url,
     mockupUrl: design.mockup_url ?? null,
-    prompt: design.prompt,
-    isPromptHidden: Boolean(design.is_prompt_hidden),
+    description: design.description ?? null,
     title: design.title ?? null,
     quote: job?.quote_content ?? null,
     priceCents: design.price_cents,
@@ -140,7 +141,7 @@ export async function getDesignDetail(id: string): Promise<DesignDetail | null> 
 }
 
 const CARD_COLUMNS =
-  "id, image_url, mockup_url, is_claimed, price_cents, title, prompt, is_prompt_hidden, created_at, vibe_id, claimed_by"
+  "id, image_url, mockup_url, is_claimed, price_cents, title, created_at, vibe_id, claimed_by"
 
 type CardRow = {
   id: string
@@ -149,8 +150,6 @@ type CardRow = {
   is_claimed: boolean
   price_cents: number | null
   title: string | null
-  prompt: string | null
-  is_prompt_hidden: boolean | null
   created_at: string
   vibe_id: string | null
   claimed_by: string | null
@@ -185,8 +184,6 @@ async function toCards(rows: CardRow[]): Promise<DesignCardData[]> {
     isClaimed: d.is_claimed,
     priceCents: d.price_cents,
     title: d.title ?? null,
-    prompt: d.prompt,
-    isPromptHidden: d.is_prompt_hidden ?? null,
     vibeName: d.vibe_id ? (vibeName.get(d.vibe_id) ?? null) : null,
     claimantHandle: d.claimed_by ? (claimantHandle.get(d.claimed_by) ?? null) : null,
     createdAt: d.created_at,

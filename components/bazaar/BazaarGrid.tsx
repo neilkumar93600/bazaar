@@ -44,7 +44,7 @@ export function BazaarGrid({
           </EmptyTitle>
           <EmptyDescription>
             {searched
-              ? "Search reads the prompt each design was made from. Try a plainer word, or browse the whole bazaar."
+              ? "Nothing matched that. Try a plainer word, or browse the whole bazaar."
               : filtered
                 ? "Try widening the vibe selection or switching availability back to All."
                 : "New 1-of-1 designs land here as they clear moderation. Check back shortly."}

@@ -84,7 +84,11 @@ export const FALLBACK_DESCRIPTION =
   "A one-of-a-kind AI design, claimed by a single owner and never reprinted for anyone else."
 
 export type ListingCopy = {
-  title: string
+  /** Null when no model wrote one. Deliberately not a fallback built from the
+   *  idea: the idea is the maker's prompt, and a title is published as the h1,
+   *  the <title>, the card label, the checkout line and the receipt. Callers
+   *  store the null and let designLabel() fall through to the vibe. */
+  title: string | null
   description: string
   /** True when Kimi wrote both. False means the fallbacks ran. */
   composed: boolean
@@ -108,13 +112,6 @@ export function cleanTitle(raw: string): string {
     .slice(0, TITLE_MAX_WORDS)
 
   return words.join(" ").replace(/[.,;:!?—-]+$/, "").slice(0, TITLE_MAX_CHARS)
-}
-
-/** The name a design gets when no model wrote one: the first few words of the
- *  idea. Still shorter and more readable than the whole prompt, which is what
- *  used to be shown. */
-export function titleFromIdea(idea: string): string {
-  return cleanTitle(idea) || "Untitled design"
 }
 
 /** Strips markdown noise and clamps to a sentence boundary, the same shape
@@ -250,7 +247,7 @@ export async function composeListing(input: {
   const description = kimi?.description ? cleanDescription(kimi.description) : ""
 
   return {
-    title: title || titleFromIdea(idea),
+    title: title || null,
     description: description || FALLBACK_DESCRIPTION,
     composed: Boolean(title && description),
   }

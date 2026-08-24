@@ -7,6 +7,7 @@ import { formatDistanceToNowStrict } from "date-fns"
 
 import { cn, designLabel } from "@/lib/utils"
 import { DesignDialog } from "@/components/design/DesignDialog"
+import { ShirtMockup } from "@/components/shared/ShirtMockup"
 
 /** The one design card. Home feed, /shop and creator storefronts all render
  *  this — each data module maps its rows into this shape rather than growing
@@ -24,9 +25,6 @@ export type DesignCardData = {
   /** The design's name, written by the composer. Null on anything generated
    *  before designs.title existed, which falls back to the prompt. */
   title?: string | null
-  /** The maker's idea. Shown as the caption, and the label of last resort. */
-  prompt: string | null
-  isPromptHidden?: boolean | null
   vibeName: string | null
   claimantHandle: string | null
   createdAt: string
@@ -64,11 +62,8 @@ export function DesignCard({
    *  to land here or they'd outline the text too. */
   frameClassName?: string
 }) {
-  // The name if it has one, the prompt if it doesn't. A hidden prompt still
-  // shows the title — hiding the prompt hides the recipe, not the design.
   const label = designLabel({
     title: design.title,
-    prompt: design.isPromptHidden ? null : design.prompt,
     vibeName: design.vibeName,
   })
 
@@ -108,15 +103,25 @@ export function DesignCard({
           )}
         >
           {/* The card sells a shirt, so it shows a shirt: the real product photo
-              where one exists, the drawn stand-in everywhere else. */}
-          <Image
-            src={design.mockupUrl ?? design.imageUrl}
-            alt=""
-            fill
-            sizes="(min-width: 1280px) 280px, (min-width: 768px) 30vw, 45vw"
-            priority={priority}
-            className="object-cover transition-transform duration-500 group-hover/card:scale-105"
-          />
+              where one exists, the drawn stand-in everywhere else. Unclaimed
+              designs have no Printify product yet, so without the drawn tee a
+              whole grid of them renders as flat artwork on a white card. */}
+          {design.mockupUrl ? (
+            <Image
+              src={design.mockupUrl}
+              alt=""
+              fill
+              sizes="(min-width: 1280px) 280px, (min-width: 768px) 30vw, 45vw"
+              priority={priority}
+              className="object-cover transition-transform duration-500 group-hover/card:scale-105"
+            />
+          ) : (
+            <ShirtMockup
+              imageUrl={design.imageUrl}
+              priority={priority}
+              className="transition-transform duration-500 group-hover/card:scale-105"
+            />
+          )}
 
           {design.isClaimed ? (
             // Status Pill Badge — mint wash inside a mint edge, ink label.
@@ -146,21 +151,21 @@ export function DesignCard({
           </span>
         </div>
 
-        <div className="mt-3 flex items-baseline justify-between gap-3">
-          {/* One line, clipped. A title is a headline; a prompt standing in for
-              one is a sentence, so both get truncated the same way. */}
+        <div className="mt-3 flex items-start justify-between gap-3">
+          {/* Two lines, not one. The prompt used to caption the card underneath
+              this; now the title is the only thing naming the design, and the
+              grid is 2-up at 360 where one line clips at about eleven
+              characters. `title=` doesn't help — it never fires on touch. */}
           <span
             className={cn(
-              "truncate text-body font-medium transition-colors group-hover/card:text-primary",
-              design.title || design.prompt
-                ? "text-foreground"
-                : "text-muted-foreground"
+              "line-clamp-2 text-body font-medium transition-colors group-hover/card:text-primary",
+              design.title ? "text-foreground" : "text-muted-foreground"
             )}
             title={label}
           >
             {label}
           </span>
-          <span className="shrink-0 font-mono text-body-sm font-semibold text-gold-leaf">
+          <span className="shrink-0 pt-0.5 font-mono text-body-sm font-semibold text-gold-leaf">
             {design.priceCents === null
               ? "Free"
               : priceFormatter.format(design.priceCents / 100)}

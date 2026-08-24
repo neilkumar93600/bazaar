@@ -17,6 +17,7 @@ import {
   getOrderOptions,
   type OrderOptions,
 } from "@/app/(public)/design/[id]/order-actions";
+import { colourMockups, type ColourMockup } from "@/lib/printify/mockups";
 
 /** `boltToken` means the purchase isn't finished: the browser still has to
  *  open Bolt's modal with it. A free purchase redirects instead and returns
@@ -37,6 +38,8 @@ export type DesignDialogData = {
   viewerEmail: string;
   viewerName: string;
   orderOptions: OrderOptions;
+  /** One product photo per garment colour, for the gallery's swatch row. */
+  shirtColours: ColourMockup[];
 };
 
 export async function getDesignDialogData(
@@ -50,12 +53,11 @@ export async function getDesignDialogData(
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Only a claimed design with a product can be ordered, so the catalogue call
-  // is skipped entirely for everything else.
-  const [orderOptions, { data: profile }] = await Promise.all([
-    design?.claimedBy && design.printifyProductId
-      ? getOrderOptions(design.garmentSlug)
-      : Promise.resolve(null),
+  // Fetched for every design, not just orderable ones: the gallery needs the
+  // colour list to re-point the product photo. The catalogue is cached for the
+  // life of the process, so this is one network hop ever.
+  const [options, { data: profile }] = await Promise.all([
+    design ? getOrderOptions(design.garmentSlug) : Promise.resolve(null),
     user
       ? supabase
           .from("profiles")
@@ -70,7 +72,10 @@ export async function getDesignDialogData(
     viewerIsLoggedIn: Boolean(user),
     viewerEmail: user?.email ?? "",
     viewerName: profile?.display_name ?? "",
-    orderOptions,
+    // Only a claimed design with a product can actually be ordered.
+    orderOptions:
+      design?.claimedBy && design.printifyProductId ? options : null,
+    shirtColours: colourMockups(design?.mockupUrl ?? null, options?.colours ?? []),
   };
 }
 
@@ -106,7 +111,7 @@ export async function buyDesign(
   // the row lock, where it is actually atomic.
   const { data: design } = await supabase
     .from("designs")
-    .select("price_cents, listed_at, prompt, image_url")
+    .select("price_cents, listed_at, title, image_url")
     .eq("id", designId)
     .eq("moderation_status", "approved")
     .maybeSingle();
@@ -157,7 +162,7 @@ export async function buyDesign(
       const boltToken = await createOrderToken({
         orderReference,
         designId,
-        designLabel: designLabel({ prompt: design.prompt }, 80),
+        designLabel: designLabel({ title: design.title }, 80),
         imageUrl: design.image_url,
         priceCents: design.price_cents,
       });

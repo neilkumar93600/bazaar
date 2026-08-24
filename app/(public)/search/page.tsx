@@ -65,7 +65,7 @@ export default async function SearchPage(props: PageProps<"/search">) {
             </EmptyMedia>
             <EmptyTitle>Search designs and creators</EmptyTitle>
             <EmptyDescription>
-              Designs match on the prompt they were made from. Creators match on
+              Designs match on their name and description. Creators match on
               handle or name.
             </EmptyDescription>
           </EmptyHeader>

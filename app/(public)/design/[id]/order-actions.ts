@@ -33,8 +33,27 @@ export type OrderOptions = {
 } | null;
 
 /** Server-side: Printify's catalogue needs the API token, so the options are
- *  resolved here and handed to the form as plain data. */
+ *  resolved here and handed to the form as plain data.
+ *
+ *  Never throws. Every design page calls this now — the gallery needs the
+ *  colour list, not just the checkout — so a Printify 5xx or a 15s timeout
+ *  would otherwise take down the whole public catalogue through the route's
+ *  error boundary. `printifyFetch` throws on any non-2xx and `catalogVariants`
+ *  rethrows after clearing its cache, so the failure has to stop here.
+ *
+ *  Null is a supported answer everywhere: no swatches, no order form. */
 export async function getOrderOptions(
+  garmentSlug: string | null
+): Promise<OrderOptions> {
+  try {
+    return await resolveOrderOptions(garmentSlug);
+  } catch (error) {
+    console.error("[order] could not read the Printify catalogue", error);
+    return null;
+  }
+}
+
+async function resolveOrderOptions(
   garmentSlug: string | null
 ): Promise<OrderOptions> {
   const garment = garmentSlug ? findGarment(garmentSlug) : defaultGarment();
@@ -94,7 +113,7 @@ export async function placeGarmentOrder(
   // Re-read server-side: the client's idea of this design is a suggestion.
   const { data: design } = await supabase
     .from("designs")
-    .select("id, claimed_by, printify_product_id, garment_slug, prompt")
+    .select("id, claimed_by, printify_product_id, garment_slug, title")
     .eq("id", designId)
     .eq("moderation_status", "approved")
     .maybeSingle();
@@ -165,7 +184,7 @@ export async function placeGarmentOrder(
     const { subject, html } = garmentOrderEmail({
       orderId: order.id,
       buyerName: address.address.firstName,
-      designLabel: designLabel({ prompt: design.prompt }, 60),
+      designLabel: designLabel({ title: design.title }, 60),
       garmentLabel: garment.label,
       priceCents: garment.priceCents,
       placedAt: new Date(),

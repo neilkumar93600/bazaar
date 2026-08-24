@@ -10,30 +10,34 @@ import assert from "node:assert/strict"
 
 import { designLabel } from "./utils.ts"
 
-// Priority: printed words, then the maker's prompt, then the category.
-assert.equal(
-  designLabel({ title: "PROMETHEUS", prompt: "a titan", vibeName: "Riot" }),
-  "PROMETHEUS"
-)
-assert.equal(designLabel({ prompt: "a titan", vibeName: "Riot" }), "a titan")
+// Priority: the written title, then the category. The prompt is never a label.
+assert.equal(designLabel({ title: "PROMETHEUS", vibeName: "Riot" }), "PROMETHEUS")
 assert.equal(designLabel({ vibeName: "Riot" }), "Riot")
 assert.equal(designLabel({}), "Untitled design")
 
+// The recipe stays private: a stray `prompt` on the object is ignored, not
+// rendered. Every design has a title — the 20260810160000 migration backfilled
+// the ones minted before the column existed — so this fallback is rare.
+assert.equal(
+  designLabel({ prompt: "a titan holding a lantern" } as Parameters<typeof designLabel>[0]),
+  "Untitled design"
+)
+
 // Blank and whitespace-only fields fall through rather than rendering empty.
-assert.equal(designLabel({ title: "", prompt: "a titan" }), "a titan")
-assert.equal(designLabel({ title: "   ", prompt: "a titan" }), "a titan")
-assert.equal(designLabel({ title: null, prompt: null, vibeName: null }), "Untitled design")
+assert.equal(designLabel({ title: "", vibeName: "Riot" }), "Riot")
+assert.equal(designLabel({ title: "   ", vibeName: "Riot" }), "Riot")
+assert.equal(designLabel({ title: null, vibeName: null }), "Untitled design")
 
 // Surrounding whitespace never reaches the page.
-assert.equal(designLabel({ prompt: "  a titan  " }), "a titan")
+assert.equal(designLabel({ title: "  a titan  " }), "a titan")
 
 // Under the limit is returned untouched — no stray ellipsis.
-assert.equal(designLabel({ prompt: "a titan" }, 40), "a titan")
-assert.equal(designLabel({ prompt: "x".repeat(40) }, 40), "x".repeat(40))
+assert.equal(designLabel({ title: "a titan" }, 40), "a titan")
+assert.equal(designLabel({ title: "x".repeat(40) }, 40), "x".repeat(40))
 
 // Over the limit clips on a word boundary and never exceeds the limit.
 const long = "a lighthouse keeper carrying the light down a spiral stair"
-const clipped = designLabel({ prompt: long }, 30)
+const clipped = designLabel({ title: long }, 30)
 assert.ok(clipped.length <= 30, `got ${clipped.length}: ${clipped}`)
 assert.ok(clipped.endsWith("…"))
 assert.ok(!clipped.includes("  "))
@@ -43,7 +47,7 @@ assert.ok(!clipped.slice(0, -1).endsWith(" "))
 
 // A single word longer than the limit has no boundary to use — still clipped,
 // still within budget, rather than overflowing the <title>.
-const oneWord = designLabel({ prompt: "x".repeat(100) }, 20)
+const oneWord = designLabel({ title: "x".repeat(100) }, 20)
 assert.ok(oneWord.length <= 20)
 assert.ok(oneWord.endsWith("…"))
 

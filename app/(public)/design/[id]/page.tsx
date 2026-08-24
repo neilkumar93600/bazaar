@@ -9,6 +9,7 @@ import {
   getRelatedDesigns,
 } from "@/lib/data/design";
 import { getOrderOptions } from "@/app/(public)/design/[id]/order-actions";
+import { colourMockups } from "@/lib/printify/mockups";
 import { createClient } from "@/lib/supabase/server";
 import { designLabel, formatListingPrice } from "@/lib/utils";
 import { CreatorCard } from "@/components/design/CreatorCard";
@@ -32,9 +33,13 @@ export async function generateMetadata(
 
   return {
     title: `${label} — ${formatListingPrice(design.priceCents)}`,
-    description: design.prompt
-      ? `A 1-of-1 AI shirt design: ${design.prompt}. ${design.isClaimed ? "Already claimed." : "Unclaimed — claim it and it's yours alone, forever."}`
-      : undefined,
+    // The composer's buyer-facing copy, never the prompt: a meta description
+    // is the one place a leaked recipe gets indexed and cached forever.
+    description: `${design.description ?? `A 1-of-1 AI shirt design.`} ${
+      design.isClaimed
+        ? "Already claimed."
+        : "Unclaimed — claim it and it's yours alone, forever."
+    }`,
     robots: design.isClaimed ? undefined : { index: false, follow: true },
   };
 }
@@ -60,11 +65,10 @@ export default async function DesignDetailPage(props: PageProps<"/design/[id]">)
 
   const [orderOptions, { data: profile }, creatorDesigns, relatedDesigns] =
     await Promise.all([
-      // Only a claimed design with a product can be ordered, so the Printify
-      // catalogue call is skipped entirely for everything else.
-      design.claimedBy && design.printifyProductId
-        ? getOrderOptions(design.garmentSlug)
-        : Promise.resolve(null),
+      // Fetched for every design, not just orderable ones: the gallery needs
+      // the colour list to re-point the product photo, and the catalogue is
+      // cached for the life of the process, so this is one network hop ever.
+      getOrderOptions(design.garmentSlug),
       user
         ? supabase
             .from("profiles")
@@ -77,6 +81,9 @@ export default async function DesignDetailPage(props: PageProps<"/design/[id]">)
     ]);
 
   const title = designLabel(design);
+  // Only a claimed design with a product can actually be ordered.
+  const canOrder = Boolean(design.claimedBy && design.printifyProductId);
+  const shirtColours = colourMockups(design.mockupUrl, orderOptions?.colours ?? []);
 
   return (
     <div className="mx-auto flex max-w-page flex-col gap-14 px-6 py-8 md:px-16 sm:py-12">
@@ -93,6 +100,8 @@ export default async function DesignDetailPage(props: PageProps<"/design/[id]">)
             imageUrl={design.imageUrl}
             mockupUrl={design.mockupUrl}
             alt={title}
+            colourMockups={shirtColours}
+            featuredVariantId={design.featuredVariantId}
           />
         </div>
 
@@ -100,7 +109,7 @@ export default async function DesignDetailPage(props: PageProps<"/design/[id]">)
         <div className="lg:col-start-2 lg:row-span-2 lg:row-start-1">
           <DesignDetailPanel
             design={design}
-            orderOptions={orderOptions}
+            orderOptions={canOrder ? orderOptions : null}
             isSignedIn={Boolean(user)}
             viewerEmail={user?.email ?? ""}
             viewerDisplayName={profile?.display_name ?? ""}

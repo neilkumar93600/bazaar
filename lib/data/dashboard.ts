@@ -111,8 +111,8 @@ export async function getDashboardOverview(): Promise<DashboardOverview | null> 
 
   const [{ data: designRows }, generationsUsed] = await Promise.all([
     designIds.length
-      ? supabase.from("designs").select("id, image_url, title, prompt").in("id", designIds)
-      : Promise.resolve({ data: [] as { id: string; image_url: string; title: string | null; prompt: string | null }[] }),
+      ? supabase.from("designs").select("id, image_url, title").in("id", designIds)
+      : Promise.resolve({ data: [] as { id: string; image_url: string; title: string | null }[] }),
     countRecentGenerations(supabase, user.id),
   ])
 
@@ -211,7 +211,6 @@ export async function getDashboardOverview(): Promise<DashboardOverview | null> 
       label: designLabel(
         {
           title: designById.get(designId)?.title ?? null,
-          prompt: designById.get(designId)?.prompt ?? null,
         },
         40
       ),
