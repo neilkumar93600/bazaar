@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { DEFAULT_THEME, parseTheme, type StorefrontTheme } from "@/lib/storefront/theme"
 
 export type PayoutEntry = {
   id: string
@@ -15,6 +16,7 @@ export type SettingsData = {
   avatarUrl: string | null
   bannerUrl: string | null
   bio: string | null
+  storefrontTheme: StorefrontTheme
   totalEarnedCents: number
   pendingCents: number
   paidOutCents: number
@@ -36,15 +38,20 @@ export async function getSettingsData(): Promise<SettingsData | null> {
 
   if (!profile) return null
 
+  // Same guarded read as lib/data/storefront.ts — both columns landed after the
+  // baseline schema, so neither may be allowed to fail the settings page.
   let bannerUrl: string | null = null
+  let storefrontTheme = DEFAULT_THEME
   try {
-    const { data: bannerData } = await supabase
+    const { data: extra } = await supabase
       .from("profiles")
-      .select("banner_url")
+      .select("banner_url, storefront_theme")
       .eq("id", user.id)
       .single()
-    if (bannerData && "banner_url" in bannerData) {
-      bannerUrl = (bannerData as { banner_url?: string | null }).banner_url ?? null
+    if (extra) {
+      const row = extra as { banner_url?: string | null; storefront_theme?: unknown }
+      bannerUrl = row.banner_url ?? null
+      if (row.storefront_theme) storefrontTheme = parseTheme(row.storefront_theme)
     }
   } catch {
     bannerUrl = null
@@ -73,6 +80,7 @@ export async function getSettingsData(): Promise<SettingsData | null> {
     avatarUrl: profile.avatar_url ?? null,
     bannerUrl,
     bio: (profile as Record<string, unknown>).bio as string | null ?? null,
+    storefrontTheme,
     totalEarnedCents,
     pendingCents,
     paidOutCents,

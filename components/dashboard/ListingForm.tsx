@@ -273,7 +273,13 @@ export function ListingForm({
             })
           }}
         >
-          {isListed ? "Update listing" : "Make it live"}
+          {isPending
+            ? isListed
+              ? "Updating…"
+              : "Publishing…"
+            : isListed
+              ? "Update listing"
+              : "Make it live"}
         </Button>
 
         {isListed && (
@@ -293,7 +299,7 @@ export function ListingForm({
               })
             }}
           >
-            Delist
+            {isPending ? "Delisting…" : "Delist"}
           </Button>
         )}
       </div>

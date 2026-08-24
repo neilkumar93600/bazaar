@@ -17,7 +17,7 @@ export function ShareButton({ handle }: { handle: string }) {
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
       }}
-      className="inline-flex items-center justify-center gap-1.5 rounded-md bg-white px-4 py-2 text-caption font-semibold text-[#262626] border border-[#262626] shadow-[2px_2px_0px_0px_#262626] hover:bg-[#fcfff7] transition-all cursor-pointer"
+      className="inline-flex items-center justify-center gap-1.5 rounded-[var(--sf-radius-sm,4px)] bg-[var(--sf-surface)] px-4 py-2 text-caption font-semibold text-[var(--sf-ink)] border-[length:var(--sf-border,1px)] border-[var(--sf-ink)] shadow-[var(--sf-shadow-sm)] hover:bg-[var(--sf-surface)] transition-all cursor-pointer"
     >
       <AnimatePresence mode="popLayout" initial={false}>
         <motion.span

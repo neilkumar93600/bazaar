@@ -93,7 +93,7 @@ export function MobileBottomNav({ isLoggedIn = false }: MobileBottomNavProps) {
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md lg:hidden"
     >
-      <nav className="relative flex h-16 items-center justify-around rounded-full border-2 border-foreground/80 bg-card/95 px-2 shadow-[2px_2px_0px_0px_#262626] backdrop-blur-md">
+      <nav className="relative flex h-16 items-center justify-around rounded-full border-2 border-foreground/80 bg-card/95 px-2 shadow-[var(--sf-shadow,2px_2px_0px_0px_var(--sf-ink,#262626))] backdrop-blur-md">
         {navItems.map((item) => {
           const isActive = item.exact
             ? pathname === item.href
@@ -125,7 +125,7 @@ export function MobileBottomNav({ isLoggedIn = false }: MobileBottomNavProps) {
                   whileTap={{ scale: 0.88, rotate: -12 }}
                   whileHover={{ scale: 1.08, rotate: 6 }}
                   transition={SPRING_TRANSITION}
-                  className="btn-ember relative flex h-14 w-14 items-center justify-center !rounded-full border-2 border-foreground shadow-[2px_2px_0px_0px_#262626] transition-shadow group-hover:shadow-[3px_3px_0px_0px_#262626]"
+                  className="btn-ember relative flex h-14 w-14 items-center justify-center !rounded-full border-2 border-foreground shadow-[var(--sf-shadow,2px_2px_0px_0px_var(--sf-ink,#262626))] transition-shadow group-hover:shadow-[var(--sf-shadow,3px_3px_0px_0px_var(--sf-ink,#262626))]"
                 >
                   <Sparkles className="h-6 w-6 text-foreground transition-transform duration-300 group-hover:scale-110" />
                 </motion.div>
@@ -153,7 +153,7 @@ export function MobileBottomNav({ isLoggedIn = false }: MobileBottomNavProps) {
                       {isActive && (
                         <motion.div
                           layoutId="mobile-nav-pill"
-                          className="absolute inset-x-2 inset-y-1 rounded-full bg-accent border border-foreground/10 shadow-[1px_1px_0px_0px_#262626]"
+                          className="absolute inset-x-2 inset-y-1 rounded-full bg-accent border border-foreground/10 shadow-[var(--sf-shadow-sm,1px_1px_0px_0px_var(--sf-ink,#262626))]"
                           transition={SPRING_TRANSITION}
                         />
                       )}
@@ -198,9 +198,9 @@ export function MobileBottomNav({ isLoggedIn = false }: MobileBottomNavProps) {
                           href={link.href}
                           onClick={() => setSheetOpen(false)}
                           className={cn(
-                            "flex items-center justify-between rounded-xl px-4 py-3 text-body-sm font-medium transition-all border",
+                            "flex items-center justify-between rounded-[var(--sf-radius,8px)] px-4 py-3 text-body-sm font-medium transition-all border",
                             isLinkActive
-                              ? "bg-accent border-foreground text-foreground shadow-[2px_2px_0px_0px_#262626]"
+                              ? "bg-accent border-foreground text-foreground shadow-[var(--sf-shadow,2px_2px_0px_0px_var(--sf-ink,#262626))]"
                               : "border-transparent text-muted-ink hover:bg-accent/60 hover:text-foreground"
                           )}
                         >
@@ -218,7 +218,7 @@ export function MobileBottomNav({ isLoggedIn = false }: MobileBottomNavProps) {
                     <form action={signOut}>
                       <button
                         type="submit"
-                        className="flex w-full items-center justify-between rounded-xl border border-destructive/30 px-4 py-3 text-body-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
+                        className="flex w-full items-center justify-between rounded-[var(--sf-radius,8px)] border border-destructive/30 px-4 py-3 text-body-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
                       >
                         <div className="flex items-center gap-3">
                           <LogOut className="h-5 w-5" />
@@ -248,7 +248,7 @@ export function MobileBottomNav({ isLoggedIn = false }: MobileBottomNavProps) {
               {isActive && (
                 <motion.div
                   layoutId="mobile-nav-pill"
-                  className="absolute inset-x-2 inset-y-1 rounded-full bg-accent border border-foreground/10 shadow-[1px_1px_0px_0px_#262626]"
+                  className="absolute inset-x-2 inset-y-1 rounded-full bg-accent border border-foreground/10 shadow-[var(--sf-shadow-sm,1px_1px_0px_0px_var(--sf-ink,#262626))]"
                   transition={SPRING_TRANSITION}
                 />
               )}

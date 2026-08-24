@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import {
   Sparkles,
@@ -82,6 +83,8 @@ export function CreateForm({
   const [enhance, setEnhance] = useState(true)
   const [picked, setPicked] = useState<string | null>(null)
   const [phase, setPhase] = useState<Phase>({ step: "idle" })
+
+  const router = useRouter()
 
   const style = findStyle(styleSlug)
 
@@ -510,6 +513,9 @@ export function CreateForm({
                 garmentSlug: null,
                 variantId: null,
                 placement: null,
+              }}
+              onSuccess={() => {
+                router.push("/dashboard/designs")
               }}
             />
           </motion.div>

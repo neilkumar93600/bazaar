@@ -8,6 +8,7 @@ import { getNotificationPreferences } from "@/lib/data/notifications";
 import { formatCents } from "@/lib/utils";
 import { AccountForm } from "@/components/dashboard/AccountForm";
 import { StorefrontPreferencesForm } from "@/components/dashboard/StorefrontPreferencesForm";
+import { StorefrontThemePrompt } from "@/components/dashboard/StorefrontThemePrompt";
 import { NotificationPreferencesForm } from "@/components/dashboard/NotificationPreferencesForm";
 import { SecuritySettingsForm } from "@/components/dashboard/SecuritySettingsForm";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -28,6 +29,12 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const metadata: Metadata = { title: "Settings" };
+
+/** Storefront theming and the cover-banner drawing are both server actions
+ *  invoked from this page, so they run inside this segment's budget. The text
+ *  call takes up to a minute; the image call is a full gpt-image-2 render and
+ *  runs to muapi.ts's own 180s ceiling. Matches app/api/generate's budget. */
+export const maxDuration = 300;
 
 const AVATAR_COLOR_CLASSES = [
   "bg-[#262626] text-[#a3e635]",
@@ -185,7 +192,11 @@ export default async function SettingsPage() {
         </TabsContent>
 
         {/* Storefront & AI Content Panel */}
-        <TabsContent value="storefront" className="outline-none m-0">
+        <TabsContent value="storefront" className="flex flex-col gap-6 outline-none m-0">
+          <StorefrontThemePrompt
+            initialTheme={settings.storefrontTheme}
+            handle={settings.handle}
+          />
           <StorefrontPreferencesForm />
         </TabsContent>
 

@@ -2,6 +2,7 @@ import { cache } from "react"
 
 import type { DesignCardData } from "@/components/shared/DesignCard"
 import { createClient } from "@/lib/supabase/server"
+import { DEFAULT_THEME, parseTheme, type StorefrontTheme } from "@/lib/storefront/theme"
 
 export type StorefrontProfile = {
   id: string
@@ -16,6 +17,8 @@ export type StorefrontDesign = DesignCardData & { claimedAt: string }
 
 export type StorefrontData = {
   profile: StorefrontProfile
+  /** How this creator asked their storefront to look. House style by default. */
+  theme: StorefrontTheme
   followerCount: number
   designs: StorefrontDesign[]
   createdDesigns: DesignCardData[]
@@ -44,15 +47,21 @@ export const getStorefrontData = cache(async function getStorefrontData(
 
   if (!stdProfile) return null
 
+  // banner_url and storefront_theme ride in one guarded query: both were added
+  // after the baseline schema, and a database missing either must cost this
+  // storefront its decoration, not its page.
   let bannerUrl: string | null = null
+  let theme = DEFAULT_THEME
   try {
-    const { data: bannerData } = await supabase
+    const { data: extra } = await supabase
       .from("profiles")
-      .select("banner_url")
+      .select("banner_url, storefront_theme")
       .eq("id", stdProfile.id)
       .single()
-    if (bannerData && "banner_url" in bannerData) {
-      bannerUrl = (bannerData as { banner_url?: string | null }).banner_url ?? null
+    if (extra) {
+      const row = extra as { banner_url?: string | null; storefront_theme?: unknown }
+      bannerUrl = row.banner_url ?? null
+      if (row.storefront_theme) theme = parseTheme(row.storefront_theme)
     }
   } catch {
     bannerUrl = null
@@ -189,6 +198,7 @@ export const getStorefrontData = cache(async function getStorefrontData(
   }))
 
   return {
+    theme,
     profile: {
       id: profile.id,
       handle: profile.handle,

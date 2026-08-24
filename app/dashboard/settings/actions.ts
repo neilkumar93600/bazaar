@@ -2,7 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { DEFAULT_THEME, type StorefrontTheme } from "@/lib/storefront/theme";
+import { generateThemeFromPrompt } from "@/lib/storefront/theme-prompt";
+import { generateBannerFromPrompt } from "@/lib/storefront/banner-prompt";
 
 export type UpdateProfileState = { error?: string; success?: boolean };
 
@@ -152,4 +155,116 @@ export async function updateNotificationPreferences(
 
   revalidatePath("/dashboard/settings");
   return { success: true };
+}
+
+export type ThemePromptState = {
+  error?: string;
+  success?: boolean;
+  theme?: StorefrontTheme;
+  bannerUrl?: string;
+};
+
+/** Rewrites a creator's storefront look from a sentence they typed.
+ *
+ *  The model's answer is never written as given — `generateThemeFromPrompt`
+ *  hands back an already-parsed theme, so the row can only ever hold hex
+ *  literals and known enum values. "reset" clears the column back to NULL,
+ *  which renders as house style.
+ */
+export async function applyStorefrontThemePrompt(
+  _prevState: ThemePromptState,
+  formData: FormData,
+): Promise<ThemePromptState> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { error: "You must be signed in." };
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("handle")
+    .eq("id", user.id)
+    .single();
+
+  const save = async (theme: StorefrontTheme | null) => {
+    const { error } = await supabase
+      .from("profiles")
+      .update({ storefront_theme: theme })
+      .eq("id", user.id);
+    if (error) return false;
+    revalidatePath("/dashboard/settings");
+    if (profile?.handle) revalidatePath(`/creator/${profile.handle}`);
+    return true;
+  };
+
+  const intent = formData.get("intent");
+
+  if (intent === "reset") {
+    return (await save(null))
+      ? { success: true, theme: DEFAULT_THEME }
+      : { error: "Could not reset your storefront look." };
+  }
+
+  const prompt = String(formData.get("themePrompt") ?? "").trim();
+  if (!prompt) {
+    return { error: "Describe how you want your storefront to look." };
+  }
+
+  // The cover image is its own button: it is a paid image generation (~$0.09 a
+  // press against the theming call's fraction of a cent) and it takes minutes,
+  // so it does not ride along with every colour tweak.
+  if (intent === "banner") {
+    let banner;
+    try {
+      banner = await generateBannerFromPrompt(prompt);
+    } catch (error) {
+      console.error("[settings] storefront banner generation failed", error);
+      return { error: "Could not draw a banner from that. Try describing the scene or texture." };
+    }
+
+    // Service role for the write: the "designs" bucket is not writable by a
+    // signed-in user's own key, same as every other generated image in the app.
+    const admin = createServiceClient();
+    const path = `storefront-banners/${user.id}/${Date.now()}.png`;
+    const { error: uploadError } = await admin.storage
+      .from("designs")
+      .upload(path, banner.bytes, { contentType: banner.contentType, upsert: true });
+
+    if (uploadError) {
+      console.error("[settings] storefront banner upload failed", uploadError);
+      return { error: "The banner drew fine but could not be saved. Try again." };
+    }
+
+    const {
+      data: { publicUrl },
+    } = admin.storage.from("designs").getPublicUrl(path);
+
+    const { error: bannerError } = await supabase
+      .from("profiles")
+      .update({ banner_url: publicUrl })
+      .eq("id", user.id);
+
+    if (bannerError) {
+      return { error: "The banner drew fine but could not be saved. Try again." };
+    }
+
+    revalidatePath("/dashboard/settings");
+    if (profile?.handle) revalidatePath(`/creator/${profile.handle}`);
+    return { success: true, bannerUrl: publicUrl };
+  }
+
+  let theme: StorefrontTheme;
+  try {
+    theme = await generateThemeFromPrompt(prompt);
+  } catch (error) {
+    console.error("[settings] storefront theme prompt failed", error);
+    return { error: "Could not read a storefront look out of that. Try describing the colours and mood." };
+  }
+
+  return (await save(theme))
+    ? { success: true, theme }
+    : { error: "Could not save your storefront look." };
 }

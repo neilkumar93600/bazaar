@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react"
 
+import Link from "next/link"
+import { ArrowUpRight } from "lucide-react"
+
 import {
   getDesignDialogData,
   type DesignDialogData,
@@ -60,6 +63,26 @@ export function DesignDialog({
   const design = loadedFor === designId ? data?.design : null
   const title = design ? designLabel(design) : "Design"
 
+  const availableColours: string[] =
+    data?.shirtColours && data.shirtColours.length > 0
+      ? data.shirtColours.map((c) => c.colour)
+      : data?.orderOptions?.colours && data.orderOptions.colours.length > 0
+      ? data.orderOptions.colours.map((c) => c.colour)
+      : [
+          "Black",
+          "White",
+          "Navy",
+          "Sport Grey",
+          "Maroon",
+          "Forest Green",
+          "Gold",
+          "Orange",
+          "Light Blue",
+        ]
+
+  const [selectedColour, setSelectedColour] = useState("Black")
+  const [showArt, setShowArt] = useState(false)
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[calc(100vh-3rem)] w-full max-w-[calc(100%-2rem)] overflow-y-auto rounded-3xl border-border/80 bg-card p-6 shadow-2xl sm:max-w-2xl lg:max-w-4xl">
@@ -80,20 +103,52 @@ export function DesignDialog({
                 alt={title}
                 colourMockups={data!.shirtColours}
                 featuredVariantId={design.featuredVariantId}
+                selectedColour={selectedColour}
+                onSelectColour={setSelectedColour}
+                showArt={showArt}
+                onToggleArt={setShowArt}
               />
               {design.creator && <CreatorCard creator={design.creator} />}
+              {design.description && (
+                <div className="flex flex-col gap-2 rounded-2xl border border-border/80 bg-card p-4 shadow-xs">
+                  <h4 className="text-caption font-semibold text-muted-foreground uppercase tracking-wider">
+                    About this artwork
+                  </h4>
+                  <p className="text-body-sm text-muted-ink leading-relaxed">
+                    {design.description}
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* pr-9 clears the dialog's own close button, which is pinned
                 top-right over exactly where the panel puts its edition badge. */}
-            <div className="pr-9">
+            <div className="flex flex-col justify-between pr-9">
               <DesignDetailPanel
                 design={design}
                 orderOptions={data!.orderOptions}
+                availableColours={availableColours}
+                selectedColour={selectedColour}
+                onSelectColour={(colour) => {
+                  setSelectedColour(colour)
+                  setShowArt(false)
+                }}
+                showArt={showArt}
+                onToggleArt={setShowArt}
                 isSignedIn={data!.viewerIsLoggedIn}
                 viewerEmail={data!.viewerEmail}
                 viewerDisplayName={data!.viewerName}
               />
+              <div className="mt-6 flex items-center justify-between border-t border-border/80 pt-4">
+                <Link
+                  href={`/design/${design.id}`}
+                  onClick={() => onOpenChange(false)}
+                  className="inline-flex items-center gap-1.5 text-body-sm font-semibold text-primary hover:underline"
+                >
+                  <span>Open full design page</span>
+                  <ArrowUpRight className="size-4" />
+                </Link>
+              </div>
             </div>
           </div>
         )}

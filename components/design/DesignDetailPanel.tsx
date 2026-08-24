@@ -3,10 +3,9 @@ import { format, formatDistanceToNowStrict } from "date-fns"
 
 import type { DesignDetail } from "@/lib/data/design"
 import type { OrderOptions } from "@/app/(public)/design/[id]/order-actions"
-import { designLabel, formatListingPrice } from "@/lib/utils"
+import { designLabel, formatListingPrice, cn } from "@/lib/utils"
+import { toneForColourName } from "@/lib/printify/tones"
 import { BuyForm } from "@/components/design/BuyForm"
-import { OrderForm } from "@/components/design/OrderForm"
-import { Button } from "@/components/ui/button"
 import {
   Accordion,
   AccordionContent,
@@ -20,12 +19,22 @@ import {
 export function DesignDetailPanel({
   design,
   orderOptions,
+  availableColours = [],
+  selectedColour = "Black",
+  onSelectColour,
+  showArt = false,
+  onToggleArt,
   isSignedIn,
   viewerEmail,
   viewerDisplayName,
 }: {
   design: DesignDetail
-  orderOptions: OrderOptions
+  orderOptions?: OrderOptions
+  availableColours?: string[]
+  selectedColour?: string
+  onSelectColour?: (colour: string) => void
+  showArt?: boolean
+  onToggleArt?: (show: boolean) => void
   isSignedIn: boolean
   viewerEmail: string
   viewerDisplayName: string
@@ -63,44 +72,94 @@ export function DesignDetailPanel({
         {formatListingPrice(design.priceCents)}
       </span>
 
-      {/* Buyer-facing copy, never the prompt. The prompt is the recipe — it is
-          not selected, not serialised to the browser, and not shown. */}
-      {design.description && (
-        <p className="text-body text-muted-ink">{design.description}</p>
-      )}
+      {/* Garment Colour & Preview controls on the right side */}
+      <div className="flex flex-col gap-3 rounded-2xl border border-border/80 bg-card p-4 shadow-sm">
+        <div className="flex items-center justify-between">
+          <span className="text-body-sm font-semibold text-foreground">
+            Shirt Colour{selectedColour && !showArt ? ` · ${selectedColour}` : ""}
+          </span>
+          <div className="flex items-center gap-1 text-caption font-medium text-muted-ink">
+            <span>View:</span>
+            <button
+              type="button"
+              onClick={() => onToggleArt?.(false)}
+              className={cn(
+                "rounded-md px-2.5 py-1 text-caption transition cursor-pointer",
+                !showArt
+                  ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                  : "bg-secondary text-muted-foreground hover:text-foreground"
+              )}
+            >
+              Shirt
+            </button>
+            <button
+              type="button"
+              onClick={() => onToggleArt?.(true)}
+              className={cn(
+                "rounded-md px-2.5 py-1 text-caption transition cursor-pointer",
+                showArt
+                  ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                  : "bg-secondary text-muted-foreground hover:text-foreground"
+              )}
+            >
+              Art
+            </button>
+          </div>
+        </div>
+
+        {availableColours.length > 0 && (
+          <div className="flex flex-wrap gap-2 pt-1">
+            {availableColours.map((col) => {
+              const swatch = toneForColourName(col)
+              const active = !showArt && col.toLowerCase() === selectedColour?.toLowerCase()
+              return (
+                <button
+                  key={col}
+                  type="button"
+                  aria-label={col}
+                  aria-pressed={active}
+                  title={col}
+                  onClick={() => onSelectColour?.(col)}
+                  style={swatch ? { backgroundColor: swatch.body } : undefined}
+                  className={cn(
+                    "size-8 rounded-full border transition cursor-pointer",
+                    active
+                      ? "border-primary ring-2 ring-primary/40 scale-110 shadow-sm"
+                      : "border-border hover:border-primary/60 hover:scale-105",
+                    !swatch && "bg-secondary text-caption text-muted-foreground"
+                  )}
+                >
+                  {swatch ? "" : col.slice(0, 1)}
+                </button>
+              )
+            })}
+          </div>
+        )}
+      </div>
 
       {design.isClaimed ? (
-        <>
-          {design.claimantHandle && (
+        <div className="flex flex-col gap-2 rounded-xl border border-border/80 bg-card p-4">
+          <div className="flex items-center gap-2 text-body-sm font-semibold text-foreground">
+            <span className="size-2 rounded-full bg-emerald-500" />
+            1-of-1 Artwork Claimed
+          </div>
+          {design.claimantHandle ? (
             <p className="text-body-sm text-muted-ink">
-              Owned by{" "}
+              Owned exclusively by{" "}
               <Link
                 href={`/creator/${design.claimantHandle}`}
                 className="font-medium text-foreground underline underline-offset-4"
               >
                 @{design.claimantHandle}
               </Link>
-              . The artwork is spoken for — the print below is still open to
-              anyone.
+              .
+            </p>
+          ) : (
+            <p className="text-body-sm text-muted-ink">
+              The permanent 1-of-1 rights to this artwork are spoken for.
             </p>
           )}
-
-          {orderOptions ? (
-            isSignedIn ? (
-              <OrderForm
-                designId={design.id}
-                options={orderOptions}
-                featuredVariantId={design.featuredVariantId}
-                defaultEmail={viewerEmail}
-              />
-            ) : (
-              <SignInPanel
-                message="Sign in to order this design printed."
-                label="Log in to order"
-              />
-            )
-          ) : null}
-        </>
+        </div>
       ) : (
         <BuyForm
           designId={design.id}
@@ -189,17 +248,6 @@ function DetailRow({ label, value }: { label: string; value: string }) {
         {label}
       </span>
       <span className="text-right text-body-sm text-muted-ink">{value}</span>
-    </div>
-  )
-}
-
-function SignInPanel({ message, label }: { message: string; label: string }) {
-  return (
-    <div className="flex flex-col gap-4 rounded-xl border border-ink bg-card p-6 text-card-foreground shadow-[var(--shadow-xl-2)]">
-      <p className="text-body-sm text-muted-ink">{message}</p>
-      <Button variant="ember" className="h-11 w-full" render={<Link href="/login" />}>
-        {label}
-      </Button>
     </div>
   )
 }

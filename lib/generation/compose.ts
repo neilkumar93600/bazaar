@@ -149,13 +149,14 @@ function parseJsonReply(raw: string): Record<string, unknown> | null {
   }
 }
 
-/** One Kimi call, shared by both composers. Returns null on anything at all
- *  going wrong — the caller falls back, and a text model is never allowed to
- *  fail a generation.
+/** One Kimi call: both composers here, plus storefront theming in
+ *  lib/storefront/theme-prompt.ts. Returns null on anything at all going wrong
+ *  — the caller falls back, and a text model is never allowed to fail a
+ *  generation.
  *
  *  `image_url` is omitted rather than sent empty: the endpoint validates it as
  *  a URL and 422s on "". */
-async function callKimi(
+export async function callKimi(
   idea: string,
   systemPrompt: string,
   logTag: string

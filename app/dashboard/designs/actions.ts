@@ -89,6 +89,9 @@ export async function listDesign(
   })
 
   revalidatePath("/dashboard/designs")
+  revalidatePath(`/design/${designId}`)
+  revalidatePath("/shop")
+  revalidatePath("/")
   return {}
 }
 
@@ -110,6 +113,9 @@ export async function delistDesign(designId: string): Promise<ListingState> {
   }
 
   revalidatePath("/dashboard/designs")
+  revalidatePath(`/design/${designId}`)
+  revalidatePath("/shop")
+  revalidatePath("/")
   return {}
 }
 

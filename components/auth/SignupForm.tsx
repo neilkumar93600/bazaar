@@ -51,7 +51,7 @@ export function SignupForm() {
           onClick={() => signInWithOAuth("google")}
           whileHover={{ y: -1 }}
           whileTap={{ x: 2, y: 2 }}
-          className="flex-1 flex items-center justify-center gap-2.5 py-3 px-4 rounded-md border border-ink bg-paper-white hover:bg-cream text-ink text-body-sm font-medium transition-all shadow-glow active:shadow-none cursor-pointer"
+          className="flex-1 flex items-center justify-center gap-2.5 py-3 px-4 rounded-[4px] border border-ink bg-paper-white hover:bg-cream text-ink text-body-sm font-medium transition-all shadow-[2px_2px_0_0_#262626] active:shadow-none cursor-pointer"
         >
           {/* User provided Google SVG */}
           <svg
@@ -121,7 +121,7 @@ export function SignupForm() {
           onClick={() => signInWithOAuth("apple")}
           whileHover={{ y: -1 }}
           whileTap={{ x: 2, y: 2 }}
-          className="flex-1 flex items-center justify-center gap-2.5 py-3 px-4 rounded-md border border-ink bg-paper-white hover:bg-cream text-ink text-body-sm font-medium transition-all shadow-glow active:shadow-none cursor-pointer"
+          className="flex-1 flex items-center justify-center gap-2.5 py-3 px-4 rounded-[4px] border border-ink bg-paper-white hover:bg-cream text-ink text-body-sm font-medium transition-all shadow-[2px_2px_0_0_#262626] active:shadow-none cursor-pointer"
         >
           {/* User provided Apple SVG */}
           <svg
@@ -159,7 +159,7 @@ export function SignupForm() {
               type="text"
               placeholder="John Doe"
               required
-              className="w-full bg-paper-white border border-ink focus:border-ink focus:ring-1 focus:ring-ink text-ink placeholder:text-muted-gray rounded-md px-3.5 py-2.5 text-body-sm transition-all outline-none"
+              className="w-full bg-paper-white border border-ink focus:border-ink focus:ring-1 focus:ring-ink text-ink placeholder:text-muted-gray rounded-[4px] px-3.5 py-2.5 text-body-sm transition-all outline-none"
             />
           </div>
 
@@ -173,7 +173,7 @@ export function SignupForm() {
               type="text"
               placeholder="johndoe"
               required
-              className="w-full bg-paper-white border border-ink focus:border-ink focus:ring-1 focus:ring-ink text-ink placeholder:text-muted-gray rounded-md px-3.5 py-2.5 text-body-sm transition-all outline-none"
+              className="w-full bg-paper-white border border-ink focus:border-ink focus:ring-1 focus:ring-ink text-ink placeholder:text-muted-gray rounded-[4px] px-3.5 py-2.5 text-body-sm transition-all outline-none"
             />
           </div>
         </StaggerItem>
@@ -190,7 +190,7 @@ export function SignupForm() {
             autoComplete="email"
             placeholder="your.email@example.com"
             required
-            className="w-full bg-paper-white border border-ink focus:border-ink focus:ring-1 focus:ring-ink text-ink placeholder:text-muted-gray rounded-md px-3.5 py-2.5 text-body-sm transition-all outline-none"
+            className="w-full bg-paper-white border border-ink focus:border-ink focus:ring-1 focus:ring-ink text-ink placeholder:text-muted-gray rounded-[4px] px-3.5 py-2.5 text-body-sm transition-all outline-none"
           />
         </StaggerItem>
 
@@ -210,7 +210,7 @@ export function SignupForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full bg-paper-white border border-ink focus:border-ink focus:ring-1 focus:ring-ink text-ink placeholder:text-muted-gray rounded-md px-3.5 py-2.5 pr-10 text-body-sm transition-all outline-none"
+              className="w-full bg-paper-white border border-ink focus:border-ink focus:ring-1 focus:ring-ink text-ink placeholder:text-muted-gray rounded-[4px] px-3.5 py-2.5 pr-10 text-body-sm transition-all outline-none"
             />
             <button
               type="button"
@@ -267,7 +267,7 @@ export function SignupForm() {
               placeholder="Repeat password"
               minLength={8}
               required
-              className="w-full bg-paper-white border border-ink focus:border-ink focus:ring-1 focus:ring-ink text-ink placeholder:text-muted-gray rounded-md px-3.5 py-2.5 pr-10 text-body-sm transition-all outline-none"
+              className="w-full bg-paper-white border border-ink focus:border-ink focus:ring-1 focus:ring-ink text-ink placeholder:text-muted-gray rounded-[4px] px-3.5 py-2.5 pr-10 text-body-sm transition-all outline-none"
             />
             <button
               type="button"
@@ -293,12 +293,13 @@ export function SignupForm() {
               transition={{ duration: 0.2 }}
               className="overflow-hidden"
             >
-              <div className="p-3 rounded-md bg-destructive/10 text-destructive text-caption font-medium border border-destructive/30">
+              <div className="p-3 rounded-[4px] bg-destructive/10 text-destructive text-caption font-medium border border-destructive/30">
                 {state.error}
               </div>
             </motion.div>
           )}
         </AnimatePresence>
+
 
         {/* Lime Primary Action Button — DESIGN.md Lime Sprint CTA */}
         <StaggerItem>

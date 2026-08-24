@@ -384,13 +384,17 @@
      pixel into its own shadow and active closes the gap; the offset shrinks by
      exactly what the block travels, so the shadow's outer edge stays put and
      only the block appears to move. */
+  /* The --sf-* fallbacks are the house values. They only resolve to anything
+     else inside a creator storefront, where the page emits a themed :root —
+     see lib/storefront/theme.ts. Everywhere else this is the lime block it has
+     always been. */
   .btn-ember {
-    background-color: #a3e635;
+    background-color: var(--sf-accent, #a3e635);
     background-image: none;
-    color: #262626;
-    border: 1px solid #262626;
+    color: var(--sf-on-accent, #262626);
+    border: 1px solid var(--sf-ink, #262626);
     border-radius: var(--radius);
-    box-shadow: 2px 2px 0px 0px #262626;
+    box-shadow: 2px 2px 0px 0px var(--sf-ink, #262626);
     transition:
       background-color 150ms ease,
       box-shadow 150ms ease,
@@ -398,9 +402,10 @@
   }
 
   .btn-ember:hover {
-    background-color: #b2ec4b;
+    background-color: var(--sf-accent, #b2ec4b);
     background-image: none;
-    box-shadow: 1px 1px 0px 0px #262626;
+    filter: brightness(0.95);
+    box-shadow: 1px 1px 0px 0px var(--sf-ink, #262626);
     transform: translate(1px, 1px);
   }
 
@@ -543,3 +548,4 @@
     }
   }
 }
+

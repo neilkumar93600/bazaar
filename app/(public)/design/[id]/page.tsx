@@ -12,9 +12,7 @@ import { getOrderOptions } from "@/app/(public)/design/[id]/order-actions";
 import { colourMockups } from "@/lib/printify/mockups";
 import { createClient } from "@/lib/supabase/server";
 import { designLabel, formatListingPrice } from "@/lib/utils";
-import { CreatorCard } from "@/components/design/CreatorCard";
-import { DesignDetailPanel } from "@/components/design/DesignDetailPanel";
-import { DesignGallery } from "@/components/design/DesignGallery";
+import { DesignView } from "@/components/design/DesignView";
 import { Carousel } from "@/components/shared/Carousel";
 import { DesignCard } from "@/components/shared/DesignCard";
 
@@ -94,41 +92,15 @@ export default async function DesignDetailPage(props: PageProps<"/design/[id]">)
           maker. Nesting the maker under the image instead would have pushed
           the price and the buy button below a profile card on mobile.
           From lg: image top-left, maker under it, details spanning the right. */}
-      <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-2 lg:gap-12">
-        <div className="lg:col-start-1 lg:row-start-1">
-          <DesignGallery
-            imageUrl={design.imageUrl}
-            mockupUrl={design.mockupUrl}
-            alt={title}
-            colourMockups={shirtColours}
-            featuredVariantId={design.featuredVariantId}
-          />
-        </div>
-
-        {/* Everything transactional. */}
-        <div className="lg:col-start-2 lg:row-span-2 lg:row-start-1">
-          <DesignDetailPanel
-            design={design}
-            orderOptions={canOrder ? orderOptions : null}
-            isSignedIn={Boolean(user)}
-            viewerEmail={user?.email ?? ""}
-            viewerDisplayName={profile?.display_name ?? ""}
-          />
-        </div>
-
-        <div className="lg:col-start-1 lg:row-start-2">
-          {design.creator ? (
-            <CreatorCard
-              creator={design.creator}
-              designCount={creatorDesigns.length}
-            />
-          ) : (
-            <div className="rounded-xl border border-border bg-card p-5 text-body-sm text-muted-ink">
-              House stock — no maker attached to this one.
-            </div>
-          )}
-        </div>
-      </div>
+      <DesignView
+        design={design}
+        orderOptions={orderOptions}
+        shirtColours={shirtColours}
+        isSignedIn={Boolean(user)}
+        viewerEmail={user?.email ?? ""}
+        viewerDisplayName={profile?.display_name ?? ""}
+        creatorDesignCount={creatorDesigns.length}
+      />
 
       {creatorDesigns.length > 0 && design.creator && (
         <DesignStrip

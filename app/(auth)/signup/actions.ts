@@ -29,7 +29,7 @@ export async function signup(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -42,6 +42,19 @@ export async function signup(
 
   if (error) {
     return { error: error.message };
+  }
+
+  // Supabase answers a signup for an address that already has a confirmed
+  // account with 200 and a decoy user carrying no identities — that is its
+  // user-enumeration protection, and it sends no email at all. Without this
+  // check the browser lands on /verify-otp waiting for a code that is never
+  // coming, which is exactly how it read from the outside: "OTP not arriving".
+  // An unconfirmed account is a different case: it keeps its identity and does
+  // get a fresh code, so it still falls through to the verify page.
+  if (data.user && data.user.identities?.length === 0) {
+    return {
+      error: "That email already has an account. Sign in instead, or reset the password if you've forgotten it.",
+    };
   }
 
   redirect(`/verify-otp?email=${encodeURIComponent(email)}`);

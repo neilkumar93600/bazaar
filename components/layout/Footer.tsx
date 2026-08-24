@@ -16,7 +16,7 @@ interface FooterProps {
 export function Footer({ className = "" }: FooterProps) {
   return (
     <section className={`w-full ${className}`}>
-      <div className="m-2 sm:m-4 rounded-[20px] overflow-hidden relative min-h-[720px] md:min-h-[100dvh] flex flex-col justify-between font-sans">
+      <div className="m-2 sm:m-4 rounded-[var(--sf-radius,20px)] overflow-hidden relative min-h-[720px] md:min-h-[100dvh] flex flex-col justify-between font-sans">
         {/* ponytail: shares the hero's bazaar shot until a dedicated footer
             render exists — swap this one src, nothing else changes. */}
         <Image
@@ -28,7 +28,7 @@ export function Footer({ className = "" }: FooterProps) {
         />
         {/* Scrim for accessibility & contrast — the headline over this is
             near-black, so the veil is light rather than dark. */}
-        <div className="absolute inset-0 z-0 bg-pitch/70" />
+        <div className="absolute inset-0 z-0 bg-[var(--sf-bg,var(--color-pitch))]/70" />
 
         {/* Row 1 — Hero section */}
         <div className="relative z-10 flex-1 flex flex-col items-center justify-center gap-8 px-4 sm:px-8 md:px-20 pt-16 md:pt-20 pb-10 text-center">
@@ -57,7 +57,7 @@ export function Footer({ className = "" }: FooterProps) {
 
         {/* Row 2 — Frosted footer card */}
         <motion.div
-          className="relative z-10 glass-panel border rounded-[24px] mx-3 sm:mx-5 mb-3 sm:mb-5 p-6 sm:p-8 md:p-10 shadow-2xl"
+          className="relative z-10 glass-panel border rounded-[var(--sf-radius,24px)] mx-3 sm:mx-5 mb-3 sm:mb-5 p-6 sm:p-8 md:p-10 shadow-[var(--sf-shadow,var(--shadow-xl-2))]"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}

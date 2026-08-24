@@ -97,7 +97,7 @@ export function DesignCard({
       >
         <div
           className={cn(
-            "glass-surface glass-surface-interactive relative w-full overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-300 group-hover/card:shadow-xl group-hover/card:border-primary/40",
+            "glass-surface glass-surface-interactive relative w-full overflow-hidden rounded-[var(--sf-radius,8px)] border-[length:var(--sf-border,1px)] border-border bg-card shadow-[var(--sf-shadow-sm,var(--shadow-card))] transition-all duration-300 group-hover/card:shadow-[var(--sf-shadow,var(--shadow-card-hover))] group-hover/card:border-primary/40",
             aspectClassName,
             frameClassName
           )}
@@ -124,26 +124,31 @@ export function DesignCard({
           )}
 
           {design.isClaimed ? (
-            // Status Pill Badge — mint wash inside a mint edge, ink label.
-            <span className="absolute top-3 left-3 rounded-full border border-success/30 bg-mint-wash px-2.5 py-0.5 text-caption font-medium text-foreground backdrop-blur-md shadow-sm">
+            // Status Pill Badge — mint wash inside a mint edge, ink label. The
+            // --sf-* fallbacks are those house tokens; they only resolve to
+            // anything else on a themed creator storefront, where the accent
+            // takes over the status moment. A runtime override of
+            // --color-mint-wash cannot do this: globals.css declares the
+            // palette in `@theme inline`, so Tailwind bakes in the literal.
+            <span className="absolute top-3 left-3 rounded-full border-[length:var(--sf-border,1px)] border-[var(--sf-accent,var(--color-success))]/30 bg-[var(--sf-wash,var(--color-mint-wash))] px-2.5 py-0.5 text-caption font-medium text-foreground backdrop-blur-md shadow-[var(--sf-shadow-sm,var(--shadow-card))]">
               Claimed
             </span>
           ) : (
-            <span className="absolute top-3 left-3 rounded-full bg-sunset-sweep px-2.5 py-1 text-caption font-medium text-background shadow-sm">
+            <span className="absolute top-3 left-3 rounded-full bg-[var(--sf-ink,var(--color-depth))] px-2.5 py-1 text-caption font-medium text-[var(--sf-on-ink,var(--color-background))] shadow-[var(--sf-shadow-sm,var(--shadow-card))]">
               1 of 1
             </span>
           )}
 
           <span
             aria-hidden
-            className="pointer-events-none absolute inset-0 bg-gradient-to-t from-pitch/90 via-pitch/30 to-transparent opacity-0 transition-opacity duration-200 group-hover/card:opacity-100 group-focus-visible/card:opacity-100"
+            className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[var(--sf-bg,var(--color-pitch))]/90 via-[var(--sf-bg,var(--color-pitch))]/30 to-transparent opacity-0 transition-opacity duration-200 group-hover/card:opacity-100 group-focus-visible/card:opacity-100"
           />
           <span className="pointer-events-none absolute inset-0 flex items-end justify-center p-3 opacity-0 transition-opacity duration-200 group-hover/card:opacity-100 group-focus-visible/card:opacity-100">
             <span
               className={
                 design.isClaimed
-                  ? "glass-panel rounded-lg border border-border/60 px-4 py-2 text-body-sm font-medium text-foreground backdrop-blur-md shadow-md"
-                  : "btn-ember px-4 py-2 text-body-sm font-medium shadow-md"
+                  ? "glass-panel rounded-[var(--sf-radius-sm,4px)] border-[length:var(--sf-border,1px)] border-border/60 px-4 py-2 text-body-sm font-medium text-foreground backdrop-blur-md shadow-[var(--sf-shadow-sm,var(--shadow-card))]"
+                  : "btn-ember px-4 py-2 text-body-sm font-medium shadow-[var(--sf-shadow-sm,var(--shadow-card))]"
               }
             >
               {design.isClaimed ? "View design" : "Claim it"}
@@ -165,7 +170,7 @@ export function DesignCard({
           >
             {label}
           </span>
-          <span className="shrink-0 pt-0.5 font-mono text-body-sm font-semibold text-gold-leaf">
+          <span className="shrink-0 pt-0.5 font-mono text-body-sm font-semibold text-[var(--sf-ink,var(--color-gold-leaf))]">
             {design.priceCents === null
               ? "Free"
               : priceFormatter.format(design.priceCents / 100)}

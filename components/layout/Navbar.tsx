@@ -10,11 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Logo } from "@/components/ui/logo";
 import { cn } from "@/lib/utils";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
 import { UserMenu } from "@/components/layout/UserMenu";
 import type { NotificationItem } from "@/lib/data/notifications";
@@ -34,50 +30,42 @@ type NavbarUser = {
   avatarUrl: string | null;
 };
 
-function SearchPopover() {
+/** The search field, open in the bar rather than hidden behind an icon.
+ *
+ *  Below `md` the bar has no room for a field next to the links, so the icon
+ *  survives there as a link straight to /search — the same destination the
+ *  field submits to, one tap instead of a popover that would cover the page. */
+function SearchBar() {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
 
-  function submit() {
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
     const trimmed = query.trim();
     if (!trimmed) return;
-    setOpen(false);
     router.push(`/search?q=${encodeURIComponent(trimmed)}`);
   }
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger
-        render={
-          <Button variant="ghost" size="icon">
-            <Search className="w-5 h-5" />
-            <span className="sr-only">Search</span>
-          </Button>
-        }
-      />
-      <PopoverContent align="center" className="w-72 rounded-2xl">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            submit();
-          }}
-          className="flex gap-2"
-        >
-          <Input
-            autoFocus
-            placeholder="Search designs, creators..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="bg-secondary border-border text-foreground placeholder:text-muted-foreground rounded-xl"
-          />
-          <Button type="submit" size="icon" variant="ghost" className="text-foreground hover:bg-foreground/10 rounded-xl">
-            <Search className="w-4 h-4" />
-            <span className="sr-only">Submit search</span>
-          </Button>
-        </form>
-      </PopoverContent>
-    </Popover>
+    <>
+      <form onSubmit={submit} className="relative hidden md:block">
+        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--sf-muted,var(--color-muted-ink))]" />
+        <Input
+          type="search"
+          name="q"
+          aria-label="Search designs and creators"
+          placeholder="Search designs, creators..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="h-9 w-48 rounded-[var(--sf-radius,8px)] border-border bg-secondary pl-9 text-body-sm text-foreground placeholder:text-muted-foreground lg:w-64"
+        />
+      </form>
+
+      <Button variant="ghost" size="icon" className="md:hidden" render={<Link href="/search" />}>
+        <Search className="w-5 h-5" />
+        <span className="sr-only">Search</span>
+      </Button>
+    </>
   );
 }
 
@@ -124,17 +112,17 @@ export function Navbar({
                     "cursor-pointer text-body-sm font-medium transition-colors",
                     isActive
                       ? "text-foreground"
-                      // `text-muted-ink`, not `text-muted` — the shadcn layer
+                      // `text-[var(--sf-muted,var(--color-muted-ink))]`, not `text-muted` — the shadcn layer
                       // owns `--muted` as a cream *surface*, so `text-muted`
                       // would paint these links cream on white.
-                      : "text-muted-ink hover:text-foreground",
+                      : "text-[var(--sf-muted,var(--color-muted-ink))] hover:text-foreground",
                   )}
                 >
                   {link.label}
                 </Link>
               );
             })}
-            <SearchPopover />
+            <SearchBar />
           </div>
 
           {/* Right side: a text link plus the page's one lime button. */}

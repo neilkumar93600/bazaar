@@ -34,18 +34,18 @@ export function UserMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/30">
-        <Avatar className="size-11 border-2 border-[#262626] shadow-[2px_2px_0px_0px_#262626]">
+        <Avatar className="size-11 border-2 border-[var(--sf-ink,#262626)] shadow-[var(--sf-shadow,2px_2px_0px_0px_var(--sf-ink,#262626))]">
           <AvatarImage src={avatarUrl ?? undefined} alt="" className="object-cover" />
-          <AvatarFallback className="bg-[#262626] text-[#a3e635] font-mono font-bold">{initial}</AvatarFallback>
+          <AvatarFallback className="bg-[var(--sf-ink,#262626)] text-[var(--sf-accent,#a3e635)] font-mono font-bold">{initial}</AvatarFallback>
         </Avatar>
         <span className="sr-only">Account menu</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" sideOffset={8} className="w-56 p-2 [&_svg]:size-4.5">
-        <div className="flex flex-col px-2 py-1.5 border-b border-[#e5e5e5] mb-1">
-          <span className="text-body-sm font-bold text-[#262626] truncate">
+        <div className="flex flex-col px-2 py-1.5 border-b border-[var(--sf-line,#e5e5e5)] mb-1">
+          <span className="text-body-sm font-bold text-[var(--sf-ink,#262626)] truncate">
             {displayName || `@${handle}`}
           </span>
-          <span className="text-caption font-mono text-[#525252] truncate">
+          <span className="text-caption font-mono text-[var(--sf-muted,#525252)] truncate">
             @{handle || "user"}
           </span>
         </div>

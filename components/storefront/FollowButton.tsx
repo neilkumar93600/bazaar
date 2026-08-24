@@ -27,7 +27,7 @@ export function FollowButton({
     return (
       <Link
         href="/login"
-        className="inline-flex items-center justify-center rounded-md bg-[#a3e635] px-4 py-2 text-caption font-semibold text-[#262626] border border-[#262626] shadow-[2px_2px_0px_0px_#262626] hover:bg-[#b2f042] transition-all flex-1 text-center"
+        className="inline-flex items-center justify-center rounded-[var(--sf-radius-sm,4px)] bg-[var(--sf-btn-bg)] px-4 py-2 text-caption font-semibold text-[var(--sf-btn-ink)] border-[length:var(--sf-border,1px)] border-[var(--sf-ink)] shadow-[var(--sf-shadow-sm)] hover:brightness-95 transition-all flex-1 text-center"
       >
         Follow
       </Link>
@@ -46,10 +46,10 @@ export function FollowButton({
           setIsFollowing(result.isFollowing);
         });
       }}
-      className={`inline-flex items-center justify-center rounded-md px-4 py-2 text-caption font-semibold border border-[#262626] shadow-[2px_2px_0px_0px_#262626] transition-all flex-1 cursor-pointer disabled:opacity-50 ${
+      className={`inline-flex items-center justify-center rounded-[var(--sf-radius-sm,4px)] px-4 py-2 text-caption font-semibold border-[length:var(--sf-border,1px)] border-[var(--sf-ink)] shadow-[var(--sf-shadow-sm)] transition-all flex-1 cursor-pointer disabled:opacity-50 ${
         isFollowing
-          ? "bg-white text-[#262626] hover:bg-[#fcfff7]"
-          : "bg-[#a3e635] text-[#262626] hover:bg-[#b2f042]"
+          ? "bg-[var(--sf-surface)] text-[var(--sf-ink)] hover:bg-[var(--sf-surface)]"
+          : "bg-[var(--sf-btn-bg)] text-[var(--sf-btn-ink)] hover:brightness-95"
       }`}
     >
       <AnimatePresence mode="popLayout" initial={false}>

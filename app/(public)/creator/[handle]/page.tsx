@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { getStorefrontData } from "@/lib/data/storefront";
+import { themeCss } from "@/lib/storefront/theme";
 import { StorefrontGrid } from "@/components/storefront/StorefrontGrid";
 import { StorefrontHeader } from "@/components/storefront/StorefrontHeader";
 
@@ -50,7 +51,12 @@ export default async function CreatorStorefrontPage(
   if (!data) notFound();
 
   return (
-    <div className="bg-[#ffffff] min-h-screen py-8 sm:py-12">
+    // The creator's theme enters the page once, here. It goes in as a :root
+    // rule rather than an inline style because the navbar, the logo and the
+    // footer are rendered by the layout above this page — an inline style
+    // cannot reach them, and this route's own <style> can.
+    <div className="bg-[var(--sf-bg)] min-h-screen py-8 sm:py-12">
+      <style>{themeCss(data.theme)}</style>
       <div className="mx-auto max-w-page px-4 sm:px-6 lg:px-8 flex flex-col gap-6">
         <StorefrontHeader data={data} />
         <StorefrontGrid data={data} />

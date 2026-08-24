@@ -23,7 +23,7 @@ export function ForgotPasswordForm() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-          className="p-4 rounded-md bg-mint-wash border border-mint-edge text-ink text-body-sm font-medium"
+          className="p-4 rounded-[4px] bg-mint-wash border border-mint-edge text-ink text-body-sm font-medium"
         >
           If an account exists for that email, a password reset link has been sent to your inbox.
         </motion.div>
@@ -48,7 +48,7 @@ export function ForgotPasswordForm() {
                 autoComplete="email"
                 placeholder="your.email@example.com"
                 required
-                className="w-full bg-paper-white border border-ink focus:border-ink focus:ring-1 focus:ring-ink text-ink placeholder:text-muted-gray rounded-md px-3.5 py-2.5 text-body-sm transition-all outline-none"
+                className="w-full bg-paper-white border border-ink focus:border-ink focus:ring-1 focus:ring-ink text-ink placeholder:text-muted-gray rounded-[4px] px-3.5 py-2.5 text-body-sm transition-all outline-none"
               />
             </StaggerItem>
 
@@ -61,12 +61,13 @@ export function ForgotPasswordForm() {
                   transition={{ duration: 0.2 }}
                   className="overflow-hidden"
                 >
-                  <div className="p-3 rounded-md bg-destructive/10 text-destructive text-caption font-medium border border-destructive/30">
+                  <div className="p-3 rounded-[4px] bg-destructive/10 text-destructive text-caption font-medium border border-destructive/30">
                     {state.error}
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
+
 
             <StaggerItem>
               <motion.button
