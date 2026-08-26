@@ -4,6 +4,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Navbar } from "@/components/layout/Navbar";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { NewsletterPopup } from "@/components/layout/NewsletterPopup";
+import { WelcomePopup } from "@/components/layout/WelcomePopup";
 import { PageTransition } from "@/components/ui/motion";
 import { getNotifications } from "@/lib/data/notifications";
 import { createClient } from "@/lib/supabase/server";
@@ -38,7 +39,12 @@ export default async function PublicLayout({ children }: { children: ReactNode }
       </main>
       <Footer />
       <MobileBottomNav isLoggedIn={Boolean(user)} />
-      {!user && <NewsletterPopup />}
+      {!user && (
+        <>
+          <WelcomePopup />
+          <NewsletterPopup />
+        </>
+      )}
     </div>
   );
 }

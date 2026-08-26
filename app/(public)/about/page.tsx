@@ -8,7 +8,7 @@ import { ROYALTY_RATE_PERCENT } from "@/lib/royalty"
 export const metadata: Metadata = {
   title: "About",
   description:
-    "Why Shirt Bazaar makes every design 1-of-1: what the claim model is, what it costs a buyer, and what it pays a creator.",
+    "How Shirt Bazaar combines 1-of-1 physical apparel with full commercial IP ownership and automated custom merch storefronts.",
   alternates: { canonical: "/about" },
 }
 

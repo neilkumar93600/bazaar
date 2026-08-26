@@ -17,6 +17,31 @@ export type FaqGroup = { heading: string; entries: FaqEntry[] }
  */
 export const FAQ_GROUPS: FaqGroup[] = [
   {
+    heading: "IP Ownership & Merch Store",
+    entries: [
+      {
+        q: "How does buying a shirt give you IP ownership of a custom merch store?",
+        a: "Every 1-of-1 genesis shirt includes a complete commercial copyright assignment. Once claimed, our platform automatically provisions your dedicated storefront at /creator/yourhandle with mockups and automated on-demand fulfillment, allowing you to launch a custom merch brand with zero upfront inventory.",
+      },
+      {
+        q: "What is the difference between standard Print-on-Demand and an IP-owned custom merch store?",
+        a: "Standard print-on-demand platforms keep you as a generic reseller. With Shirt Bazaar, you own 100% exclusive commercial rights to the underlying 1-of-1 design, receive a turnkey automated storefront, and earn continuous profits without inventory or manufacturing hassle.",
+      },
+      {
+        q: "Can I legally sell merchandise if I own the commercial IP rights to a design?",
+        a: "Yes. Claiming a design assigns full commercial reproduction and merchandising rights to you. You can sell through your automated Bazaar storefront, license the artwork, or produce physical runs with no platform royalty clawbacks.",
+      },
+      {
+        q: "How fast can I launch an automated merch store after claiming a design?",
+        a: "Under 60 seconds. As soon as your order completes, your custom storefront is live, pre-populated with your design, and ready to process customer orders with automated fulfillment.",
+      },
+      {
+        q: "What is a turnkey merchandise brand starter pack?",
+        a: "It is an all-in-one package that bundles a premium physical garment, full commercial intellectual property ownership, and a fully hosted e-commerce storefront with zero-inventory dropshipping.",
+      },
+    ],
+  },
+  {
     heading: "Claiming",
     entries: [
       {

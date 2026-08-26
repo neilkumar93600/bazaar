@@ -15,7 +15,7 @@ export function NewsletterForm() {
   );
 
   return (
-    <div className="flex w-full max-w-[360px] flex-col gap-1.5">
+    <div className="flex w-full flex-col gap-1.5">
       <AnimatePresence mode="wait" initial={false}>
         {state.success ? (
           <motion.div

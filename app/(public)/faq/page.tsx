@@ -6,7 +6,7 @@ import { FAQ_GROUPS } from "@/lib/faq"
 export const metadata: Metadata = {
   title: "FAQ",
   description:
-    "How claiming works, what 1-of-1 really means, how many designs you can generate, how shirts are printed, and how the resale royalty pays out.",
+    "Everything you need to know about buying shirts, owning 100% commercial IP rights, auto-provisioned creator storefronts, and automated print-on-demand fulfillment.",
   alternates: { canonical: "/faq" },
 }
 

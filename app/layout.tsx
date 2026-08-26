@@ -5,23 +5,13 @@ import "./globals.css"
 import { cn } from "@/lib/utils";
 import { CONTACT_EMAILS, siteName, siteUrl } from "@/lib/site";
 
-// The interface face — navigation, buttons, body and every headline
-// (docs/DESIGN.md). Variable axis, no `weight` list: the system uses 400/500/600
-// and one file serves all three. 700+ is deliberately unreachable, capped at 600
-// in globals.css.
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
 
-// Technical labels, tabular meta and inline data. Brainfish keeps mono
-// achromatic like everything else — it earns its distinction from the form.
 const fontMono = Geist_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
 })
 
-// The editorial signature: Fraunces italic on one emphasis word inside a Geist
-// headline, and nowhere else — never body, never buttons, never a whole heading.
-// Only the italic is ever set; the upright loads because next/font needs a base
-// style. Variable axis, so 500 and 600 both come from one file.
 const fraunces = Fraunces({
   subsets: ["latin"],
   style: ["normal", "italic"],
@@ -30,11 +20,82 @@ const fraunces = Fraunces({
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  alternates: { canonical: "/" },
-  manifest: "/site.webmanifest",
+  title: {
+    default: "Custom Merch Store & IP Rights: Launch Your Brand | Shirt Bazaar",
+    template: "%s — Shirt Bazaar",
+  },
+  description:
+    "Buy the genesis shirt, secure 100% IP ownership, and get your custom automated merch store built for you. Start selling and keep full profits today.",
+  keywords: [
+    "merch",
+    "streetwear",
+    "apparel",
+    "clothing",
+    "storefront",
+    "fashion",
+    "tshirt",
+    "creator",
+    "dropship",
+    "branding",
+    "custom merch store builder",
+    "buy shirt own commercial rights",
+    "turnkey merchandise brand",
+    "own the IP merch",
+    "launch merch line zero inventory",
+    "automated custom clothing store",
+    "1-of-1 AI apparel",
+    "turn shirt design into brand",
+    "print on demand with full IP ownership",
+    "custom merchandise storefront dropship",
+    "commercial clothing design rights",
+    "automated apparel fulfillment for creators",
+    "creator brand starter kit",
+    "start a merch line without inventory",
+    "exclusive streetwear 1-of-1 drops",
+    "digital certificate apparel ownership",
+    "AI generative fashion marketplace",
+    "merch store auto provision",
+  ],
+  authors: [{ name: "Shirt Bazaar" }],
+  creator: "Shirt Bazaar",
+  publisher: "Shirt Bazaar",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: siteUrl,
+    siteName,
+    title: "Buy The Shirt. Own The IP. We Build Your Merch Store.",
+    description:
+      "No inventory hassles. No design guesswork. Get the physical piece, full commercial rights, and an instant automated storefront ready to take orders.",
+    images: [
+      {
+        url: `${siteUrl}/og-image.png`,
+        width: 1200,
+        height: 630,
+        alt: "Shirt Bazaar — Buy The Shirt, Own The IP, We Create Your Custom Merch Store",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Turn 1 Shirt Into Your Own Merch Store (With Full IP Ownership)",
+    description:
+      "We bundle physical apparel with legal IP ownership and a ready-to-sell custom store. Step into brand ownership with one purchase.",
+    images: [`${siteUrl}/twitter-card.png`],
+  },
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "any" },
       { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
       { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
     ],
@@ -42,31 +103,7 @@ export const metadata: Metadata = {
       { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
     ],
   },
-  title: {
-    // Primary keyword in the first three words; 53 characters, inside the
-    // 60-char SERP limit.
-    default: "1-of-1 AI Shirts, Claimed by One Owner | Shirt Bazaar",
-    template: "%s — Shirt Bazaar",
-  },
-  // 151 characters: keyword in the first half, ends on a CTA verb, and no
-  // audience or volume claim this site can't back yet.
-  description:
-    "1-of-1 AI shirt designs, claimed by exactly one owner. Every claim is permanent, comes with your own storefront, and pays 10% of every resale. Claim one.",
-  openGraph: {
-    title: "One prompt in. One shirt out. One owner.",
-    // Deliberately not the meta description reworded — social gets the
-    // conversational cut.
-    description:
-      "Nobody else can wear the design you claim. Every shirt on Shirt Bazaar exists exactly once, and the claim is permanent.",
-    siteName: "Shirt Bazaar",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "AI shirts that exist exactly once",
-    description:
-      "Claim a design and it's off the market for good — yours alone, with a storefront and 10% of every resale that follows.",
-  },
+  manifest: "/site.webmanifest",
 }
 
 export default function RootLayout({
@@ -96,15 +133,6 @@ export default function RootLayout({
                 "@type": "Organization",
                 name: siteName,
                 url: siteUrl,
-                // Both are real and already published elsewhere on the site —
-                // the icon this manifest ships, and the inbox /contact lists.
-                // Nothing here is invented for the crawler's benefit.
-                //
-                // ponytail: `sameAs` is the other half of entity recognition
-                // and belongs here too, but every href in
-                // components/layout/social-links.tsx is still null. Add it
-                // from that list the day a real profile exists — an empty
-                // sameAs is worth nothing and a fabricated one is worse.
                 logo: `${siteUrl}/android-chrome-512x512.png`,
                 contactPoint: {
                   "@type": "ContactPoint",
@@ -112,7 +140,7 @@ export default function RootLayout({
                   email: CONTACT_EMAILS.support,
                 },
                 description:
-                  "Marketplace for 1-of-1 AI-generated apparel. Claim exclusive ownership of a design, get an auto-provisioned storefront, and earn a royalty on every resale.",
+                  "Turnkey 1-of-1 apparel marketplace and automated merch store platform. Buy exclusive shirts, own 100% commercial IP rights, and launch an automated custom merch storefront with zero inventory.",
               },
               {
                 "@context": "https://schema.org",
