@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import type { Placement } from "@/lib/printify/print-areas"
+import { designImageSrc } from "@/lib/images/design-src"
 
 export type MakerDesign = {
   id: string
@@ -98,7 +99,7 @@ export async function getMyDesigns(): Promise<MyDesigns | null> {
 
   const base = (d: (typeof designs)[number]): MakerDesign => ({
     id: d.id,
-    imageUrl: d.image_url,
+    imageUrl: designImageSrc(d.id),
     originalImageUrl: d.original_image_url ?? null,
     mockupUrl: d.mockup_url ?? null,
     vibeName: d.vibe_id ? (vibeNameById.get(d.vibe_id) ?? null) : null,

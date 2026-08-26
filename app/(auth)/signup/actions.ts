@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
+import { safeNext } from "@/lib/auth/next-url";
 
 export type SignupState = { error?: string };
 
@@ -10,20 +11,21 @@ export async function signup(
   _prevState: SignupState,
   formData: FormData,
 ): Promise<SignupState> {
+  // Full name is optional: every surface that shows it already falls back to
+  // `@handle` (see app/dashboard/layout.tsx), so requiring it only added a
+  // field between a visitor and the thing they came to do.
   const fullName = String(formData.get("fullName") ?? "").trim();
   const username = String(formData.get("username") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-  const confirmPassword = String(formData.get("confirmPassword") ?? "");
 
-  if (!fullName || !username || !email || !password) {
-    return { error: "All fields are required." };
+  if (!username || !email || !password) {
+    return { error: "Username, email and password are required." };
   }
 
-  if (password !== confirmPassword) {
-    return { error: "Passwords do not match." };
-  }
-
+  // No confirm-password field to compare against — the form unmasks the
+  // password on demand, which catches the typo that a second field existed to
+  // catch, and a forgotten password has its own reset flow.
   if (password.length < 8) {
     return { error: "Password must be at least 8 characters." };
   }
@@ -34,7 +36,7 @@ export async function signup(
     password,
     options: {
       data: {
-        full_name: fullName,
+        full_name: fullName || null,
         username: username,
       },
     },
@@ -57,5 +59,9 @@ export async function signup(
     };
   }
 
-  redirect(`/verify-otp?email=${encodeURIComponent(email)}`);
+  // `next` rides along so the OTP screen can finish the trip the gate stopped.
+  const next = safeNext(String(formData.get("next") ?? ""), "/create");
+  redirect(
+    `/verify-otp?email=${encodeURIComponent(email)}&next=${encodeURIComponent(next)}`,
+  );
 }

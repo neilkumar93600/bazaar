@@ -12,7 +12,7 @@ import { Stagger, StaggerItem } from "@/components/ui/motion";
 const initialState: LoginState = {};
 const INPUT_TRANSITION = { type: "spring", stiffness: 400, damping: 25 } as const;
 
-export function LoginForm() {
+export function LoginForm({ next }: { next?: string }) {
   const [state, formAction, isPending] = useActionState(login, initialState);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -22,7 +22,7 @@ export function LoginForm() {
       <StaggerItem className="flex items-center gap-3">
         <motion.button
           type="button"
-          onClick={() => signInWithOAuth("google")}
+          onClick={() => signInWithOAuth("google", next)}
           whileHover={{ y: -1 }}
           whileTap={{ x: 2, y: 2 }}
           className="flex-1 flex items-center justify-center gap-2.5 py-3 px-4 rounded-[4px] border border-ink bg-paper-white hover:bg-cream text-ink text-body-sm font-medium transition-all shadow-[2px_2px_0_0_#262626] active:shadow-none cursor-pointer"
@@ -92,7 +92,7 @@ export function LoginForm() {
 
         <motion.button
           type="button"
-          onClick={() => signInWithOAuth("apple")}
+          onClick={() => signInWithOAuth("apple", next)}
           whileHover={{ y: -1 }}
           whileTap={{ x: 2, y: 2 }}
           className="flex-1 flex items-center justify-center gap-2.5 py-3 px-4 rounded-[4px] border border-ink bg-paper-white hover:bg-cream text-ink text-body-sm font-medium transition-all shadow-[2px_2px_0_0_#262626] active:shadow-none cursor-pointer"
@@ -122,6 +122,8 @@ export function LoginForm() {
 
       {/* Main Login Form */}
       <form action={formAction} className="flex flex-col gap-4">
+        {next && <input type="hidden" name="next" value={next} />}
+
         {/* Email Field */}
         <StaggerItem className="flex flex-col gap-1.5">
           <label htmlFor="email" className="text-caption font-medium text-ink">
@@ -220,7 +222,10 @@ export function LoginForm() {
       <StaggerItem>
         <p className="text-center text-body-sm text-muted-ink font-medium">
           Don&apos;t have an account?{" "}
-          <Link href="/signup" className="text-ink font-semibold underline underline-offset-4 hover:opacity-75">
+          <Link
+            href={next ? `/signup?next=${encodeURIComponent(next)}` : "/signup"}
+            className="text-ink font-semibold underline underline-offset-4 hover:opacity-75"
+          >
             Sign up for free
           </Link>
         </p>

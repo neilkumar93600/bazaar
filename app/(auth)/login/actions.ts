@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
+import { safeNext } from "@/lib/auth/next-url";
 
 export type LoginState = { error?: string };
 
@@ -25,6 +26,7 @@ export async function login(
     return { error: "Incorrect email or password." };
   }
 
-  // The feed, not the dashboard: the product's front door is the bazaar.
-  redirect("/");
+  // The feed, not the dashboard: the product's front door is the bazaar —
+  // unless the gate sent them here mid-trip, in which case finish that trip.
+  redirect(safeNext(String(formData.get("next") ?? ""), "/"));
 }

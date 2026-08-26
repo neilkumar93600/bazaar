@@ -1,11 +1,16 @@
 import type { Metadata } from "next";
 import { VerifyOtpForm } from "@/components/auth";
+import { safeNext } from "@/lib/auth/next-url";
 
 export const metadata: Metadata = { title: "Verify email" };
 
 export default async function VerifyOtpPage(props: PageProps<"/verify-otp">) {
   const searchParams = await props.searchParams;
   const email = typeof searchParams.email === "string" ? searchParams.email : "";
+  const next = safeNext(
+    typeof searchParams.next === "string" ? searchParams.next : null,
+    "/create",
+  );
 
   return (
     <div className="flex flex-col items-center text-center gap-6 w-full max-w-sm mx-auto">
@@ -26,7 +31,7 @@ export default async function VerifyOtpPage(props: PageProps<"/verify-otp">) {
       </div>
 
       {/* 6-box Form */}
-      <VerifyOtpForm email={email} />
+      <VerifyOtpForm email={email} next={next} />
     </div>
   );
 }

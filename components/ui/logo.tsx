@@ -2,6 +2,31 @@ import React from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
+/** The mark's geometry, written once.
+ *
+ *  "1/1" — the edition notation the art world uses for a unique piece, and the
+ *  string already printed on every card in the bazaar. Drawn rather than set:
+ *  the numerals are reduced to bars of the same weight as the slash, so the
+ *  mark reads as the rhythm bar-slash-bar and stays a solid block at favicon
+ *  size, where real numerals would break up.
+ *
+ *  Every surface renders these three paths. A logo that is retyped per surface
+ *  drifts, and `app/icon.svg` and `public/logo-icon.svg` carry the same three
+ *  `d` strings for the same reason — those two cannot import from here. */
+const MARK_VIEWBOX = "0 0 104 100";
+const MARK_PATHS = [
+  // Leading 1 — stem plus the flag that keeps it a numeral and not a bare bar.
+  // The flag is the only asymmetry in the mark.
+  "M0 0H32V100H8V19H0V0Z",
+  // The slash, same horizontal weight as both stems. Its foot crosses into the
+  // leading 1 so the three strokes lock as one block rather than reading as
+  // three spaced characters.
+  "M53 0H74L51 100H30L53 0Z",
+  // Trailing 1 — no flag. Reducing it to a plain bar is what turns the pair
+  // into a mark rather than two numerals side by side.
+  "M80 0H104V100H80V0Z",
+];
+
 export interface LogoIconProps extends React.SVGProps<SVGSVGElement> {
   className?: string;
 }
@@ -10,20 +35,48 @@ export function LogoIcon({ className, ...props }: LogoIconProps) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 70 40"
+      viewBox={MARK_VIEWBOX}
       fill="none"
-      className={cn("w-[35px] h-[20px] shrink-0", className)}
+      role="img"
+      aria-label="1 of 1"
+      className={cn("w-[21px] h-[20px] shrink-0", className)}
       {...props}
     >
-      <g id="logomark">
-        <path
-          d="M37.2551 1.61586C38.1803 0.653384 39.4368 0.112671 40.7452 0.112671C46.6318 0.112671 52.1793 0.112674 57.6424 0.112685C68.6302 0.112708 74.1324 13.9329 66.3629 22.0156L49.4389 39.6217C48.662 40.43 47.3335 39.8575 47.3335 38.7144V23.2076L49.2893 21.1729C50.8432 19.5564 49.7427 16.7923 47.5451 16.7923H22.6667L37.2551 1.61586Z"
-          fill="currentColor"
-        />
-        <path
-          d="M32.7449 38.3842C31.8198 39.3467 30.5633 39.8874 29.2549 39.8874C23.3683 39.8874 17.8208 39.8874 12.3577 39.8874C1.36983 39.8873 -4.13236 26.0672 3.63721 17.9844L20.5612 0.378369C21.3381 -0.429908 22.6666 0.142547 22.6666 1.28562L22.6667 16.7923L20.7108 18.8271C19.1569 20.4437 20.2574 23.2077 22.455 23.2077L47.3335 23.2076L32.7449 38.3842Z"
-          fill="currentColor"
-        />
+      <g id="logomark" fill="currentColor">
+        {MARK_PATHS.map((d) => (
+          <path key={d} d={d} />
+        ))}
+      </g>
+    </svg>
+  );
+}
+
+export interface LogoBadgeProps extends React.SVGProps<SVGSVGElement> {
+  className?: string;
+}
+
+/** The mark as a struck stamp: lime on an ink tile, matching `app/icon.svg`.
+ *
+ *  This is the one place lime fills the mark. DESIGN.md rations lime to
+ *  actions and forbids it as a UI icon fill, but the app icon has always been
+ *  the exception — it is a stamp rather than an icon in a row of controls, and
+ *  it is where the brand gets to shout. Use it for avatars, share cards and
+ *  app surfaces; use `LogoIcon` anywhere the mark sits inside the interface. */
+export function LogoBadge({ className, ...props }: LogoBadgeProps) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 100 100"
+      role="img"
+      aria-label="1 of 1"
+      className={cn("size-8 shrink-0", className)}
+      {...props}
+    >
+      <rect width="100" height="100" rx="22" fill="#262626" />
+      <g transform="translate(21.4, 22.5) scale(0.55)" fill="#A3E635">
+        {MARK_PATHS.map((d) => (
+          <path key={d} d={d} />
+        ))}
       </g>
     </svg>
   );

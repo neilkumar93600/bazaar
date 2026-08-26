@@ -1,5 +1,6 @@
 import type { DesignCardData } from "@/components/shared/DesignCard"
 import { createClient } from "@/lib/supabase/server"
+import { designImageSrc } from "@/lib/images/design-src"
 
 const DESIGNS_PER_COLUMN = 14
 
@@ -98,7 +99,7 @@ export async function getFeedColumns(): Promise<FeedColumn[]> {
       .slice(0, DESIGNS_PER_COLUMN)
       .map((d) => ({
         id: d.id,
-        imageUrl: d.image_url,
+        imageUrl: designImageSrc(d.id),
         mockupUrl: d.mockup_url ?? null,
         isClaimed: d.is_claimed,
         priceCents: d.price_cents,

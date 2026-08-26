@@ -3,7 +3,7 @@ import { Fraunces, Geist, Geist_Mono } from "next/font/google"
 
 import "./globals.css"
 import { cn } from "@/lib/utils";
-import { siteName, siteUrl } from "@/lib/site";
+import { CONTACT_EMAILS, siteName, siteUrl } from "@/lib/site";
 
 // The interface face — navigation, buttons, body and every headline
 // (docs/DESIGN.md). Variable axis, no `weight` list: the system uses 400/500/600
@@ -96,6 +96,21 @@ export default function RootLayout({
                 "@type": "Organization",
                 name: siteName,
                 url: siteUrl,
+                // Both are real and already published elsewhere on the site —
+                // the icon this manifest ships, and the inbox /contact lists.
+                // Nothing here is invented for the crawler's benefit.
+                //
+                // ponytail: `sameAs` is the other half of entity recognition
+                // and belongs here too, but every href in
+                // components/layout/social-links.tsx is still null. Add it
+                // from that list the day a real profile exists — an empty
+                // sameAs is worth nothing and a fabricated one is worse.
+                logo: `${siteUrl}/android-chrome-512x512.png`,
+                contactPoint: {
+                  "@type": "ContactPoint",
+                  contactType: "customer support",
+                  email: CONTACT_EMAILS.support,
+                },
                 description:
                   "Marketplace for 1-of-1 AI-generated apparel. Claim exclusive ownership of a design, get an auto-provisioned storefront, and earn a royalty on every resale.",
               },

@@ -3,6 +3,7 @@
 // client components would drag that whole module graph into the browser bundle.
 // app/(auth)/layout.tsx imports it by path.
 export * from "./AuthTransition";
+export * from "./CarriedPromptNote";
 export * from "./LoginForm";
 export * from "./SignupForm";
 export * from "./ForgotPasswordForm";

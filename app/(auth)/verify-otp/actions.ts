@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
+import { safeNext } from "@/lib/auth/next-url";
 
 export type VerifyOtpState = { error?: string };
 
@@ -39,7 +40,9 @@ export async function verifyOtp(
 
   // Straight to the thing they signed up to do. There is no separate setup
   // step — handle and display name were captured at signup and written above.
-  redirect("/create");
+  // `next` is whatever the gate interrupted; /create is the right default
+  // because that is what signup is for.
+  redirect(safeNext(String(formData.get("next") ?? ""), "/create"));
 }
 
 export async function resendOtp(email: string) {

@@ -3,6 +3,7 @@ import { cache } from "react"
 import type { DesignCardData } from "@/components/shared/DesignCard"
 import { createClient } from "@/lib/supabase/server"
 import { DEFAULT_THEME, parseTheme, type StorefrontTheme } from "@/lib/storefront/theme"
+import { designImageSrc } from "@/lib/images/design-src"
 
 export type StorefrontProfile = {
   id: string
@@ -129,7 +130,7 @@ export const getStorefrontData = cache(async function getStorefrontData(
   const designs: StorefrontDesign[] = (designRows ?? [])
     .map((d) => ({
       id: d.id,
-      imageUrl: d.image_url,
+      imageUrl: designImageSrc(d.id),
       mockupUrl: d.mockup_url ?? null,
       claimedAt: claimedAtByDesignId.get(d.id)!,
       createdAt: d.created_at,
@@ -186,7 +187,7 @@ export const getStorefrontData = cache(async function getStorefrontData(
 
   const createdDesigns: DesignCardData[] = (createdRows ?? []).map((d) => ({
     id: d.id,
-    imageUrl: d.image_url,
+    imageUrl: designImageSrc(d.id),
     mockupUrl: d.mockup_url ?? null,
     createdAt: d.created_at,
     priceCents: d.price_cents,

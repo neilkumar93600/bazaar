@@ -1,6 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+import { safeNext } from "@/lib/auth/next-url";
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
@@ -34,12 +36,25 @@ export async function updateSession(request: NextRequest) {
   const isProtectedRoute = PROTECTED_ROUTES.some((route) => pathname.startsWith(route));
 
   if (!user && isProtectedRoute) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    // Carry the destination so auth can finish the trip the visitor started.
+    // Without this a person who typed a prompt into the home hero and pressed
+    // "Generate my design" was bounced here and then dropped on the homepage,
+    // with their draft stranded in sessionStorage.
+    //
+    // /create is where that hero button lands — a new-visitor action — so it
+    // opens signup; /dashboard is a returning-user surface and opens login.
+    // Both pages cross-link to the other and carry `next` along.
+    const target = pathname.startsWith("/create") ? "/signup" : "/login";
+    const url = new URL(target, request.url);
+    url.searchParams.set("next", pathname + request.nextUrl.search);
+    return NextResponse.redirect(url);
   }
 
   if (user && isAuthRoute) {
-    // The feed, not the dashboard: the product's front door is the bazaar.
-    return NextResponse.redirect(new URL("/", request.url));
+    // The feed, not the dashboard: the product's front door is the bazaar —
+    // unless they were headed somewhere specific before the gate stopped them.
+    const next = safeNext(request.nextUrl.searchParams.get("next"), "/");
+    return NextResponse.redirect(new URL(next, request.url));
   }
 
   return supabaseResponse;

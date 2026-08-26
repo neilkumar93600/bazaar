@@ -12,6 +12,7 @@ import { getOrderOptions } from "@/app/(public)/design/[id]/order-actions";
 import { colourMockups } from "@/lib/printify/mockups";
 import { createClient } from "@/lib/supabase/server";
 import { designLabel, formatListingPrice } from "@/lib/utils";
+import { designJsonLd } from "@/lib/seo/design-schema";
 import { DesignView } from "@/components/design/DesignView";
 import { Carousel } from "@/components/shared/Carousel";
 import { DesignCard } from "@/components/shared/DesignCard";
@@ -85,6 +86,28 @@ export default async function DesignDetailPage(props: PageProps<"/design/[id]">)
 
   return (
     <div className="mx-auto flex max-w-page flex-col gap-14 px-6 py-8 md:px-16 sm:py-12">
+      <script
+        type="application/ld+json"
+        // Built from this page's own row and the same buy gate the order form
+        // uses. JSON.stringify escapes the design's title and description,
+        // which are composer-written and the only non-literal values here.
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            designJsonLd({
+              id: design.id,
+              name: title,
+              description: design.description,
+              imageUrl: design.mockupUrl ?? design.imageUrl,
+              vibeName: design.vibeName,
+              canOrder,
+              garmentPriceCents: orderOptions?.priceCents ?? null,
+              creatorName:
+                design.creator?.displayName ??
+                (design.creator?.handle ? `@${design.creator.handle}` : null),
+            }),
+          ),
+        }}
+      />
       <Breadcrumb vibeName={design.vibeName} title={title} />
 
       {/* Three grid children, placed rather than nested. On a phone they stack

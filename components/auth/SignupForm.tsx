@@ -34,11 +34,10 @@ function getPasswordStrength(password: string) {
   }
 }
 
-export function SignupForm() {
+export function SignupForm({ next }: { next?: string }) {
   const [state, formAction, isPending] = useActionState(signup, initialState);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const strength = getPasswordStrength(password);
 
@@ -48,7 +47,7 @@ export function SignupForm() {
       <StaggerItem className="flex items-center gap-3">
         <motion.button
           type="button"
-          onClick={() => signInWithOAuth("google")}
+          onClick={() => signInWithOAuth("google", next)}
           whileHover={{ y: -1 }}
           whileTap={{ x: 2, y: 2 }}
           className="flex-1 flex items-center justify-center gap-2.5 py-3 px-4 rounded-[4px] border border-ink bg-paper-white hover:bg-cream text-ink text-body-sm font-medium transition-all shadow-[2px_2px_0_0_#262626] active:shadow-none cursor-pointer"
@@ -118,7 +117,7 @@ export function SignupForm() {
 
         <motion.button
           type="button"
-          onClick={() => signInWithOAuth("apple")}
+          onClick={() => signInWithOAuth("apple", next)}
           whileHover={{ y: -1 }}
           whileTap={{ x: 2, y: 2 }}
           className="flex-1 flex items-center justify-center gap-2.5 py-3 px-4 rounded-[4px] border border-ink bg-paper-white hover:bg-cream text-ink text-body-sm font-medium transition-all shadow-[2px_2px_0_0_#262626] active:shadow-none cursor-pointer"
@@ -147,18 +146,21 @@ export function SignupForm() {
       </StaggerItem>
 
       <form action={formAction} className="flex flex-col gap-3.5">
+        {next && <input type="hidden" name="next" value={next} />}
+
         {/* Full Name & Username in 2 Columns */}
         <StaggerItem className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="flex flex-col gap-1">
             <label htmlFor="fullName" className="text-caption font-medium text-ink">
-              Full name
+              Full name{" "}
+              <span className="font-normal text-muted-gray">(optional)</span>
             </label>
             <input
               id="fullName"
               name="fullName"
               type="text"
+              autoComplete="name"
               placeholder="John Doe"
-              required
               className="w-full bg-paper-white border border-ink focus:border-ink focus:ring-1 focus:ring-ink text-ink placeholder:text-muted-gray rounded-[4px] px-3.5 py-2.5 text-body-sm transition-all outline-none"
             />
           </div>
@@ -253,36 +255,9 @@ export function SignupForm() {
           </AnimatePresence>
         </StaggerItem>
 
-        {/* Confirm Password Field */}
-        <StaggerItem className="flex flex-col gap-1">
-          <label htmlFor="confirmPassword" className="text-caption font-medium text-ink">
-            Confirm password
-          </label>
-          <div className="relative">
-            <input
-              id="confirmPassword"
-              name="confirmPassword"
-              type={showConfirmPassword ? "text" : "password"}
-              autoComplete="new-password"
-              placeholder="Repeat password"
-              minLength={8}
-              required
-              className="w-full bg-paper-white border border-ink focus:border-ink focus:ring-1 focus:ring-ink text-ink placeholder:text-muted-gray rounded-[4px] px-3.5 py-2.5 pr-10 text-body-sm transition-all outline-none"
-            />
-            <button
-              type="button"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-ink hover:text-ink transition-colors p-1 cursor-pointer"
-              aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-            >
-              {showConfirmPassword ? (
-                <EyeOff className="size-4" />
-              ) : (
-                <Eye className="size-4" />
-              )}
-            </button>
-          </div>
-        </StaggerItem>
+        {/* No confirm-password field: the eye toggle above lets someone read
+            what they typed, which is what the second field was guarding
+            against, and a forgotten password has its own reset flow. */}
 
         <AnimatePresence>
           {state.error && (
@@ -334,7 +309,10 @@ export function SignupForm() {
       <StaggerItem>
         <p className="text-center text-body-sm text-muted-ink font-medium">
           Already have an account?{" "}
-          <Link href="/login" className="text-ink font-semibold underline underline-offset-4 hover:opacity-75">
+          <Link
+            href={next ? `/login?next=${encodeURIComponent(next)}` : "/login"}
+            className="text-ink font-semibold underline underline-offset-4 hover:opacity-75"
+          >
             Sign in
           </Link>
         </p>

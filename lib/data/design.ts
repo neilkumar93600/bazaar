@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import type { DesignCardData } from "@/components/shared/DesignCard"
+import { designImageSrc } from "@/lib/images/design-src"
 
 export type DesignCreator = {
   id: string
@@ -111,7 +112,7 @@ export async function getDesignDetail(id: string): Promise<DesignDetail | null> 
 
   return {
     id: design.id,
-    imageUrl: design.image_url,
+    imageUrl: designImageSrc(design.id),
     mockupUrl: design.mockup_url ?? null,
     description: design.description ?? null,
     title: design.title ?? null,
@@ -179,7 +180,7 @@ async function toCards(rows: CardRow[]): Promise<DesignCardData[]> {
 
   return rows.map((d) => ({
     id: d.id,
-    imageUrl: d.image_url,
+    imageUrl: designImageSrc(d.id),
     mockupUrl: d.mockup_url ?? null,
     isClaimed: d.is_claimed,
     priceCents: d.price_cents,

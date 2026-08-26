@@ -13,7 +13,13 @@ import {
 const initialState: VerifyOtpState = {};
 const INPUT_TRANSITION = { type: "spring", stiffness: 400, damping: 25 } as const;
 
-export function VerifyOtpForm({ email: initialEmail }: { email: string }) {
+export function VerifyOtpForm({
+  email: initialEmail,
+  next,
+}: {
+  email: string;
+  next?: string;
+}) {
   const [state, formAction, isPending] = useActionState(verifyOtp, initialState);
   const [token, setToken] = useState("");
   const [email, setEmail] = useState(initialEmail);
@@ -26,6 +32,7 @@ export function VerifyOtpForm({ email: initialEmail }: { email: string }) {
       {/* Hidden inputs to pass data to server action */}
       <input type="hidden" name="email" value={email} />
       <input type="hidden" name="token" value={token} />
+      {next && <input type="hidden" name="next" value={next} />}
 
       <Stagger className="flex flex-col gap-6 items-center">
         {/* If no email was in query params, show an email input or allow changing it */}
