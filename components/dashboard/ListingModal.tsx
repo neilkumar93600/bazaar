@@ -19,11 +19,15 @@ export function ListingModal({
   garmentOptions,
   open,
   onOpenChange,
+  onSuccess,
 }: {
   design: MakerDesign
   garmentOptions: GarmentOption[]
   open: boolean
   onOpenChange: (open: boolean) => void
+  /** Fires only when the design actually goes live — distinct from
+   *  onOpenChange(false), which also fires on a plain cancel. */
+  onSuccess?: () => void
 }) {
   const isListed = Boolean(design.listedAt)
 
@@ -77,7 +81,10 @@ export function ListingModal({
                 variantId: design.featuredVariantId,
                 placement: design.placement,
               }}
-              onSuccess={() => onOpenChange(false)}
+              onSuccess={() => {
+                onOpenChange(false)
+                onSuccess?.()
+              }}
               hideInlineThumbnail
             />
           </div>

@@ -7,6 +7,7 @@ import { Palette, Upload, Trash2, Sparkles, AlertCircle } from "lucide-react"
 
 import { createPersona, deletePersona, type PersonaState } from "@/app/dashboard/personas/actions"
 import { createClient } from "@/lib/supabase/client"
+import { cn } from "@/lib/utils"
 import type { UserPersona } from "@/lib/data/personas"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -170,63 +171,92 @@ function PersonaCreateForm() {
         <Label htmlFor="persona-images" className="text-body-sm font-semibold text-foreground">
           Reference designs
         </Label>
-        <label
-          htmlFor="persona-images"
-          className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-background/60 px-4 py-8 text-center transition-colors hover:border-foreground"
+
+        <div className="relative">
+        <div
+          className={cn(
+            "flex flex-col gap-2 transition-all duration-300",
+            (uploading || isPending) && "pointer-events-none select-none blur-sm opacity-40",
+          )}
         >
-          <Upload className="h-6 w-6 text-muted-ink" />
-          <span className="text-body-sm font-medium text-foreground">
-            {files.length > 0
-              ? `${files.length} image${files.length === 1 ? "" : "s"} selected — click to add more`
-              : "Click to choose images"}
-          </span>
-          <span className="text-caption text-muted-ink">
-            {MIN_IMAGES}–{MAX_IMAGES} images, PNG or JPG
-          </span>
-        </label>
-        <input
-          ref={inputRef}
-          id="persona-images"
-          name="images"
-          type="file"
-          accept="image/*"
-          multiple
-          disabled={isPending || uploading}
-          onChange={(e) => handleFiles(e.target.files)}
-          className="hidden"
-        />
-
-        {files.length > 0 && (
-          <button
-            type="button"
-            onClick={clearFiles}
-            disabled={isPending || uploading}
-            className="self-start text-caption font-medium text-muted-ink underline underline-offset-2 hover:text-foreground disabled:opacity-50"
+          <label
+            htmlFor="persona-images"
+            className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-background/60 px-4 py-8 text-center transition-colors hover:border-foreground"
           >
-            Clear selection
-          </button>
-        )}
+            <Upload className="h-6 w-6 text-muted-ink" />
+            <span className="text-body-sm font-medium text-foreground">
+              {files.length > 0
+                ? `${files.length} image${files.length === 1 ? "" : "s"} selected — click to add more`
+                : "Click to choose images"}
+            </span>
+            <span className="text-caption text-muted-ink">
+              {MIN_IMAGES}–{MAX_IMAGES} images, PNG or JPG
+            </span>
+          </label>
+          <input
+            ref={inputRef}
+            id="persona-images"
+            name="images"
+            type="file"
+            accept="image/*"
+            multiple
+            disabled={isPending || uploading}
+            onChange={(e) => handleFiles(e.target.files)}
+            className="hidden"
+          />
 
-        {files.length > 0 && (
-          <div className="grid grid-cols-6 gap-2 sm:grid-cols-8 md:grid-cols-10">
-            {previewUrls.map((url) => (
-              <div
-                key={url}
-                className="relative aspect-square overflow-hidden rounded-lg border border-border bg-background"
-              >
-                {/* Object URLs, not next/image: these never leave the browser
-                    and are revoked the moment the selection changes. */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={url} alt="" className="h-full w-full object-cover" />
-              </div>
-            ))}
-            {files.length > 20 && (
-              <div className="flex aspect-square items-center justify-center rounded-lg border border-border bg-background text-caption font-medium text-muted-ink">
-                +{files.length - 20}
-              </div>
-            )}
-          </div>
-        )}
+          {files.length > 0 && (
+            <button
+              type="button"
+              onClick={clearFiles}
+              disabled={isPending || uploading}
+              className="self-start text-caption font-medium text-muted-ink underline underline-offset-2 hover:text-foreground disabled:opacity-50"
+            >
+              Clear selection
+            </button>
+          )}
+
+          {files.length > 0 && (
+            <div className="grid grid-cols-6 gap-2 sm:grid-cols-8 md:grid-cols-10">
+              {previewUrls.map((url) => (
+                <div
+                  key={url}
+                  className="relative aspect-square overflow-hidden rounded-lg border border-border bg-background"
+                >
+                  {/* Object URLs, not next/image: these never leave the browser
+                      and are revoked the moment the selection changes. */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={url} alt="" className="h-full w-full object-cover" />
+                </div>
+              ))}
+              {files.length > 20 && (
+                <div className="flex aspect-square items-center justify-center rounded-lg border border-border bg-background text-caption font-medium text-muted-ink">
+                  +{files.length - 20}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Mascot overlays the blurred dropzone/thumbnails instead of sitting
+            in its own block below — the loading state happens on top of the
+            thing it's blocking, not after it. */}
+        <AnimatePresence>
+          {(uploading || isPending) && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2"
+            >
+              <ChibiGhost variant={uploading ? "uploading" : "analyzing"} size={120} interactive={false} />
+              <p className="text-body-sm font-semibold text-foreground drop-shadow-sm">
+                {uploading ? `Uploading images… ${uploadedCount}/${files.length}` : "Analyzing your style…"}
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        </div>
       </div>
 
       {(uploadError || state.error) && (
@@ -241,19 +271,6 @@ function PersonaCreateForm() {
           Persona saved — pick it in the create form.
         </p>
       )}
-
-      <AnimatePresence>
-        {(uploading || isPending) && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 8 }}
-            className="flex justify-center"
-          >
-            <ChibiGhost variant={uploading ? "uploading" : "analyzing"} size={120} interactive={false} />
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       <div className="flex flex-col gap-2">
         <button

@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState, useTransition } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -13,6 +13,9 @@ import {
   Wand2,
   AlertCircle,
   Info,
+  Scissors,
+  RotateCcw,
+  Rocket,
 } from "lucide-react"
 
 import { createClient } from "@/lib/supabase/client"
@@ -28,20 +31,29 @@ import type { UserPersona } from "@/lib/data/personas"
 import { clearHeroDraft, readHeroDraft } from "@/lib/hero-draft"
 import { cn } from "@/lib/utils"
 import type { GarmentOption } from "@/app/dashboard/designs/garment-options"
-import { ListingForm } from "@/components/dashboard/ListingForm"
+import {
+  removeDesignBackground,
+  restoreDesignBackground,
+} from "@/app/dashboard/designs/actions"
+import { ListingModal } from "@/components/dashboard/ListingModal"
 import { StylePopoverPicker } from "@/components/create/StylePopoverPicker"
 import { Label } from "@/components/ui/label"
 import { NativeSelect, NativeSelectOptGroup } from "@/components/ui/native-select"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { ChibiGhost } from "@/components/shared/ChibiGhost"
 
 const POLL_INTERVAL_MS = 2000
 const POLL_CEILING_MS = 240_000
 
-type Landed = { id: string; imageUrl: string }
+/** Not a real progress signal — the job only ever reports pending/done/failed
+ *  — but a maker staring at a spinner needs *something* moving. Ticks up
+ *  against the same budget the copy already promises ("about a minute"). */
+const ESTIMATED_SECONDS = 60
+
+type Landed = { id: string; imageUrl: string; originalImageUrl: string | null }
 
 type Phase =
   | { step: "idle" }
@@ -84,6 +96,10 @@ export function CreateForm({
   const [enhance, setEnhance] = useState(true)
   const [picked, setPicked] = useState<string | null>(null)
   const [phase, setPhase] = useState<Phase>({ step: "idle" })
+  const [elapsedSeconds, setElapsedSeconds] = useState(0)
+  const [showListingModal, setShowListingModal] = useState(false)
+  const [bgError, setBgError] = useState<string | null>(null)
+  const [bgPending, startBgTransition] = useTransition()
 
   const router = useRouter()
   /** Set the instant `listDesign` succeeds, before the redirect is attempted. */
@@ -99,6 +115,26 @@ export function CreateForm({
     },
     [],
   )
+
+  // Only a clock, not a real progress signal — the job reports pending/done/
+  // failed and nothing in between — but it's what turns a static spinner into
+  // something a maker can tell is still alive.
+  useEffect(() => {
+    if (phase.step !== "generating") return
+    const interval = setInterval(() => setElapsedSeconds((s) => s + 1), 1000)
+    return () => clearInterval(interval)
+  }, [phase.step])
+
+  /** Patches one landed design's image fields in place — the background-cut
+   *  buttons update `designs` server-side and this is how the result card
+   *  picks that up without a full poll round-trip. */
+  const patchLanded = useCallback((id: string, patch: Partial<Landed>) => {
+    setPhase((prev) =>
+      prev.step === "done"
+        ? { ...prev, designs: prev.designs.map((d) => (d.id === id ? { ...d, ...patch } : d)) }
+        : prev,
+    )
+  }, [])
 
   const pollJob = useCallback((jobId: string) => {
     const supabase = createClient()
@@ -122,7 +158,7 @@ export function CreateForm({
           .maybeSingle(),
         supabase
           .from("designs")
-          .select("id, image_url")
+          .select("id, image_url, original_image_url")
           .eq("generation_job_id", jobId)
           .order("created_at", { ascending: true }),
       ])
@@ -130,6 +166,7 @@ export function CreateForm({
       const landed: Landed[] = (designs ?? []).map((d) => ({
         id: d.id,
         imageUrl: d.image_url,
+        originalImageUrl: d.original_image_url,
       }))
 
       if (job?.status === "failed") {
@@ -161,6 +198,7 @@ export function CreateForm({
     if (!style) return
 
     setPicked(null)
+    setElapsedSeconds(0)
     setPhase({ step: "generating", partial: [] })
 
     const response = await fetch("/api/generate", {
@@ -192,6 +230,47 @@ export function CreateForm({
     }
 
     pollJob(payload.jobId)
+  }
+
+  /** Back to the form with the same prompt/style/persona still set — a
+   *  maker who doesn't like what landed tweaks and reruns rather than
+   *  starting over from a blank idea box. The design itself is untouched;
+   *  this only clears what's shown, same as never having generated it. */
+  function handleRedesign() {
+    setPicked(null)
+    setListed(false)
+    setBgError(null)
+    setShowListingModal(false)
+    setPhase({ step: "idle" })
+  }
+
+  function toggleBackground(design: Landed) {
+    const isCut = design.originalImageUrl !== null
+    setBgError(null)
+    startBgTransition(async () => {
+      const result = isCut
+        ? await restoreDesignBackground(design.id)
+        : await removeDesignBackground(design.id)
+
+      if (result.error) {
+        setBgError(result.error)
+        return
+      }
+
+      const supabase = createClient()
+      const { data } = await supabase
+        .from("designs")
+        .select("image_url, original_image_url")
+        .eq("id", design.id)
+        .maybeSingle()
+
+      if (data) {
+        patchLanded(design.id, {
+          imageUrl: data.image_url,
+          originalImageUrl: data.original_image_url,
+        })
+      }
+    })
   }
 
   const busy = phase.step === "generating"
@@ -427,7 +506,11 @@ export function CreateForm({
           </div>
         )}
 
-        {/* One design gets the whole column; a fan-out tiles two up. */}
+        {/* One design gets the whole column; a fan-out tiles two up. Each
+            empty slot carries its own generating overlay — the mascot and
+            progress live on the card that's actually rendering, not in a
+            separate block underneath, and vanish the instant that card's
+            image lands. */}
         {slots > 0 && (
           <div className={cn("grid gap-4", slots > 1 ? "grid-cols-2" : "grid-cols-1")}>
             {Array.from({ length: slots }, (_, index) => {
@@ -435,10 +518,29 @@ export function CreateForm({
 
               if (!design) {
                 return (
-                  <Skeleton
+                  <div
                     key={index}
-                    className="aspect-[4/5] w-full rounded-2xl border-2 border-foreground/20 bg-card animate-pulse"
-                  />
+                    className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl border-2 border-foreground/20 bg-card"
+                  >
+                    <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-foreground/5 to-foreground/10" />
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-4 text-center">
+                      <ChibiGhost variant="generating" size={88} interactive={false} />
+                      <p className="text-body-sm font-semibold text-foreground">
+                        Rendering… {elapsedSeconds}s
+                      </p>
+                      <p className="text-caption text-muted-ink">
+                        Usually finishes in about {ESTIMATED_SECONDS}s
+                      </p>
+                      <div className="mt-1 h-1.5 w-2/3 max-w-[160px] overflow-hidden rounded-full bg-border">
+                        <motion.div
+                          className="h-full rounded-full bg-foreground"
+                          animate={{ x: ["-120%", "220%"] }}
+                          transition={{ duration: 1.1, repeat: Infinity, ease: "easeInOut" }}
+                          style={{ width: "33%" }}
+                        />
+                      </div>
+                    </div>
+                  </div>
                 )
               }
 
@@ -478,17 +580,6 @@ export function CreateForm({
           </div>
         )}
 
-        {phase.step === "generating" && (
-          <div className="flex flex-col items-center gap-2">
-            <ChibiGhost variant="generating" size={100} interactive={false} />
-            <p className="text-body-sm text-muted-ink text-center">
-              {imagesPerJob === 1
-                ? "Rendering your design… this takes about a minute."
-                : `Rendering ${imagesPerJob} designs… Variations appear as they finish.`}
-            </p>
-          </div>
-        )}
-
         {phase.step === "done" && !picked && (
           <p className="text-body-sm font-medium text-foreground text-center">
             Select your favorite artwork variant above to list it in the Bazaar.
@@ -513,41 +604,80 @@ export function CreateForm({
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col gap-4 rounded-2xl border-2 border-foreground bg-card p-6 shadow-[2px_2px_0px_0px_#262626]"
+            className="flex flex-col gap-3 rounded-2xl border-2 border-foreground bg-card p-6 shadow-[2px_2px_0px_0px_#262626]"
           >
             <div className="flex items-center gap-2 border-b border-border pb-3">
               <Shirt className="h-5 w-5 text-foreground" />
               <h3 className="text-body-sm font-semibold text-foreground">
-                List Artwork to Bazaar
+                Your Design
               </h3>
             </div>
-            <p className="text-caption text-muted-ink">
-              Choose the garment, placement, and set your price to list this 1-of-1 design.
-            </p>
-            <ListingForm
-              designId={pickedDesign.id}
-              imageUrl={pickedDesign.imageUrl}
-              isListed={false}
-              priceCents={null}
-              garmentOptions={garmentOptions}
-              frozen={false}
-              initialConfig={{
-                garmentSlug: null,
-                variantId: null,
-                placement: null,
-              }}
-              onSuccess={() => {
-                // Confirm first, navigate second. The design is live the moment
-                // the action returns, so a navigation that does not happen —
-                // an RSC fetch that fails, a slow route — must not read as
-                // "nothing happened": the maker is left looking at the same
-                // form with a listed design behind it. The banner below is the
-                // receipt, and it carries its own link.
-                setListed(true)
-                router.push("/dashboard/designs")
-              }}
-            />
+
+            {bgError && (
+              <div className="flex items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-body-sm font-medium text-destructive">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <span>{bgError}</span>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={bgPending}
+                onClick={() => toggleBackground(pickedDesign)}
+              >
+                <Scissors className="mr-1.5 size-3.5" />
+                {bgPending
+                  ? pickedDesign.originalImageUrl !== null
+                    ? "Restoring…"
+                    : "Cutting…"
+                  : pickedDesign.originalImageUrl !== null
+                    ? "Restore background"
+                    : "Remove background"}
+              </Button>
+              <Button type="button" variant="outline" onClick={handleRedesign}>
+                <RotateCcw className="mr-1.5 size-3.5" />
+                Redesign
+              </Button>
+              <Button type="button" variant="ember" onClick={() => setShowListingModal(true)}>
+                <Rocket className="mr-1.5 size-3.5" />
+                Make live
+              </Button>
+            </div>
           </motion.div>
+        )}
+
+        {pickedDesign && (
+          <ListingModal
+            design={{
+              id: pickedDesign.id,
+              imageUrl: pickedDesign.imageUrl,
+              originalImageUrl: pickedDesign.originalImageUrl,
+              mockupUrl: null,
+              vibeName: style?.label ?? null,
+              createdAt: new Date().toISOString(),
+              priceCents: null,
+              listedAt: null,
+              hasProduct: false,
+              garmentSlug: null,
+              featuredVariantId: null,
+              placement: null,
+            }}
+            garmentOptions={garmentOptions}
+            open={showListingModal}
+            onOpenChange={setShowListingModal}
+            onSuccess={() => {
+              // Confirm first, navigate second. The design is live the moment
+              // the action returns, so a navigation that does not happen — an
+              // RSC fetch that fails, a slow route — must not read as "nothing
+              // happened": the maker is left looking at the same form with a
+              // listed design behind it. The banner below is the receipt, and
+              // it carries its own link.
+              setListed(true)
+              router.push("/dashboard/designs")
+            }}
+          />
         )}
       </div>
     </div>
