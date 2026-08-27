@@ -18,7 +18,7 @@ export default function NotFound() {
           {/* Center Mascot Card Container */}
           <div className=" relative -mx-8 sm:-mx-12 md:-mx-16 z-10 w-52 h-52 sm:w-64 sm:h-64 md:w-80 md:h-80 transition-all duration-500 group">
             <Image
-              src="/mascot-404.png"
+              src="/mascots/mascot-404.png"
               alt="Shirt Bazaar Lost Mascot"
               fill
               sizes="(max-width: 768px) 208px, 320px"

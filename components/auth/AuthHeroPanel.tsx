@@ -7,25 +7,25 @@ import { LogoIcon } from "@/components/ui/logo";
 
 const CAROUSEL_ITEMS = [
   {
-    image: "/auth1.png",
+    image: "/auth/auth1.png",
     quote:
       "EVERY DESIGN IS ONE-OF-ONE. CLAIM IT AND IT'S EXCLUSIVELY YOURS, WITH A ROYALTY ON EVERY RESALE.",
     author: "SHIRT BAZAAR ATELIER",
   },
   {
-    image: "/auth2.png",
+    image: "/auth/auth2.png",
     quote:
       "DISCOVER & COLLECT LIMITED EDITION STREETWEAR CREATED BY INDEPENDENT ARTISTS WORLDWIDE.",
     author: "CREATOR COLLECTIVE",
   },
   {
-    image: "/auth3.png",
+    image: "/auth/auth3.png",
     quote:
       "REAL-TIME MARKET UPDATES, RESALE ALERTS AND PORTFOLIO TRACKING FOR FASHION CREATORS.",
     author: "INSIGHTS & ANALYTICS",
   },
   {
-    image: "/auth4.png",
+    image: "/auth/auth4.png",
     quote:
       "THE FUTURE OF DIGITAL APPAREL OWNERSHIP. CLAIM YOUR VIBE AND OWN YOUR UNIQUE CREATIONS.",
     author: "DIGITAL BAZAAR",

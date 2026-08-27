@@ -80,7 +80,7 @@ export const metadata: Metadata = {
       "No inventory hassles. No design guesswork. Get the physical piece, full commercial rights, and an instant automated storefront ready to take orders.",
     images: [
       {
-        url: `${siteUrl}/og-image.png`,
+        url: `${siteUrl}/seo/og-image.png`,
         width: 1200,
         height: 630,
         alt: "Shirt Bazaar — Buy The Shirt, Own The IP, We Create Your Custom Merch Store",
@@ -92,15 +92,15 @@ export const metadata: Metadata = {
     title: "Turn 1 Shirt Into Your Own Merch Store (With Full IP Ownership)",
     description:
       "We bundle physical apparel with legal IP ownership and a ready-to-sell custom store. Step into brand ownership with one purchase.",
-    images: [`${siteUrl}/twitter-card.png`],
+    images: [`${siteUrl}/seo/twitter-card.png`],
   },
   icons: {
     icon: [
-      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
-      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/icons/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icons/favicon-16x16.png", sizes: "16x16", type: "image/png" },
     ],
     apple: [
-      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+      { url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
     ],
   },
   manifest: "/site.webmanifest",
@@ -133,7 +133,7 @@ export default function RootLayout({
                 "@type": "Organization",
                 name: siteName,
                 url: siteUrl,
-                logo: `${siteUrl}/android-chrome-512x512.png`,
+                logo: `${siteUrl}/icons/android-chrome-512x512.png`,
                 contactPoint: {
                   "@type": "ContactPoint",
                   contactType: "customer support",

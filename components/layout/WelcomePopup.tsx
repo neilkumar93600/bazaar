@@ -73,7 +73,7 @@ export function WelcomePopup() {
         {/* Left Column: Visual Brand Universe */}
         <div className="relative min-h-[260px] md:min-h-[480px] w-full overflow-hidden bg-pitch flex flex-col justify-between p-6 md:p-8">
           <Image
-            src="/welcome-banner.png"
+            src="/banners/welcome-banner.png"
             alt="Shirt Bazaar — The Infinite 1-of-1 Vault"
             fill
             sizes="(max-width: 768px) 100vw, 480px"

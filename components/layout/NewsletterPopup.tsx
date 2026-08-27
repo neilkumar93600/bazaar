@@ -74,7 +74,7 @@ export function NewsletterPopup() {
         {/* Left Column: Visual Showcase & Brand Media */}
         <div className="relative min-h-[260px] md:min-h-[460px] w-full overflow-hidden bg-pitch flex flex-col justify-between p-6">
           <Image
-            src="/welcome-banner2.png"
+            src="/banners/welcome-banner2.png"
             alt="Bazaar 1-of-1 Streetwear Drops"
             fill
             sizes="(max-width: 768px) 100vw, 480px"

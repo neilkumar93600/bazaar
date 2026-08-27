@@ -91,11 +91,11 @@ function buildIco(images) {
 }
 
 const targets = [
-  { file: "public/favicon-16x16.png", size: 16, rounded: true },
-  { file: "public/favicon-32x32.png", size: 32, rounded: true },
-  { file: "public/apple-touch-icon.png", size: 180, rounded: false },
-  { file: "public/android-chrome-192x192.png", size: 192, rounded: false },
-  { file: "public/android-chrome-512x512.png", size: 512, rounded: false },
+  { file: "public/icons/favicon-16x16.png", size: 16, rounded: true },
+  { file: "public/icons/favicon-32x32.png", size: 32, rounded: true },
+  { file: "public/icons/apple-touch-icon.png", size: 180, rounded: false },
+  { file: "public/icons/android-chrome-192x192.png", size: 192, rounded: false },
+  { file: "public/icons/android-chrome-512x512.png", size: 512, rounded: false },
 ];
 
 for (const { file, size, rounded } of targets) {
@@ -108,5 +108,5 @@ const icoImages = [];
 for (const size of icoSizes) {
   icoImages.push({ size, data: await png(size, true) });
 }
-writeFileSync(join(root, "public/favicon.ico"), buildIco(icoImages));
-console.log(`wrote public/favicon.ico (${icoSizes.join(", ")}px)`);
+writeFileSync(join(root, "public/icons/favicon.ico"), buildIco(icoImages));
+console.log(`wrote public/icons/favicon.ico (${icoSizes.join(", ")}px)`);
