@@ -54,7 +54,7 @@ export function Feed({ columns }: { columns: FeedColumn[] }) {
 
   if (designs.length === 0) {
     return (
-      <section className="flex min-h-[calc(100dvh-67px)] flex-col items-center justify-center gap-2 px-6 text-center">
+      <section className="flex min-h-[calc(100svh-67px)] flex-col items-center justify-center gap-2 px-6 text-center">
         <p className="text-subheading text-foreground">No drops yet</p>
         <p className="max-w-sm text-body-sm text-muted-foreground">
           New 1-of-1 AI designs land here constantly. Check back soon.
@@ -64,11 +64,16 @@ export function Feed({ columns }: { columns: FeedColumn[] }) {
   }
 
   return (
-    // `dvh`, not `vh`: the marquee needs a definite height to mask against, and
-    // `h-screen` re-measures as mobile Safari's toolbar collapses, which jumps
-    // the whole wall mid-scroll. The 67px is the navbar's fixed row height —
-    // the wall fills exactly what's left, so the footer starts one scroll down.
-    <section className="mask-fade-y grid h-[calc(100dvh-67px)] grid-cols-2 gap-3 overflow-hidden px-3 pb-3 md:grid-cols-3 md:gap-4 md:px-4 md:pb-4 lg:grid-cols-6">
+    // `svh`, not `vh` or `dvh`: the marquee needs a definite height to fade
+    // against. `vh`/`h-screen` re-measures as mobile Safari's toolbar
+    // collapses, which jumps the whole wall mid-scroll — but so does `dvh`,
+    // which is the *dynamic* viewport and tracks the toolbar most closely of
+    // the three. Resizing this section relayouts ~2200px of marquee track and
+    // two dozen images on the visitor's very first swipe, which is the swipe
+    // that has to feel like it took. `svh` is the small viewport and stays put.
+    // The 67px is the navbar's fixed row height — the wall fills exactly what's
+    // left, so the footer starts one scroll down.
+    <section className="mask-fade-y grid h-[calc(100svh-67px)] grid-cols-2 gap-3 overflow-hidden px-3 pb-3 md:grid-cols-3 md:gap-4 md:px-4 md:pb-4 lg:grid-cols-6">
       {tracks.map((track, index) => (
         <Marquee
           key={index}

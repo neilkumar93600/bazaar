@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton"
  *  height, so nothing shifts when the designs land. */
 export default function Loading() {
   return (
-    <div className="grid h-[calc(100dvh-67px)] grid-cols-2 gap-3 overflow-hidden px-3 pb-3 md:grid-cols-3 md:gap-4 md:px-4 md:pb-4 lg:grid-cols-6">
+    <div className="grid h-[calc(100svh-67px)] grid-cols-2 gap-3 overflow-hidden px-3 pb-3 md:grid-cols-3 md:gap-4 md:px-4 md:pb-4 lg:grid-cols-6">
       {Array.from({ length: 6 }, (_, column) => (
         <div
           key={column}

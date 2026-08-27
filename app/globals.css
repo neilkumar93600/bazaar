@@ -509,17 +509,47 @@
 
   /* Softens the clipped top/bottom edge of a scrolling feed column.
    *
-   * `will-change: transform` gives this its own compositing layer. Without
-   * it, iOS Safari has to re-rasterize the mask against the twelve
-   * simultaneously-animating marquee tracks underneath it (Feed.tsx) on the
-   * main thread — and under that load the swipe gesture recognizer can stall
-   * over exactly this region, which on the homepage is the entire first
-   * viewport a visitor's thumb lands on. Reported as "scroll doesn't work on
-   * mobile"; a real device is what would confirm it, not Chromium's emulator,
-   * which never reproduces this class of bug. */
+   * Two painted strips, not `mask-image`. The marquee tracks under this are
+   * pure-transform animations, so both engines already run them on the
+   * compositor for free — but a masked ancestor has to composite its subtree
+   * into one surface and re-apply the mask, which drags those tracks back onto
+   * the main thread every frame for as long as they run, which is forever.
+   * That is what "scroll doesn't work on iPhone" was: the wall is the entire
+   * first viewport a thumb lands on, and Safari's gesture recognizer never got
+   * a turn. An earlier pass tried to buy the mask a layer with
+   * `will-change: transform`; that made it worse — the section never
+   * transforms, so the hint only pinned a full-viewport masked surface in
+   * memory.
+   *
+   * The gradients fade to `--background` rather than to transparent because
+   * they sit *over* the tracks instead of cutting them out. Identical result
+   * here, since the wall sits directly on the page.
+   *
+   * `touch-action` states the obvious out loud: the only gesture over this
+   * region is a vertical page pan, plus zoom, which stays for accessibility. */
   .mask-fade-y {
-    mask-image: linear-gradient(180deg, transparent 0%, #000 7%, #000 93%, transparent 100%);
-    will-change: transform;
+    position: relative;
+    touch-action: pan-y pinch-zoom;
+  }
+
+  .mask-fade-y::before,
+  .mask-fade-y::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    height: 7%;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .mask-fade-y::before {
+    top: 0;
+    background: linear-gradient(180deg, var(--background), transparent);
+  }
+
+  .mask-fade-y::after {
+    bottom: 0;
+    background: linear-gradient(0deg, var(--background), transparent);
   }
 
   /* Concentrates the hero's contrast veil where the headline/copy actually

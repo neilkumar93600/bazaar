@@ -54,3 +54,6 @@ next-env.d.ts
 .email-preview
 
 .vercel
+
+# Logo/brand PNG exports (scripts/export-logo.mjs, export-lockup.mjs)
+/export
