@@ -7,7 +7,7 @@ import { analyzePersonaStyle } from "@/lib/generation/persona-analysis"
 
 export type PersonaState = { error?: string; success?: boolean }
 
-const MIN_REFERENCE_IMAGES = 20
+const MIN_REFERENCE_IMAGES = 10
 const MAX_REFERENCE_IMAGES = 50
 const MAX_NAME_CHARS = 60
 

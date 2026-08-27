@@ -1,6 +1,6 @@
 "use client"
 
-import { useActionState, useEffect, useMemo, useState, useTransition } from "react"
+import { useActionState, useEffect, useMemo, useRef, useState, useTransition } from "react"
 import Image from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
 import { Palette, Upload, Trash2, Sparkles, AlertCircle } from "lucide-react"
@@ -10,7 +10,7 @@ import type { UserPersona } from "@/lib/data/personas"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 
-const MIN_IMAGES = 20
+const MIN_IMAGES = 10
 const MAX_IMAGES = 50
 
 const initialState: PersonaState = {}
@@ -27,11 +27,40 @@ export function PersonaManager({ personas }: { personas: UserPersona[] }) {
 function PersonaCreateForm() {
   const [state, formAction, isPending] = useActionState(createPersona, initialState)
   const [files, setFiles] = useState<File[]>([])
+  const inputRef = useRef<HTMLInputElement>(null)
 
+  // A file input replaces its whole FileList on every pick, and the form
+  // posts the input rather than React state — so a second pick would throw
+  // the first batch away. Merge old and new into a DataTransfer and write it
+  // back to the input, keeping both the previews and the submitted set.
   const handleFiles = (list: FileList | null) => {
-    if (!list) return
-    setFiles(Array.from(list).slice(0, MAX_IMAGES))
+    const input = inputRef.current
+    if (!list?.length || !input) return
+
+    const transfer = new DataTransfer()
+    const seen = new Set<string>()
+    for (const file of [...files, ...Array.from(list)]) {
+      const key = `${file.name}:${file.size}:${file.lastModified}`
+      if (seen.has(key) || seen.size >= MAX_IMAGES) continue
+      seen.add(key)
+      transfer.items.add(file)
+    }
+
+    input.files = transfer.files
+    setFiles(Array.from(transfer.files))
   }
+
+  const clearFiles = () => {
+    if (inputRef.current) inputRef.current.value = ""
+    setFiles([])
+  }
+
+  // Same input element sticks around after a save, so drop the old selection
+  // rather than let it be submitted a second time.
+  useEffect(() => {
+    if (state.success) clearFiles()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.success])
 
   // Recomputed only when the selection changes, and revoked on the way out —
   // createObjectURL on every render would leak one blob per thumbnail per
@@ -89,7 +118,7 @@ function PersonaCreateForm() {
           <Upload className="h-6 w-6 text-muted-ink" />
           <span className="text-body-sm font-medium text-foreground">
             {files.length > 0
-              ? `${files.length} image${files.length === 1 ? "" : "s"} selected`
+              ? `${files.length} image${files.length === 1 ? "" : "s"} selected — click to add more`
               : "Click to choose images"}
           </span>
           <span className="text-caption text-muted-ink">
@@ -97,6 +126,7 @@ function PersonaCreateForm() {
           </span>
         </label>
         <input
+          ref={inputRef}
           id="persona-images"
           name="images"
           type="file"
@@ -106,6 +136,17 @@ function PersonaCreateForm() {
           onChange={(e) => handleFiles(e.target.files)}
           className="hidden"
         />
+
+        {files.length > 0 && (
+          <button
+            type="button"
+            onClick={clearFiles}
+            disabled={isPending}
+            className="self-start text-caption font-medium text-muted-ink underline underline-offset-2 hover:text-foreground disabled:opacity-50"
+          >
+            Clear selection
+          </button>
+        )}
 
         {files.length > 0 && (
           <div className="grid grid-cols-6 gap-2 sm:grid-cols-8 md:grid-cols-10">
