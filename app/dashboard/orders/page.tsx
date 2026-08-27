@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { ReceiptIcon } from "lucide-react";
 import { format } from "date-fns";
 
 import { getMyOrders, type MyOrder } from "@/lib/data/orders";
 import { formatCents } from "@/lib/utils";
+import { ChibiGhost } from "@/components/shared/ChibiGhost";
 import { Button } from "@/components/ui/button";
 import { Badge, type badgeVariants } from "@/components/ui/badge";
 import {
@@ -48,8 +48,8 @@ export default async function OrdersPage() {
       {orders.length === 0 ? (
         <Empty>
           <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <ReceiptIcon />
+            <EmptyMedia variant="default">
+              <ChibiGhost variant="lying" size={96} interactive={false} />
             </EmptyMedia>
             <EmptyTitle>No orders yet</EmptyTitle>
             <EmptyDescription>

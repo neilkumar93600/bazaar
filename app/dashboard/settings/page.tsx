@@ -11,10 +11,12 @@ import { StorefrontPreferencesForm } from "@/components/dashboard/StorefrontPref
 import { StorefrontThemePrompt } from "@/components/dashboard/StorefrontThemePrompt";
 import { NotificationPreferencesForm } from "@/components/dashboard/NotificationPreferencesForm";
 import { SecuritySettingsForm } from "@/components/dashboard/SecuritySettingsForm";
+import { ChibiGhost } from "@/components/shared/ChibiGhost";
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
+  EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
 import {
@@ -203,6 +205,9 @@ export default async function SettingsPage() {
             {settings.payouts.length === 0 ? (
               <Empty className="p-8">
                 <EmptyHeader>
+                  <EmptyMedia variant="default">
+                    <ChibiGhost variant="cozy" size={80} interactive={false} />
+                  </EmptyMedia>
                   <EmptyTitle>No royalties earned yet</EmptyTitle>
                   <EmptyDescription>
                     Royalties from secondary claims and resales of your 1-of-1 designs will appear here.

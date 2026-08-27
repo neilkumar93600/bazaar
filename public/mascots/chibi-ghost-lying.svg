@@ -1,0 +1,148 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" width="100%" height="100%" fill="none">
+  <style>
+    @keyframes lyingSway {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-4px) rotate(-1.5deg); }
+    }
+    @keyframes tearDrip1 {
+      0% { transform: translateY(0px); opacity: 1; }
+      70% { transform: translateY(18px); opacity: 1; }
+      100% { transform: translateY(22px); opacity: 0; }
+    }
+    @keyframes tearDrip2 {
+      0% { transform: translateY(0px); opacity: 1; }
+      70% { transform: translateY(18px); opacity: 1; }
+      100% { transform: translateY(22px); opacity: 0; }
+    }
+    @keyframes puddleRipple {
+      0%, 100% { transform: scaleX(1); }
+      50% { transform: scaleX(1.15); }
+    }
+    @keyframes recordShine {
+      0%, 100% { opacity: 0.6; transform: rotate(0deg); }
+      50% { opacity: 1; transform: rotate(15deg); }
+    }
+
+    .lying-rig {
+      animation: lyingSway 3.8s ease-in-out infinite;
+      transform-origin: 118px 100px;
+    }
+    .tear-1 {
+      animation: tearDrip1 1.8s ease-in infinite;
+      transform-origin: 154px 104px;
+    }
+    .tear-2 {
+      animation: tearDrip2 1.8s ease-in 0.9s infinite;
+      transform-origin: 182px 98px;
+    }
+    .puddle-ripple {
+      animation: puddleRipple 1.8s ease-in-out infinite;
+      transform-origin: 168px 126px;
+    }
+    .record-shine {
+      animation: recordShine 3s ease-in-out infinite;
+      transform-origin: 178px 148px;
+    }
+
+    svg:hover .lying-rig {
+      animation-duration: 2.0s;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .lying-rig, .tear-1, .tear-2, .puddle-ripple, .record-shine {
+        animation: none !important;
+      }
+    }
+  </style>
+
+  <!-- CDs / Vinyl records on the floor -->
+  <g>
+    <!-- CD 1 (Left) -->
+    <ellipse cx="178" cy="148" rx="22" ry="10" fill="#ffffff" stroke="#262626" stroke-width="2.5" />
+    <ellipse cx="178" cy="148" rx="8" ry="3.5" fill="#f4f4f5" stroke="#262626" stroke-width="1.8" />
+    <circle cx="178" cy="148" r="1.5" fill="#262626" />
+    <path class="record-shine" d="M 166 146 C 172 143 184 143 190 146" stroke="#262626" stroke-width="1" stroke-linecap="round" />
+
+    <!-- CD Case (Square album jacket) -->
+    <path d="M 148 138 L 170 128 L 186 138 L 164 148 Z" fill="#ffffff" stroke="#262626" stroke-width="2.5" stroke-linejoin="round" />
+    <path d="M 158 135 L 164 132 L 174 138 L 168 141 Z" fill="#262626" opacity="0.15" />
+
+    <!-- Musical note near records -->
+    <path d="M 194 116 C 194 112 202 108 206 110 L 206 122 C 203 120 198 120 196 124 C 194 127 197 131 200 130 C 204 129 207 125 207 120 L 207 109" fill="#262626" stroke="#262626" stroke-width="0.8" />
+  </g>
+
+  <!-- Lying Down Ghost Body (Melted horizontal puddle blook) -->
+  <g class="lying-rig">
+    <path
+      d="
+        M 195 105
+        C 195 72 165 62 135 64
+        C 95 66 60 76 42 98
+        C 32 110 30 124 38 134
+        C 45 142 56 142 66 135
+        C 76 128 86 130 95 138
+        C 104 146 116 146 126 138
+        C 136 130 148 132 158 140
+        C 172 148 188 144 194 132
+        C 198 124 196 114 195 105
+        Z
+      "
+      fill="#ffffff"
+      stroke="#262626"
+      stroke-width="5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+
+    <!-- Ruffled tail on left -->
+    <path
+      d="
+        M 42 108
+        C 48 116 56 116 62 110
+        C 68 104 76 104 82 112
+        C 88 120 96 120 102 112
+      "
+      fill="none"
+      stroke="#262626"
+      stroke-width="3"
+      stroke-linecap="round"
+    />
+
+    <!-- Eyes (Looking up sideways peacefully) -->
+    <!-- Left Eye -->
+    <ellipse cx="148" cy="92" rx="8" ry="14" transform="rotate(-15 148 92)" fill="#262626" />
+    <ellipse cx="146" cy="88" rx="3" ry="6" transform="rotate(-15 146 88)" fill="#ffffff" />
+    <circle cx="150" cy="98" r="2" fill="#ffffff" />
+
+    <!-- Right Eye -->
+    <ellipse cx="176" cy="86" rx="8" ry="14" transform="rotate(-15 176 86)" fill="#262626" />
+    <ellipse cx="174" cy="82" rx="3" ry="6" transform="rotate(-15 174 82)" fill="#ffffff" />
+    <circle cx="178" cy="92" r="2" fill="#ffffff" />
+
+    <!-- Tiny peaceful horizontal mouth dot / line -->
+    <path d="M 162 110 C 164 112 167 112 168 110" fill="none" stroke="#262626" stroke-width="2.5" stroke-linecap="round" />
+
+    <!-- Left tear: repeating drip cycle -->
+    <path
+      class="tear-1"
+      d="M 152 104 C 152 108 151 111 152 113 C 153 115 155 115 156 113 C 157 111 156 108 154 104 Z"
+      fill="#ffffff"
+      stroke="#262626"
+      stroke-width="2"
+      stroke-linejoin="round"
+    />
+
+    <!-- Right tear: offset drip cycle -->
+    <path
+      class="tear-2"
+      d="M 180 98 C 180 102 179 105 180 107 C 181 109 183 109 184 107 C 185 105 184 102 182 98 Z"
+      fill="#ffffff"
+      stroke="#262626"
+      stroke-width="2"
+      stroke-linejoin="round"
+    />
+
+    <!-- Tear Puddle on floor, ripples with drop impact -->
+    <ellipse class="puddle-ripple" cx="168" cy="126" rx="14" ry="4" fill="#ffffff" stroke="#262626" stroke-width="2" />
+  </g>
+</svg>

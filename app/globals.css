@@ -324,6 +324,19 @@
   }
 }
 
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-6px) rotate(1deg);
+  }
+}
+
+.animate-float {
+  animation: float 3.5s ease-in-out infinite;
+}
+
 /* Marquee (components/ui/marquee.tsx) pauses on hover via its own class;
    keyboard focus has to pause it too or focus walks off a moving target. */
 .animate-marquee:focus-within,

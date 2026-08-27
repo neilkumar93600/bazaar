@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { MessageSquare } from "lucide-react";
 import { formatDistanceToNowStrict } from "date-fns";
 
 import { getInboxThreads } from "@/lib/data/messages";
+import { ChibiGhost } from "@/components/shared/ChibiGhost";
 import {
   Empty,
   EmptyDescription,
@@ -37,8 +37,8 @@ export default async function MessagesPage() {
       {threads.length === 0 ? (
         <Empty>
           <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <MessageSquare />
+            <EmptyMedia variant="default">
+              <ChibiGhost variant="headphones" size={96} interactive={false} />
             </EmptyMedia>
             <EmptyTitle>No messages yet</EmptyTitle>
             <EmptyDescription>

@@ -1,0 +1,158 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240" width="100%" height="100%" fill="none">
+  <style>
+    @keyframes analyzeFloat {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-7px) rotate(-1deg); }
+    }
+    @keyframes glassSweep {
+      0%, 100% { transform: rotate(-8deg); }
+      50% { transform: rotate(14deg); }
+    }
+    @keyframes eyeScan {
+      0%, 100% { transform: translateX(-3px); }
+      50% { transform: translateX(3px); }
+    }
+    @keyframes lensGlow {
+      0%, 100% { opacity: 0.3; transform: scale(0.9); }
+      50% { opacity: 0.8; transform: scale(1.15); }
+    }
+    @keyframes scanRay {
+      0% { opacity: 0; transform: scale(0.6); }
+      50% { opacity: 0.6; }
+      100% { opacity: 0; transform: scale(1.3); }
+    }
+
+    .analyzing-rig {
+      animation: analyzeFloat 2.8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+      transform-origin: 100px 120px;
+    }
+    .magnifying-arm-rig {
+      animation: glassSweep 2.4s ease-in-out infinite;
+      transform-origin: 148px 135px;
+    }
+    .scanning-eyes {
+      animation: eyeScan 2.4s ease-in-out infinite;
+      transform-origin: center;
+    }
+    .lens-glow {
+      animation: lensGlow 2.0s ease-in-out infinite;
+      transform-origin: 142px 96px;
+    }
+    .lens-radar {
+      animation: scanRay 2.0s ease-out infinite;
+      transform-origin: 142px 96px;
+    }
+
+    /* Hover Acceleration */
+    svg:hover .analyzing-rig {
+      animation-duration: 1.6s;
+    }
+    svg:hover .magnifying-arm-rig {
+      animation-duration: 1.2s;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .analyzing-rig, .magnifying-arm-rig, .scanning-eyes, .lens-glow, .lens-radar {
+        animation: none !important;
+      }
+    }
+  </style>
+
+  <!-- Ghost Body -->
+  <g class="analyzing-rig">
+    <path
+      d="
+        M 100 44
+        C 62 44 48 76 48 116
+        C 48 152 46 172 54 192
+        C 58 202 68 200 74 192
+        C 80 184 90 184 96 192
+        C 102 200 112 200 118 192
+        C 124 184 134 184 140 192
+        C 146 200 156 198 160 188
+        C 166 172 164 150 162 116
+        C 160 76 138 44 100 44
+        Z
+      "
+      fill="#ffffff"
+      stroke="#262626"
+      stroke-width="5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+
+    <!-- Ruffled hem -->
+    <path
+      d="
+        M 52 176
+        C 60 186 70 186 76 178
+        C 82 170 92 170 98 178
+        C 104 186 114 186 120 178
+        C 126 170 136 170 142 178
+        C 148 184 154 180 156 176
+      "
+      fill="none"
+      stroke="#262626"
+      stroke-width="3.5"
+      stroke-linecap="round"
+    />
+
+    <!-- Focused brows -->
+    <path d="M 74 92 L 90 96" stroke="#262626" stroke-width="3" stroke-linecap="round" />
+    <path d="M 128 92 L 112 96" stroke="#262626" stroke-width="3" stroke-linecap="round" />
+
+    <!-- Eyes, glancing left-right with scanning animation -->
+    <g class="scanning-eyes">
+      <ellipse cx="82" cy="110" rx="9" ry="16" fill="#262626" />
+      <ellipse cx="82" cy="104" rx="3.5" ry="7" fill="#ffffff" />
+      <circle cx="82" cy="118" r="2.5" fill="#ffffff" />
+      <ellipse cx="120" cy="110" rx="9" ry="16" fill="#262626" />
+      <ellipse cx="120" cy="104" rx="3.5" ry="7" fill="#ffffff" />
+      <circle cx="120" cy="118" r="2.5" fill="#ffffff" />
+    </g>
+
+    <!-- Tiny cute curious mouth -->
+    <path d="M 98 132 C 101 135 104 135 107 132" fill="none" stroke="#262626" stroke-width="2.5" stroke-linecap="round" />
+
+    <!-- Resting Left Arm -->
+    <path
+      d="M 50 124 C 42 128 40 136 46 140 C 52 142 56 136 54 130"
+      fill="#ffffff"
+      stroke="#262626"
+      stroke-width="3.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+
+    <!-- Articulated Arm & Magnifying Glass Rig (Properly held in hand) -->
+    <g class="magnifying-arm-rig">
+      <!-- Radar scan wave from lens -->
+      <circle class="lens-radar" cx="142" cy="96" r="22" stroke="#a3e635" stroke-width="2" fill="none" />
+
+      <!-- Magnifying Glass Lens Glow -->
+      <circle class="lens-glow" cx="142" cy="96" r="16" fill="#a3e635" opacity="0.4" />
+
+      <!-- Magnifying Glass Rim -->
+      <circle cx="142" cy="96" r="16" stroke="#262626" stroke-width="3.5" fill="none" />
+      <ellipse cx="137" cy="91" rx="6" ry="3" transform="rotate(-30 137 91)" fill="#ffffff" opacity="0.6" />
+
+      <!-- Handle passing through hand -->
+      <line x1="152" y1="108" x2="168" y2="134" stroke="#262626" stroke-width="4.5" stroke-linecap="round" />
+
+      <!-- Ghost Right Arm seamlessly clutching handle -->
+      <path
+        d="
+          M 148 138
+          C 156 138 165 132 163 120
+          C 161 114 153 115 150 122
+          C 146 128 142 132 146 138
+        "
+        fill="#ffffff"
+        stroke="#262626"
+        stroke-width="3.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </g>
+  </g>
+</svg>

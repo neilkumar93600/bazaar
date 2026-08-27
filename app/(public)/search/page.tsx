@@ -1,10 +1,10 @@
 import type { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
-import { SearchIcon } from "lucide-react"
 
 import { BazaarGrid } from "@/components/bazaar/BazaarGrid"
 import { SearchField } from "@/components/bazaar/SearchField"
+import { ChibiGhost } from "@/components/shared/ChibiGhost"
 import {
   Empty,
   EmptyDescription,
@@ -60,8 +60,8 @@ export default async function SearchPage(props: PageProps<"/search">) {
       {!query.q ? (
         <Empty className="glass-surface rounded-3xl bg-card text-card-foreground">
           <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <SearchIcon />
+            <EmptyMedia variant="default">
+              <ChibiGhost variant="dapper" size={96} interactive={false} />
             </EmptyMedia>
             <EmptyTitle>Search designs and creators</EmptyTitle>
             <EmptyDescription>

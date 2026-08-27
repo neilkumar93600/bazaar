@@ -11,7 +11,6 @@ import {
   Heart,
   Edit3,
   ArrowUpRight,
-  ShirtIcon,
   Scissors,
 } from "lucide-react"
 
@@ -33,6 +32,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty"
+import { ChibiGhost } from "@/components/shared/ChibiGhost"
 
 type TabFilter = "all" | "unlisted" | "listed" | "adopted"
 
@@ -60,8 +60,8 @@ export function MyDesignsClient({
         </div>
         <Empty className="glass-surface rounded-3xl bg-card">
           <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <ShirtIcon />
+            <EmptyMedia variant="default">
+              <ChibiGhost variant="happy" size={96} interactive={false} />
             </EmptyMedia>
             <EmptyTitle>Nothing made yet</EmptyTitle>
             <EmptyDescription>

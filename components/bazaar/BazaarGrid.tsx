@@ -1,7 +1,7 @@
 import Link from "next/link"
-import { ShirtIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { ChibiGhost } from "@/components/shared/ChibiGhost"
 import {
   Empty,
   EmptyContent,
@@ -32,8 +32,8 @@ export function BazaarGrid({
     return (
       <Empty className="glass-surface rounded-3xl bg-card text-card-foreground">
         <EmptyHeader>
-          <EmptyMedia variant="icon">
-            <ShirtIcon />
+          <EmptyMedia variant="default">
+            <ChibiGhost variant="lying" size={96} interactive={false} />
           </EmptyMedia>
           <EmptyTitle>
             {searched

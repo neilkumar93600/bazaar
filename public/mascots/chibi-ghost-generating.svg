@@ -1,0 +1,180 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240" width="100%" height="100%" fill="none">
+  <style>
+    @keyframes spellFloat {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-8px) rotate(1.5deg); }
+    }
+    @keyframes wandSwish {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(-10deg); }
+      60% { transform: rotate(14deg); }
+      85% { transform: rotate(-4deg); }
+    }
+    @keyframes wandGlow {
+      0%, 100% { transform: scale(1); opacity: 0.6; }
+      50% { transform: scale(1.4); opacity: 1; }
+    }
+    @keyframes sparkleBurst1 {
+      0%, 100% { transform: translate(0px, 0px) scale(0.6); opacity: 0; }
+      50% { transform: translate(4px, -6px) scale(1.2); opacity: 1; }
+    }
+    @keyframes sparkleBurst2 {
+      0%, 100% { transform: translate(0px, 0px) scale(0.6); opacity: 0; }
+      50% { transform: translate(8px, 4px) scale(1.2); opacity: 1; }
+    }
+    @keyframes magicDust {
+      0% { transform: translateY(0px) scale(0.8); opacity: 0; }
+      50% { opacity: 0.9; }
+      100% { transform: translateY(-16px) scale(1.1); opacity: 0; }
+    }
+    @keyframes eyeBlink {
+      0%, 90%, 100% { transform: scaleY(1); }
+      95% { transform: scaleY(0.08); }
+    }
+
+    .generating-rig {
+      animation: spellFloat 3.0s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+      transform-origin: 100px 120px;
+    }
+    .wand-arm-rig {
+      animation: wandSwish 1.6s ease-in-out infinite;
+      transform-origin: 148px 126px;
+    }
+    .wand-tip-glow {
+      animation: wandGlow 0.8s ease-in-out infinite;
+      transform-origin: 178px 50px;
+    }
+    .burst-1 {
+      animation: sparkleBurst1 1.2s ease-out infinite;
+    }
+    .burst-2 {
+      animation: sparkleBurst2 1.2s ease-out 0.4s infinite;
+    }
+    .dust-1 {
+      animation: magicDust 2.2s ease-out infinite;
+      transform-origin: 40px 75px;
+    }
+    .dust-2 {
+      animation: magicDust 2.2s ease-out 1.1s infinite;
+      transform-origin: 156px 144px;
+    }
+    .generating-eye {
+      animation: eyeBlink 3.6s ease-in-out infinite;
+    }
+
+    /* Hover Acceleration */
+    svg:hover .generating-rig {
+      animation-duration: 1.5s;
+    }
+    svg:hover .wand-arm-rig {
+      animation-duration: 0.9s;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .generating-rig, .wand-arm-rig, .wand-tip-glow, .burst-1, .burst-2, .dust-1, .dust-2, .generating-eye {
+        animation: none !important;
+      }
+    }
+  </style>
+
+  <!-- Ghost Body -->
+  <g class="generating-rig">
+    <path
+      d="
+        M 100 44
+        C 62 44 48 76 48 116
+        C 48 152 46 172 54 192
+        C 58 202 68 200 74 192
+        C 80 184 90 184 96 192
+        C 102 200 112 200 118 192
+        C 124 184 134 184 140 192
+        C 146 200 156 198 160 188
+        C 166 172 164 150 162 116
+        C 160 76 138 44 100 44
+        Z
+      "
+      fill="#ffffff"
+      stroke="#262626"
+      stroke-width="5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+
+    <!-- Ruffled hem -->
+    <path
+      d="
+        M 52 176
+        C 60 186 70 186 76 178
+        C 82 170 92 170 98 178
+        C 104 186 114 186 120 178
+        C 126 170 136 170 142 178
+        C 148 184 154 180 156 176
+      "
+      fill="none"
+      stroke="#262626"
+      stroke-width="3.5"
+      stroke-linecap="round"
+    />
+
+    <!-- Excited bright eyes -->
+    <g class="generating-eye" style="transform-origin: 82px 110px;">
+      <ellipse cx="82" cy="110" rx="9" ry="17" fill="#262626" />
+      <ellipse cx="82" cy="103" rx="4" ry="8" fill="#ffffff" />
+      <circle cx="82" cy="119" r="3" fill="#ffffff" />
+    </g>
+    <g class="generating-eye" style="transform-origin: 120px 110px;">
+      <ellipse cx="120" cy="110" rx="9" ry="17" fill="#262626" />
+      <ellipse cx="120" cy="103" rx="4" ry="8" fill="#ffffff" />
+      <circle cx="120" cy="119" r="3" fill="#ffffff" />
+    </g>
+
+    <!-- Big happy open mouth -->
+    <path d="M 94 130 C 94 140 108 140 108 130 Z" fill="#262626" />
+
+    <!-- Resting Left arm -->
+    <path
+      d="M 50 120 C 42 124 40 132 46 136 C 52 138 56 132 54 126"
+      fill="#ffffff"
+      stroke="#262626"
+      stroke-width="3.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+
+    <!-- Arm raised holding the wand rig -->
+    <g class="wand-arm-rig">
+      <!-- Solid Ghost Arm holding wand -->
+      <path
+        d="
+          M 148 126
+          C 158 116 166 102 168 84
+          C 166 78 158 82 156 94
+          C 152 108 146 118 142 124
+          Z
+        "
+        fill="#ffffff"
+        stroke="#262626"
+        stroke-width="3.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+      <!-- Wand handle & rod -->
+      <line x1="164" y1="80" x2="176" y2="54" stroke="#262626" stroke-width="4" stroke-linecap="round" />
+      <!-- Wand tip glow -->
+      <circle class="wand-tip-glow" cx="178" cy="50" r="7" fill="#a3e635" />
+
+      <!-- Sparkle burst around the wand tip -->
+      <g stroke="#a3e635" stroke-width="3" stroke-linecap="round">
+        <path class="burst-1" d="M 178 30 L 178 20" />
+        <path class="burst-2" d="M 200 42 L 208 36" />
+        <path class="burst-1" d="M 202 62 L 210 64" />
+      </g>
+    </g>
+
+    <!-- Small trailing sparkles drifting past the body -->
+    <g fill="#262626">
+      <path class="dust-1" d="M 40 70 L 41 74 L 45 75 L 41 76 L 40 80 L 39 76 L 35 75 L 39 74 Z" />
+      <path class="dust-2" d="M 156 140 L 157 143 L 160 144 L 157 145 L 156 148 L 155 145 L 152 144 L 155 143 Z" />
+    </g>
+  </g>
+</svg>

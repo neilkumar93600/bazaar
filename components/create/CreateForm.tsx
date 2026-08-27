@@ -36,6 +36,7 @@ import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { ChibiGhost } from "@/components/shared/ChibiGhost"
 
 const POLL_INTERVAL_MS = 2000
 const POLL_CEILING_MS = 240_000
@@ -478,11 +479,14 @@ export function CreateForm({
         )}
 
         {phase.step === "generating" && (
-          <p className="text-body-sm text-muted-ink text-center">
-            {imagesPerJob === 1
-              ? "Rendering your design… this takes about a minute."
-              : `Rendering ${imagesPerJob} designs… Variations appear as they finish.`}
-          </p>
+          <div className="flex flex-col items-center gap-2">
+            <ChibiGhost variant="generating" size={100} interactive={false} />
+            <p className="text-body-sm text-muted-ink text-center">
+              {imagesPerJob === 1
+                ? "Rendering your design… this takes about a minute."
+                : `Rendering ${imagesPerJob} designs… Variations appear as they finish.`}
+            </p>
+          </div>
         )}
 
         {phase.step === "done" && !picked && (

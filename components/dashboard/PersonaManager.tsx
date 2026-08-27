@@ -1,6 +1,6 @@
 "use client"
 
-import { useActionState, useEffect, useMemo, useRef, useState, useTransition, type FormEvent } from "react"
+import { startTransition, useActionState, useEffect, useMemo, useRef, useState, useTransition, type FormEvent } from "react"
 import Image from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
 import { Palette, Upload, Trash2, Sparkles, AlertCircle } from "lucide-react"
@@ -11,6 +11,7 @@ import type { UserPersona } from "@/lib/data/personas"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
+import { ChibiGhost } from "@/components/shared/ChibiGhost"
 
 const MIN_IMAGES = 10
 const MAX_IMAGES = 50
@@ -112,7 +113,9 @@ function PersonaCreateForm() {
       const fd = new FormData()
       fd.set("name", String(name ?? ""))
       urls.forEach((url) => fd.append("imageUrls", url))
-      formAction(fd)
+      // useActionState's dispatcher must run inside a transition for isPending
+      // to track it — calling it bare here left React warning on every submit.
+      startTransition(() => formAction(fd))
     } finally {
       setUploading(false)
     }
@@ -238,6 +241,19 @@ function PersonaCreateForm() {
           Persona saved — pick it in the create form.
         </p>
       )}
+
+      <AnimatePresence>
+        {(uploading || isPending) && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            className="flex justify-center"
+          >
+            <ChibiGhost variant={uploading ? "uploading" : "analyzing"} size={120} interactive={false} />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="flex flex-col gap-2">
         <button
