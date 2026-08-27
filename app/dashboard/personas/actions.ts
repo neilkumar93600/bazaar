@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 
-import { createClient, createServiceClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/supabase/server"
 import { analyzePersonaStyle } from "@/lib/generation/persona-analysis"
 
 export type PersonaState = { error?: string; success?: boolean }
@@ -11,12 +11,15 @@ const MIN_REFERENCE_IMAGES = 10
 const MAX_REFERENCE_IMAGES = 50
 const MAX_NAME_CHARS = 60
 
-/** Uploads the reference set, has a vision model derive the shared style,
- *  and saves the persona. All server-side: the upload alone could go through
- *  the caller's own session (storage RLS would allow it under their own
- *  path), but the analysis call needs MUAPI_API_KEY, so the whole thing runs
- *  here rather than splitting the flow across a client upload and a second
- *  server call.
+/** Has a vision model derive the shared style from an already-uploaded
+ *  reference set, and saves the persona. The images themselves go straight
+ *  from the browser to Storage under the caller's own session before this
+ *  runs (see PersonaManager's handleSubmit) — a Server Action body is capped
+ *  by Vercel's serverless payload limit (hard 4.5MB, unrelated to
+ *  next.config's bodySizeLimit), which 10-50 full-resolution images blow
+ *  past immediately. This action only ever sees the resulting URLs, small
+ *  enough that body size is a non-issue, and re-checks each one is actually
+ *  this user's own upload before trusting it.
  *
  *  Throws nothing back to the client as an unhandled rejection — a maker
  *  waiting on this button press needs a reason, not a blank failure, so every
@@ -35,53 +38,40 @@ export async function createPersona(
   const name = String(formData.get("name") ?? "").trim().slice(0, MAX_NAME_CHARS)
   if (!name) return { error: "Give this persona a name." }
 
-  const files = formData
-    .getAll("images")
-    .filter((entry): entry is File => entry instanceof File && entry.size > 0)
+  const imageUrls = formData
+    .getAll("imageUrls")
+    .filter((entry): entry is string => typeof entry === "string" && entry.length > 0)
 
-  if (files.length < MIN_REFERENCE_IMAGES) {
+  if (imageUrls.length < MIN_REFERENCE_IMAGES) {
     return {
-      error: `Upload at least ${MIN_REFERENCE_IMAGES} reference designs — ${files.length} isn't enough for the style to come through.`,
+      error: `Upload at least ${MIN_REFERENCE_IMAGES} reference designs — ${imageUrls.length} isn't enough for the style to come through.`,
     }
   }
-  if (files.length > MAX_REFERENCE_IMAGES) {
+  if (imageUrls.length > MAX_REFERENCE_IMAGES) {
     return { error: `Keep it to ${MAX_REFERENCE_IMAGES} reference designs or fewer.` }
   }
 
-  const admin = createServiceClient()
-  const uploadedUrls: string[] = []
-
-  for (const [index, file] of files.entries()) {
-    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg"
-    const path = `persona-refs/${user.id}/${Date.now()}-${index}.${ext}`
-
-    const { error: uploadError } = await admin.storage
-      .from("designs")
-      .upload(path, file, { contentType: file.type || "image/jpeg" })
-
-    if (uploadError) {
-      return { error: `Couldn't upload reference ${index + 1}. Try again.` }
-    }
-
-    const {
-      data: { publicUrl },
-    } = admin.storage.from("designs").getPublicUrl(path)
-    uploadedUrls.push(publicUrl)
+  // Ownership check: the client picked these paths itself, so confirm every
+  // URL actually points at this user's own persona-refs prefix rather than
+  // trusting whatever the form posted.
+  const ownPrefix = `/designs/persona-refs/${user.id}/`
+  if (imageUrls.some((url) => !url.includes(ownPrefix))) {
+    return { error: "Those images weren't uploaded by you. Try again." }
   }
 
   let styleSummary: string
   try {
-    styleSummary = await analyzePersonaStyle(uploadedUrls)
+    styleSummary = await analyzePersonaStyle(imageUrls)
   } catch (error) {
     console.error(`[personas] style analysis failed for user ${user.id}`, error)
     return { error: "Couldn't work out a style from those images. Try again in a moment." }
   }
 
-  const { error: insertError } = await admin.from("personas").insert({
+  const { error: insertError } = await supabase.from("personas").insert({
     owner_id: user.id,
     name,
     style_summary: styleSummary,
-    reference_image_urls: uploadedUrls,
+    reference_image_urls: imageUrls,
   })
 
   if (insertError) {

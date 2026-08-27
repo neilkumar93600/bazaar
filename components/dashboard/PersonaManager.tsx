@@ -1,11 +1,12 @@
 "use client"
 
-import { useActionState, useEffect, useMemo, useRef, useState, useTransition } from "react"
+import { useActionState, useEffect, useMemo, useRef, useState, useTransition, type FormEvent } from "react"
 import Image from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
 import { Palette, Upload, Trash2, Sparkles, AlertCircle } from "lucide-react"
 
 import { createPersona, deletePersona, type PersonaState } from "@/app/dashboard/personas/actions"
+import { createClient } from "@/lib/supabase/client"
 import type { UserPersona } from "@/lib/data/personas"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -27,32 +28,32 @@ export function PersonaManager({ personas }: { personas: UserPersona[] }) {
 function PersonaCreateForm() {
   const [state, formAction, isPending] = useActionState(createPersona, initialState)
   const [files, setFiles] = useState<File[]>([])
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // A file input replaces its whole FileList on every pick, and the form
-  // posts the input rather than React state — so a second pick would throw
-  // the first batch away. Merge old and new into a DataTransfer and write it
-  // back to the input, keeping both the previews and the submitted set.
+  // A file input replaces its whole FileList on every pick — merge old and
+  // new picks into React state instead, so a second pick adds to the
+  // selection rather than replacing it.
   const handleFiles = (list: FileList | null) => {
-    const input = inputRef.current
-    if (!list?.length || !input) return
-
-    const transfer = new DataTransfer()
-    const seen = new Set<string>()
-    for (const file of [...files, ...Array.from(list)]) {
-      const key = `${file.name}:${file.size}:${file.lastModified}`
-      if (seen.has(key) || seen.size >= MAX_IMAGES) continue
-      seen.add(key)
-      transfer.items.add(file)
-    }
-
-    input.files = transfer.files
-    setFiles(Array.from(transfer.files))
+    if (!list?.length) return
+    setFiles((prev) => {
+      const seen = new Set(prev.map((f) => `${f.name}:${f.size}:${f.lastModified}`))
+      const merged = [...prev]
+      for (const file of Array.from(list)) {
+        const key = `${file.name}:${file.size}:${file.lastModified}`
+        if (seen.has(key) || merged.length >= MAX_IMAGES) continue
+        seen.add(key)
+        merged.push(file)
+      }
+      return merged
+    })
   }
 
   const clearFiles = () => {
     if (inputRef.current) inputRef.current.value = ""
     setFiles([])
+    setUploadError(null)
   }
 
   // Same input element sticks around after a save, so drop the old selection
@@ -61,6 +62,57 @@ function PersonaCreateForm() {
     if (state.success) clearFiles()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.success])
+
+  // Images go straight from the browser to Storage under the caller's own
+  // session (RLS scoped to persona-refs/{uid}/*) — a Server Action body is
+  // capped by Vercel's serverless payload limit (hard 4.5MB) which 10-50
+  // full-resolution images blow past immediately. The action itself only
+  // ever receives the resulting URLs.
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setUploadError(null)
+    if (files.length < MIN_IMAGES) return
+
+    const name = new FormData(e.currentTarget).get("name")
+
+    setUploading(true)
+    try {
+      const supabase = createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) {
+        setUploadError("Sign in to create a persona.")
+        return
+      }
+
+      const urls: string[] = []
+      for (const [index, file] of files.entries()) {
+        const ext = file.name.split(".").pop()?.toLowerCase() || "jpg"
+        const path = `persona-refs/${user.id}/${Date.now()}-${index}.${ext}`
+
+        const { error } = await supabase.storage
+          .from("designs")
+          .upload(path, file, { contentType: file.type || "image/jpeg" })
+        if (error) {
+          setUploadError(`Couldn't upload reference ${index + 1}. Try again.`)
+          return
+        }
+
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("designs").getPublicUrl(path)
+        urls.push(publicUrl)
+      }
+
+      const fd = new FormData()
+      fd.set("name", String(name ?? ""))
+      urls.forEach((url) => fd.append("imageUrls", url))
+      formAction(fd)
+    } finally {
+      setUploading(false)
+    }
+  }
 
   // Recomputed only when the selection changes, and revoked on the way out —
   // createObjectURL on every render would leak one blob per thumbnail per
@@ -75,7 +127,7 @@ function PersonaCreateForm() {
 
   return (
     <form
-      action={formAction}
+      onSubmit={handleSubmit}
       className="flex flex-col gap-6 rounded-2xl border-2 border-foreground bg-card p-6 md:p-8 shadow-[2px_2px_0px_0px_#262626]"
     >
       <div className="flex items-center gap-2 border-b border-border pb-4">
@@ -101,7 +153,7 @@ function PersonaCreateForm() {
           name="name"
           placeholder="e.g. Late-night streetwear"
           maxLength={60}
-          disabled={isPending}
+          disabled={isPending || uploading}
           required
           className="rounded-xl border-2 border-border bg-background"
         />
@@ -132,7 +184,7 @@ function PersonaCreateForm() {
           type="file"
           accept="image/*"
           multiple
-          disabled={isPending}
+          disabled={isPending || uploading}
           onChange={(e) => handleFiles(e.target.files)}
           className="hidden"
         />
@@ -141,7 +193,7 @@ function PersonaCreateForm() {
           <button
             type="button"
             onClick={clearFiles}
-            disabled={isPending}
+            disabled={isPending || uploading}
             className="self-start text-caption font-medium text-muted-ink underline underline-offset-2 hover:text-foreground disabled:opacity-50"
           >
             Clear selection
@@ -170,10 +222,10 @@ function PersonaCreateForm() {
         )}
       </div>
 
-      {state.error && (
+      {(uploadError || state.error) && (
         <div className="flex items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-body-sm font-medium text-destructive">
           <AlertCircle className="h-4 w-4 shrink-0" />
-          <span>{state.error}</span>
+          <span>{uploadError || state.error}</span>
         </div>
       )}
 
@@ -185,11 +237,11 @@ function PersonaCreateForm() {
 
       <button
         type="submit"
-        disabled={isPending || files.length < MIN_IMAGES}
+        disabled={isPending || uploading || files.length < MIN_IMAGES}
         className="btn-ember flex w-full items-center justify-center gap-2.5 !rounded-full border-2 border-foreground px-6 py-3.5 text-body-sm font-semibold shadow-[2px_2px_0px_0px_#262626] transition-all hover:shadow-[3px_3px_0px_0px_#262626] disabled:opacity-50"
       >
         <Sparkles className="h-5 w-5 text-foreground" />
-        {isPending ? "Analyzing your style…" : "Create persona"}
+        {uploading ? "Uploading images…" : isPending ? "Analyzing your style…" : "Create persona"}
       </button>
     </form>
   )
