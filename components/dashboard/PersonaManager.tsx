@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/client"
 import type { UserPersona } from "@/lib/data/personas"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
+import { Spinner } from "@/components/ui/spinner"
 
 const MIN_IMAGES = 10
 const MAX_IMAGES = 50
@@ -29,6 +30,7 @@ function PersonaCreateForm() {
   const [state, formAction, isPending] = useActionState(createPersona, initialState)
   const [files, setFiles] = useState<File[]>([])
   const [uploading, setUploading] = useState(false)
+  const [uploadedCount, setUploadedCount] = useState(0)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -76,6 +78,7 @@ function PersonaCreateForm() {
     const name = new FormData(e.currentTarget).get("name")
 
     setUploading(true)
+    setUploadedCount(0)
     try {
       const supabase = createClient()
       const {
@@ -103,6 +106,7 @@ function PersonaCreateForm() {
           data: { publicUrl },
         } = supabase.storage.from("designs").getPublicUrl(path)
         urls.push(publicUrl)
+        setUploadedCount(index + 1)
       }
 
       const fd = new FormData()
@@ -235,14 +239,49 @@ function PersonaCreateForm() {
         </p>
       )}
 
-      <button
-        type="submit"
-        disabled={isPending || uploading || files.length < MIN_IMAGES}
-        className="btn-ember flex w-full items-center justify-center gap-2.5 !rounded-full border-2 border-foreground px-6 py-3.5 text-body-sm font-semibold shadow-[2px_2px_0px_0px_#262626] transition-all hover:shadow-[3px_3px_0px_0px_#262626] disabled:opacity-50"
-      >
-        <Sparkles className="h-5 w-5 text-foreground" />
-        {uploading ? "Uploading images…" : isPending ? "Analyzing your style…" : "Create persona"}
-      </button>
+      <div className="flex flex-col gap-2">
+        <button
+          type="submit"
+          disabled={isPending || uploading || files.length < MIN_IMAGES}
+          className="btn-ember flex w-full items-center justify-center gap-2.5 !rounded-full border-2 border-foreground px-6 py-3.5 text-body-sm font-semibold shadow-[2px_2px_0px_0px_#262626] transition-all hover:shadow-[3px_3px_0px_0px_#262626] disabled:opacity-50"
+        >
+          {uploading || isPending ? (
+            <Spinner className="h-5 w-5 text-foreground" />
+          ) : (
+            <Sparkles className="h-5 w-5 text-foreground" />
+          )}
+          {uploading
+            ? `Uploading images… ${uploadedCount}/${files.length}`
+            : isPending
+              ? "Analyzing your style…"
+              : "Create persona"}
+        </button>
+
+        <AnimatePresence>
+          {(uploading || isPending) && (
+            <motion.div
+              initial={{ opacity: 0, scaleY: 0 }}
+              animate={{ opacity: 1, scaleY: 1 }}
+              exit={{ opacity: 0, scaleY: 0 }}
+              className="h-1.5 w-full overflow-hidden rounded-full bg-border"
+            >
+              {uploading ? (
+                <motion.div
+                  className="h-full rounded-full bg-foreground"
+                  animate={{ width: `${(uploadedCount / Math.max(files.length, 1)) * 100}%` }}
+                  transition={{ duration: 0.3 }}
+                />
+              ) : (
+                <motion.div
+                  className="h-full w-1/3 rounded-full bg-foreground"
+                  animate={{ x: ["-120%", "220%"] }}
+                  transition={{ duration: 1.1, repeat: Infinity, ease: "easeInOut" }}
+                />
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </form>
   )
 }
