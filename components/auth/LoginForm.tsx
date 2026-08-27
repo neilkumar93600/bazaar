@@ -124,17 +124,17 @@ export function LoginForm({ next }: { next?: string }) {
       <form action={formAction} className="flex flex-col gap-4">
         {next && <input type="hidden" name="next" value={next} />}
 
-        {/* Email Field */}
+        {/* Email or username field */}
         <StaggerItem className="flex flex-col gap-1.5">
           <label htmlFor="email" className="text-caption font-medium text-ink">
-            Email address
+            Email or username
           </label>
           <input
             id="email"
             name="email"
-            type="email"
-            autoComplete="email"
-            placeholder="your.email@example.com"
+            type="text"
+            autoComplete="username"
+            placeholder="your.email@example.com or username"
             required
             className="w-full bg-paper-white border border-ink focus:border-ink focus:ring-1 focus:ring-ink text-ink placeholder:text-muted-gray rounded-[4px] px-3.5 py-2.5 text-body-sm transition-all outline-none"
           />
