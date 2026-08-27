@@ -2,26 +2,23 @@
  *
  *  Server-only. `lib/generation/personas.ts` holds the static presets and is
  *  imported by CreateForm ("use client"), so this vision call lives in its
- *  own file rather than there — a client bundle must never see MUAPI_API_KEY.
+ *  own file rather than there — a client bundle must never see
+ *  OPENROUTER_API_KEY.
  *
- *  MODEL. `openrouter-vision` (MuAPI), routed to a Gemini vision model behind
- *  the scenes. Discovered live against MuAPI's `/models` catalog and its own
- *  422 validation error, not documented anywhere: the endpoint wants
- *  `images_list` (an array — multi-image in one call, not one call per
- *  image), `system_prompt`, `max_tokens`, alongside the usual `prompt`. Its
- *  reply lands in `outputs[0]` exactly like every other MuAPI model, so
- *  `runModel()` needs no changes to support it.
+ *  MODEL. Talks to OpenRouter directly (see ./openrouter.ts), not MuAPI —
+ *  MuAPI is this app's image *generation* transport; its `openrouter-vision`
+ *  passthrough model caps `images_list` at 4 URLs, too few for a 10-50 image
+ *  persona upload, and returned a bare 403 under real traffic besides.
+ *  `gemini-2.5-flash` reads reference images well and is cheap for a call
+ *  this infrequent (once per persona, not per generation).
  */
 
-import { runModel } from "./muapi.ts"
+import { runVisionChat } from "./openrouter.ts"
 
-const MODEL_PATH = "/openrouter-vision"
+const MODEL = "google/gemini-2.5-flash"
 
-/** Same shape as compose.ts's own budget for a text call — this is one
- *  request, not a poll loop racing an image render, so it can be generous
- *  without holding anything else up. */
-const TIMEOUT_MS = 90_000
-
+/** Every reference image goes in one call — the model needs to see them
+ *  together to describe a *shared* style, not one description per image. */
 const MAX_TOKENS = 400
 
 /** One dense paragraph, not a report. Long enough to be specific, short
@@ -62,19 +59,13 @@ export async function analyzePersonaStyle(imageUrls: string[]): Promise<string> 
     throw new Error("No reference images to analyze")
   }
 
-  const reply = await Promise.race([
-    runModel(MODEL_PATH, {
-      prompt: `Derive the shared visual style from these ${imageUrls.length} reference designs.`,
-      images_list: imageUrls,
-      system_prompt: SYSTEM_PROMPT,
-      max_tokens: MAX_TOKENS,
-    }),
-    new Promise<null>((resolve) => setTimeout(() => resolve(null), TIMEOUT_MS)),
-  ])
-
-  if (!reply) {
-    throw new Error(`Style analysis timed out after ${TIMEOUT_MS}ms`)
-  }
+  const reply = await runVisionChat({
+    model: MODEL,
+    systemPrompt: SYSTEM_PROMPT,
+    prompt: `Derive the shared visual style from these ${imageUrls.length} reference designs.`,
+    imageUrls,
+    maxTokens: MAX_TOKENS,
+  })
 
   const summary = clampSummary(reply)
   if (!summary) {
