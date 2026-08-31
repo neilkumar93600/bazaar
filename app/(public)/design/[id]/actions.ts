@@ -40,6 +40,8 @@ export type DesignDialogData = {
   orderOptions: OrderOptions;
   /** One product photo per garment colour, for the gallery's swatch row. */
   shirtColours: ColourMockup[];
+  /** Same, for the back print. Empty unless the design is `placement: "both"`. */
+  backShirtColours: ColourMockup[];
 };
 
 export async function getDesignDialogData(
@@ -76,6 +78,7 @@ export async function getDesignDialogData(
     orderOptions:
       design?.claimedBy && design.printifyProductId ? options : null,
     shirtColours: colourMockups(design?.mockupUrl ?? null, options?.colours ?? []),
+    backShirtColours: colourMockups(design?.backMockupUrl ?? null, options?.colours ?? []),
   };
 }
 

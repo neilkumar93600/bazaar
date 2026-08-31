@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import type { DesignCardData } from "@/components/shared/DesignCard"
 import { designImageSrc } from "@/lib/images/design-src"
+import type { Placement } from "@/lib/printify/print-areas"
 
 export type DesignCreator = {
   id: string
@@ -18,6 +19,12 @@ export type DesignDetail = {
   /** Printify's photo of the finished garment, once the design is claimed and
    *  synced. Null falls back to the drawn mockup. */
   mockupUrl: string | null
+  /** The back-print photo. Only ever set for `placement: "both"` — a front- or
+   *  back-only design has nothing else to show. */
+  backMockupUrl: string | null
+  /** What the maker printed this on. Null is a pre-garment-config design,
+   *  which the bazaar treats as "front". */
+  placement: Placement | null
   /** Buyer-facing copy, written by the composer. The prompt is deliberately
    *  absent from this type: it is the recipe, it never reaches the browser, and
    *  a field that exists is a field something eventually renders. */
@@ -54,7 +61,7 @@ export async function getDesignDetail(id: string): Promise<DesignDetail | null> 
   const { data: design } = await supabase
     .from("designs")
     .select(
-      "id, image_url, mockup_url, title, description, price_cents, vibe_id, is_claimed, claimed_by, created_at, generation_job_id, printify_product_id, garment_slug, featured_variant_id"
+      "id, image_url, mockup_url, back_mockup_url, placement, title, description, price_cents, vibe_id, is_claimed, claimed_by, created_at, generation_job_id, printify_product_id, garment_slug, featured_variant_id"
     )
     .eq("id", id)
     .eq("moderation_status", "approved")
@@ -114,6 +121,8 @@ export async function getDesignDetail(id: string): Promise<DesignDetail | null> 
     id: design.id,
     imageUrl: designImageSrc(design.id),
     mockupUrl: design.mockup_url ?? null,
+    backMockupUrl: design.back_mockup_url ?? null,
+    placement: (design.placement as Placement | null) ?? null,
     description: design.description ?? null,
     title: design.title ?? null,
     quote: job?.quote_content ?? null,

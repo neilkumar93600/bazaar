@@ -25,6 +25,7 @@ export function DesignView({
   design,
   orderOptions,
   shirtColours,
+  backShirtColours = [],
   isSignedIn,
   viewerEmail,
   viewerDisplayName,
@@ -33,6 +34,7 @@ export function DesignView({
   design: DesignDetail
   orderOptions: OrderOptions
   shirtColours: ColourMockup[]
+  backShirtColours?: ColourMockup[]
   isSignedIn: boolean
   viewerEmail: string
   viewerDisplayName: string
@@ -57,25 +59,58 @@ export function DesignView({
 
   const [selectedColour, setSelectedColour] = useState(initialColour)
   const [showArt, setShowArt] = useState(false)
+  const [side, setSide] = useState<"front" | "back">("front")
 
   const title = designLabel(design)
 
   return (
     <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-2 lg:gap-12">
-      {/* Left Column: Instant-loading Gallery + Creator Card */}
-      <div className="flex flex-col gap-6 lg:col-start-1 lg:row-start-1">
+      {/* Split into three grid items, not two flex columns: a mobile buyer
+          reads image -> price/colour/buy -> maker/description, so the buy
+          button can't sit inside the same block as the stuff that used to
+          push it down the page. `order` reshuffles that stack on mobile;
+          `lg:order-none` plus explicit col/row-start put it all back for the
+          two-column desktop layout, where the maker card and description
+          belong under the gallery either way. */}
+      <div className="order-1 lg:order-none lg:col-start-1 lg:row-start-1">
         <DesignGallery
           imageUrl={design.imageUrl}
           mockupUrl={design.mockupUrl}
+          backMockupUrl={design.backMockupUrl}
           alt={title}
           colourMockups={shirtColours}
+          backColourMockups={backShirtColours}
           featuredVariantId={design.featuredVariantId}
           selectedColour={selectedColour}
           onSelectColour={setSelectedColour}
           showArt={showArt}
           onToggleArt={setShowArt}
+          side={side}
         />
+      </div>
 
+      {/* Transactional Panel with Colour Selector below pricing */}
+      <div className="order-2 lg:order-none lg:col-start-2 lg:row-span-2 lg:row-start-1">
+        <DesignDetailPanel
+          design={design}
+          orderOptions={orderOptions}
+          availableColours={availableColours}
+          selectedColour={selectedColour}
+          onSelectColour={(colour) => {
+            setSelectedColour(colour)
+            setShowArt(false)
+          }}
+          showArt={showArt}
+          onToggleArt={setShowArt}
+          side={side}
+          onChangeSide={setSide}
+          isSignedIn={isSignedIn}
+          viewerEmail={viewerEmail}
+          viewerDisplayName={viewerDisplayName}
+        />
+      </div>
+
+      <div className="order-3 lg:order-none flex flex-col gap-6 lg:col-start-1">
         {design.creator ? (
           <CreatorCard
             creator={design.creator}
@@ -97,25 +132,6 @@ export function DesignView({
             </p>
           </div>
         )}
-      </div>
-
-      {/* Right Column: Transactional Panel with Colour Selector below pricing */}
-      <div className="lg:col-start-2 lg:row-span-2 lg:row-start-1">
-        <DesignDetailPanel
-          design={design}
-          orderOptions={orderOptions}
-          availableColours={availableColours}
-          selectedColour={selectedColour}
-          onSelectColour={(colour) => {
-            setSelectedColour(colour)
-            setShowArt(false)
-          }}
-          showArt={showArt}
-          onToggleArt={setShowArt}
-          isSignedIn={isSignedIn}
-          viewerEmail={viewerEmail}
-          viewerDisplayName={viewerDisplayName}
-        />
       </div>
     </div>
   )

@@ -24,6 +24,8 @@ export function DesignDetailPanel({
   onSelectColour,
   showArt = false,
   onToggleArt,
+  side = "front",
+  onChangeSide,
   isSignedIn,
   viewerEmail,
   viewerDisplayName,
@@ -35,6 +37,11 @@ export function DesignDetailPanel({
   onSelectColour?: (colour: string) => void
   showArt?: boolean
   onToggleArt?: (show: boolean) => void
+  /** Which print side the gallery is showing. Only rendered as a switch when
+   *  the design actually has a back photo (`placement: "both"`) — a front- or
+   *  back-only design has nothing to toggle to. */
+  side?: "front" | "back"
+  onChangeSide?: (side: "front" | "back") => void
   isSignedIn: boolean
   viewerEmail: string
   viewerDisplayName: string
@@ -71,6 +78,35 @@ export function DesignDetailPanel({
       <span className="font-mono text-heading text-foreground font-semibold">
         {formatListingPrice(design.priceCents)}
       </span>
+
+      {/* Print side switch — only a `both`-placement design has a back photo
+          to switch to. Sits above the colour section: colour and side are
+          independent choices, but side is the one that decides which photo
+          the colour swatches below re-point. */}
+      {design.backMockupUrl && (
+        <div className="flex items-center justify-between rounded-2xl border border-border/80 bg-card p-4 shadow-sm">
+          <span className="text-body-sm font-semibold text-foreground">
+            Print side · {side === "back" ? "Back" : "Front"}
+          </span>
+          <div className="flex items-center gap-1 text-caption font-medium text-muted-ink">
+            {(["front", "back"] as const).map((option) => (
+              <button
+                key={option}
+                type="button"
+                onClick={() => onChangeSide?.(option)}
+                className={cn(
+                  "rounded-md px-2.5 py-1 text-caption capitalize transition cursor-pointer",
+                  side === option
+                    ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                    : "bg-secondary text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Garment Colour & Preview controls on the right side */}
       <div className="flex flex-col gap-3 rounded-2xl border border-border/80 bg-card p-4 shadow-sm">

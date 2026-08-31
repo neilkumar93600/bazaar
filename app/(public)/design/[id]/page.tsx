@@ -83,6 +83,7 @@ export default async function DesignDetailPage(props: PageProps<"/design/[id]">)
   // Only a claimed design with a product can actually be ordered.
   const canOrder = Boolean(design.claimedBy && design.printifyProductId);
   const shirtColours = colourMockups(design.mockupUrl, orderOptions?.colours ?? []);
+  const backShirtColours = colourMockups(design.backMockupUrl, orderOptions?.colours ?? []);
 
   return (
     <div className="mx-auto flex max-w-page flex-col gap-14 px-6 py-8 md:px-16 sm:py-12">
@@ -119,6 +120,7 @@ export default async function DesignDetailPage(props: PageProps<"/design/[id]">)
         design={design}
         orderOptions={orderOptions}
         shirtColours={shirtColours}
+        backShirtColours={backShirtColours}
         isSignedIn={Boolean(user)}
         viewerEmail={user?.email ?? ""}
         viewerDisplayName={profile?.display_name ?? ""}

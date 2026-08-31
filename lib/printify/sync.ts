@@ -85,6 +85,7 @@ export async function syncDesignProduct(designId: string): Promise<void> {
       .update({
         printify_product_id: result.productId,
         mockup_url: result.mockupUrl,
+        back_mockup_url: result.backMockupUrl,
       })
       .eq("id", design.id)
   } catch (error) {

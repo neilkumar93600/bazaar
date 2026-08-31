@@ -83,25 +83,29 @@ async function uploadImage(
  *  3001 comes back with every image marked `"other"`, and the view is encoded in
  *  the src as `?camera_label=front-2`. So trust `is_default` first — Printify
  *  sets it on the image it treats as the primary — then fall back to the camera
- *  label, then to `position`, then to whatever came first. */
+ *  label, then to `position`, then to whatever came first.
+ *
+ *  Takes a camera rather than a `Placement`: a `both` design needs both shots,
+ *  the front chest mark and the full back print, so the caller asks for each
+ *  side by name instead of the print-area rule that produced them. */
 function pickMockup(
   product: Product,
   featuredVariantId: number | null,
-  placement: Placement
+  camera: "front" | "back"
 ): string | null {
   const images = product.images ?? []
 
   // The camera has to face the print. A back-only design photographed from the
   // front is a picture of a blank shirt — which is exactly what the bazaar was
   // showing before this took placement into account.
-  const camera = placement === "back" ? "camera_label=back" : "camera_label=front"
+  const cameraLabel = `camera_label=${camera}`
 
   const forVariant = featuredVariantId
     ? images.filter((image) => image.variant_ids.includes(featuredVariantId))
     : []
 
   const chosen =
-    forVariant.find((image) => image.src.includes(camera)) ??
+    forVariant.find((image) => image.src.includes(cameraLabel)) ??
     // Right colour but no shot from the side we want: still better than the
     // right camera on the wrong colour, because the design is at least visible
     // in the default render.
@@ -109,16 +113,21 @@ function pickMockup(
     forVariant[0] ??
     // No featured variant (a design from before garment config existed), or
     // Printify rendered nothing for it.
-    images.find((image) => image.src.includes(camera)) ??
+    images.find((image) => image.src.includes(cameraLabel)) ??
     images.find((image) => image.is_default) ??
-    images.find((image) => image.position === placement) ??
+    images.find((image) => image.position === camera) ??
     images[0] ??
     null
 
   return chosen?.src ?? null
 }
 
-export type PrintifySyncResult = { productId: string; mockupUrl: string | null }
+export type PrintifySyncResult = {
+  productId: string
+  mockupUrl: string | null
+  /** The back-print photo, only ever populated for `placement: "both"`. */
+  backMockupUrl: string | null
+}
 
 /** Creates the Printify product for a design and returns its id plus the first
  *  mockup Printify renders for it.
@@ -189,18 +198,31 @@ export async function createDesignProduct({
     }
   )
 
-  let mockupUrl = pickMockup(created, featuredVariantId, placement)
+  // Front camera is the hero everywhere except a back-only design, where the
+  // hero has to be the shot that actually shows the print.
+  const heroCamera = placement === "back" ? "back" : "front"
+  const needsBack = placement === "both"
 
-  for (let attempt = 0; attempt < MOCKUP_POLL_ATTEMPTS && !mockupUrl; attempt++) {
+  let mockupUrl = pickMockup(created, featuredVariantId, heroCamera)
+  let backMockupUrl = needsBack ? pickMockup(created, featuredVariantId, "back") : null
+
+  for (
+    let attempt = 0;
+    attempt < MOCKUP_POLL_ATTEMPTS && (!mockupUrl || (needsBack && !backMockupUrl));
+    attempt++
+  ) {
     await sleep(MOCKUP_POLL_DELAY_MS)
     const product = await printifyFetch<Product>(
       config,
       `/v1/shops/${config.shopId}/products/${created.id}.json`
     )
-    mockupUrl = pickMockup(product, featuredVariantId, placement)
+    if (!mockupUrl) mockupUrl = pickMockup(product, featuredVariantId, heroCamera)
+    if (needsBack && !backMockupUrl) {
+      backMockupUrl = pickMockup(product, featuredVariantId, "back")
+    }
   }
 
-  return { productId: created.id, mockupUrl }
+  return { productId: created.id, mockupUrl, backMockupUrl }
 }
 
 /** Re-reads a product's mockups. For designs whose product exists but whose
@@ -217,5 +239,5 @@ export async function fetchProductMockup(
     config,
     `/v1/shops/${config.shopId}/products/${productId}.json`
   )
-  return pickMockup(product, featuredVariantId, placement)
+  return pickMockup(product, featuredVariantId, placement === "back" ? "back" : "front")
 }

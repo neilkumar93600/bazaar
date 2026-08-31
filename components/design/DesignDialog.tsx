@@ -82,6 +82,7 @@ export function DesignDialog({
 
   const [selectedColour, setSelectedColour] = useState("Black")
   const [showArt, setShowArt] = useState(false)
+  const [side, setSide] = useState<"front" | "back">("front")
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -96,34 +97,32 @@ export function DesignDialog({
           </p>
         ) : (
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-            <div className="flex flex-col gap-5">
+            {/* Three grid items, not two flex columns: on mobile the buy
+                button must land above the maker card and description, not
+                trapped below them in the same stacked block. `order` handles
+                the mobile stack; `lg:order-none` restores the original
+                two-column layout, where those sections belong under the
+                gallery either way. */}
+            <div className="order-1 lg:order-none">
               <DesignGallery
                 imageUrl={design.imageUrl}
                 mockupUrl={design.mockupUrl}
+                backMockupUrl={design.backMockupUrl}
                 alt={title}
                 colourMockups={data!.shirtColours}
+                backColourMockups={data!.backShirtColours}
                 featuredVariantId={design.featuredVariantId}
                 selectedColour={selectedColour}
                 onSelectColour={setSelectedColour}
                 showArt={showArt}
                 onToggleArt={setShowArt}
+                side={side}
               />
-              {design.creator && <CreatorCard creator={design.creator} />}
-              {design.description && (
-                <div className="flex flex-col gap-2 rounded-2xl border border-border/80 bg-card p-4 shadow-xs">
-                  <h4 className="text-caption font-semibold text-muted-foreground uppercase tracking-wider">
-                    About this artwork
-                  </h4>
-                  <p className="text-body-sm text-muted-ink leading-relaxed">
-                    {design.description}
-                  </p>
-                </div>
-              )}
             </div>
 
             {/* pr-9 clears the dialog's own close button, which is pinned
                 top-right over exactly where the panel puts its edition badge. */}
-            <div className="flex flex-col justify-between pr-9">
+            <div className="order-2 lg:order-none flex flex-col justify-between pr-9">
               <DesignDetailPanel
                 design={design}
                 orderOptions={data!.orderOptions}
@@ -135,6 +134,8 @@ export function DesignDialog({
                 }}
                 showArt={showArt}
                 onToggleArt={setShowArt}
+                side={side}
+                onChangeSide={setSide}
                 isSignedIn={data!.viewerIsLoggedIn}
                 viewerEmail={data!.viewerEmail}
                 viewerDisplayName={data!.viewerName}
@@ -149,6 +150,20 @@ export function DesignDialog({
                   <ArrowUpRight className="size-4" />
                 </Link>
               </div>
+            </div>
+
+            <div className="order-3 lg:order-none flex flex-col gap-5">
+              {design.creator && <CreatorCard creator={design.creator} />}
+              {design.description && (
+                <div className="flex flex-col gap-2 rounded-2xl border border-border/80 bg-card p-4 shadow-xs">
+                  <h4 className="text-caption font-semibold text-muted-foreground uppercase tracking-wider">
+                    About this artwork
+                  </h4>
+                  <p className="text-body-sm text-muted-ink leading-relaxed">
+                    {design.description}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         )}

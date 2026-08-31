@@ -76,6 +76,13 @@ export default function FaqPage() {
           </Link>
           ,{" "}
           <Link
+            href="/ip-policy"
+            className="text-primary underline underline-offset-4"
+          >
+            Commercial IP Policy
+          </Link>
+          ,{" "}
+          <Link
             href="/refund-policy"
             className="text-primary underline underline-offset-4"
           >

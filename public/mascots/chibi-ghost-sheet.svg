@@ -1,0 +1,488 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" width="100%" height="100%" fill="none">
+  <style>
+    .ink-line { stroke: #262626; stroke-linecap: round; stroke-linejoin: round; }
+    .ink-text { font-family: 'Comic Sans MS', 'Caveat', 'Patrick Hand', cursive, sans-serif; fill: #262626; font-weight: bold; }
+    .sparkle { fill: #262626; }
+  </style>
+
+  <!-- Background Canvas -->
+  <rect width="600" height="800" fill="#ffffff" rx="16" />
+
+  <!-- Doodles / Sparkles background -->
+  <g class="sparkle">
+    <!-- Tiny cross sparkles -->
+    <path d="M 280 40 L 280 50 M 275 45 L 285 45" class="ink-line" stroke-width="2" />
+    <path d="M 520 180 L 520 188 M 516 184 L 524 184" class="ink-line" stroke-width="1.8" />
+    <path d="M 80 420 L 80 428 M 76 424 L 84 424" class="ink-line" stroke-width="1.8" />
+    <path d="M 330 360 L 330 370 M 325 365 L 335 365" class="ink-line" stroke-width="2" />
+
+    <!-- Little Hearts -->
+    <path d="M 180 340 C 180 336 184 334 187 337 C 190 334 194 336 194 340 C 194 345 187 349 187 349 C 187 349 180 345 180 340 Z" />
+    <path d="M 430 460 C 430 456 434 454 437 457 C 440 454 444 456 444 460 C 444 465 437 469 437 469 C 437 469 430 465 430 460 Z" />
+
+    <!-- Little Stars & Dots -->
+    <circle cx="290" cy="220" r="2" />
+    <circle cx="310" cy="240" r="1.5" />
+    <circle cx="560" cy="380" r="2.5" />
+    <circle cx="50" cy="220" r="2" />
+    <circle cx="230" cy="530" r="2" />
+    <circle cx="360" cy="560" r="2.5" />
+  </g>
+
+  <!-- ==================== 1. TOP LEFT: Classic Floating Blook ==================== -->
+  <g transform="translate(40, 30)">
+    <!-- Floating blook body -->
+    <path
+      d="
+        M 80 20
+        C 50 20 38 48 38 78
+        C 38 108 42 126 48 138
+        C 52 144 58 144 62 138
+        C 66 132 72 132 76 138
+        C 80 144 86 144 90 138
+        C 94 132 100 132 104 138
+        C 108 144 114 144 118 138
+        C 122 126 124 105 124 78
+        C 124 48 110 20 80 20
+        Z
+      "
+      fill="#ffffff"
+      stroke="#262626"
+      stroke-width="4.5"
+      class="ink-line"
+    />
+    <!-- Hemline Ruffle -->
+    <path d="M 44 126 C 48 134 56 134 60 128 C 64 122 72 122 76 128 C 80 134 88 134 92 128 C 96 122 104 122 108 128 C 112 134 116 132 118 126" stroke="#262626" stroke-width="2.5" fill="none" class="ink-line" />
+
+    <!-- Eyes -->
+    <ellipse cx="66" cy="72" rx="7" ry="13" fill="#262626" />
+    <ellipse cx="66" cy="67" rx="2.5" ry="5.5" fill="#ffffff" />
+    <circle cx="66" cy="78" r="1.8" fill="#ffffff" />
+    <ellipse cx="96" cy="72" rx="7" ry="13" fill="#262626" />
+    <ellipse cx="96" cy="67" rx="2.5" ry="5.5" fill="#ffffff" />
+    <circle cx="96" cy="78" r="1.8" fill="#ffffff" />
+
+    <!-- Tiny Shy Dot Mouth -->
+    <circle cx="81" cy="90" r="1.5" fill="#262626" />
+  </g>
+
+  <!-- ==================== 2. TOP RIGHT: Crying Tears Blook ==================== -->
+  <g transform="translate(240, 25)">
+    <text x="75" y="16" class="ink-text" font-size="14" text-anchor="middle">oooooh...</text>
+    <!-- Little bubbles above head -->
+    <circle cx="55" cy="22" r="2" fill="#262626" />
+    <circle cx="65" cy="20" r="2.5" fill="#262626" />
+    <circle cx="75" cy="20" r="2" fill="#262626" />
+
+    <path
+      d="
+        M 75 28
+        C 48 28 36 54 36 82
+        C 36 112 40 128 46 140
+        C 50 146 56 146 60 140
+        C 64 134 70 134 74 140
+        C 78 146 84 146 88 140
+        C 92 134 98 134 102 140
+        C 106 146 112 144 114 138
+        C 118 126 120 108 120 82
+        C 120 54 102 28 75 28
+        Z
+      "
+      fill="#ffffff"
+      stroke="#262626"
+      stroke-width="4.5"
+      class="ink-line"
+    />
+
+    <!-- Solid Dark Shadow Ruff Base -->
+    <path
+      d="
+        M 38 126
+        C 40 138 48 144 54 138
+        C 60 132 68 132 74 138
+        C 80 144 88 144 94 138
+        C 100 132 108 134 112 140
+        C 114 142 116 136 116 130
+        C 116 120 40 120 38 126
+        Z
+      "
+      fill="#262626"
+    />
+
+    <!-- Eyes with Big Streams of Tears -->
+    <ellipse cx="62" cy="74" rx="7" ry="14" fill="#262626" />
+    <ellipse cx="62" cy="69" rx="2.5" ry="6" fill="#ffffff" />
+    <path d="M 62 88 C 59 93 57 100 59 103 C 61 106 65 106 67 103 C 69 100 65 93 62 88 Z" fill="#ffffff" stroke="#262626" stroke-width="2" class="ink-line" />
+    <path d="M 60 108 C 58 112 56 116 58 118 C 60 120 63 120 64 118 C 65 116 62 112 60 108 Z" fill="#ffffff" stroke="#262626" stroke-width="1.8" class="ink-line" />
+
+    <ellipse cx="88" cy="74" rx="7" ry="14" fill="#262626" />
+    <ellipse cx="88" cy="69" rx="2.5" ry="6" fill="#ffffff" />
+    <path d="M 88 88 C 85 93 83 100 85 103 C 87 106 91 106 93 103 C 95 100 91 93 88 88 Z" fill="#ffffff" stroke="#262626" stroke-width="2" class="ink-line" />
+    <path d="M 90 108 C 88 112 86 116 88 118 C 90 120 93 120 94 118 C 95 116 92 112 90 108 Z" fill="#ffffff" stroke="#262626" stroke-width="1.8" class="ink-line" />
+
+    <!-- Sad little frown -->
+    <path d="M 72 94 C 74 92 76 92 78 94" fill="none" stroke="#262626" stroke-width="2.5" class="ink-line" />
+  </g>
+
+  <!-- ==================== 3. TOP RIGHT 2: Looking Up Cute Blob ==================== -->
+  <g transform="translate(420, 20)">
+    <path
+      d="
+        M 65 24
+        C 40 24 24 45 22 75
+        C 20 102 32 120 44 126
+        C 50 128 58 122 62 125
+        C 68 128 78 126 84 120
+        C 92 112 96 90 94 70
+        C 92 40 85 24 65 24
+        Z
+      "
+      fill="#ffffff"
+      stroke="#262626"
+      stroke-width="4.5"
+      class="ink-line"
+    />
+    <!-- Tail fluff curve -->
+    <path d="M 68 24 C 82 20 98 28 102 46 C 105 60 98 72 94 75" fill="#ffffff" stroke="#262626" stroke-width="4" class="ink-line" />
+
+    <!-- Big curious eyes -->
+    <ellipse cx="50" cy="74" rx="8" ry="14" fill="#262626" />
+    <ellipse cx="48" cy="70" rx="3" ry="6" fill="#ffffff" />
+    <ellipse cx="74" cy="72" rx="7" ry="12" fill="#262626" />
+    <ellipse cx="72" cy="68" rx="2.5" ry="5" fill="#ffffff" />
+    <!-- Teardrops -->
+    <circle cx="84" cy="80" r="2.5" fill="#262626" />
+  </g>
+
+  <!-- ==================== 4. CENTER LEFT: "Dapper Blook" with Top Hat ==================== -->
+  <g transform="translate(40, 220)">
+    <!-- Text callout -->
+    <text x="140" y="28" class="ink-text" font-size="13">I call it</text>
+    <text x="140" y="44" class="ink-text" font-size="13">"dapper blook"</text>
+    <path d="M 125 38 C 115 42 108 45 105 52" stroke="#262626" stroke-width="1.5" stroke-dasharray="2 3" class="ink-line" />
+
+    <!-- Ghost Body -->
+    <path
+      d="
+        M 80 50
+        C 50 50 36 78 36 112
+        C 36 142 40 162 48 174
+        C 52 180 58 180 62 174
+        C 66 168 72 168 76 174
+        C 80 180 86 180 90 174
+        C 94 168 100 168 104 174
+        C 108 180 114 180 118 174
+        C 124 162 126 140 126 110
+        C 126 75 110 50 80 50
+        Z
+      "
+      fill="#ffffff"
+      stroke="#262626"
+      stroke-width="4.5"
+      class="ink-line"
+    />
+
+    <!-- Solid Dark Ruffled Base -->
+    <path
+      d="
+        M 38 160
+        C 42 172 50 176 56 170
+        C 62 164 70 164 76 170
+        C 82 176 90 176 96 170
+        C 102 164 110 166 116 174
+        C 120 166 122 154 122 150
+        C 120 152 40 152 38 160
+        Z
+      "
+      fill="#262626"
+    />
+
+    <!-- Tears Top Hat (Dapper Hat made of tears) -->
+    <g transform="rotate(-8 82 45)">
+      <!-- Hat Brim -->
+      <ellipse cx="82" cy="48" rx="24" ry="6" fill="#ffffff" stroke="#262626" stroke-width="3.5" class="ink-line" />
+      <!-- Hat Body -->
+      <path d="M 68 46 L 70 20 C 70 16 74 14 84 14 C 94 14 98 16 98 20 L 100 46 Z" fill="#ffffff" stroke="#262626" stroke-width="3.5" class="ink-line" />
+      <!-- Hat Band -->
+      <path d="M 69 38 C 76 41 90 41 99 38 L 99.5 44 C 91 47 77 47 68.5 44 Z" fill="#262626" />
+      <!-- Hat Top -->
+      <ellipse cx="84" cy="20" rx="14" ry="3.5" fill="#ffffff" stroke="#262626" stroke-width="2.5" />
+    </g>
+
+    <!-- Eyes (Crying tears of joy / dapper tears) -->
+    <ellipse cx="66" cy="104" rx="7.5" ry="14" fill="#262626" />
+    <ellipse cx="66" cy="99" rx="2.8" ry="6" fill="#ffffff" />
+    <circle cx="66" cy="111" r="2" fill="#ffffff" />
+    <!-- Teardrops forming heart/sparkle shape -->
+    <path d="M 66 120 C 63 125 61 131 63 134 C 65 137 69 137 71 134 C 73 131 69 125 66 120 Z" fill="#ffffff" stroke="#262626" stroke-width="2" class="ink-line" />
+
+    <ellipse cx="98" cy="104" rx="7.5" ry="14" fill="#262626" />
+    <ellipse cx="98" cy="99" rx="2.8" ry="6" fill="#ffffff" />
+    <circle cx="98" cy="111" r="2" fill="#ffffff" />
+    <path d="M 98 120 C 95 125 93 131 95 134 C 97 137 101 137 103 134 C 105 131 101 125 98 120 Z" fill="#ffffff" stroke="#262626" stroke-width="2" class="ink-line" />
+
+    <!-- Cute Hesitant Mouth -->
+    <path d="M 80 124 C 82 126 84 126 86 124" fill="none" stroke="#262626" stroke-width="2.5" class="ink-line" />
+  </g>
+
+  <!-- ==================== 5. CENTER: Floating Shy Dapper Blook ==================== -->
+  <g transform="translate(220, 240)">
+    <text x="2" y="100" class="ink-text" font-size="12">do you</text>
+    <text x="2" y="115" class="ink-text" font-size="12">like it</text>
+
+    <!-- Swaying Tail Body -->
+    <path
+      d="
+        M 75 52
+        C 50 52 40 76 42 108
+        C 44 135 34 156 46 168
+        C 54 176 72 178 88 174
+        C 106 170 120 156 120 124
+        C 120 86 105 52 75 52
+        Z
+      "
+      fill="#ffffff"
+      stroke="#262626"
+      stroke-width="4.5"
+      class="ink-line"
+    />
+
+    <!-- Small Dapper Hat -->
+    <g transform="rotate(-15 72 46)">
+      <ellipse cx="72" cy="48" rx="20" ry="5.5" fill="#ffffff" stroke="#262626" stroke-width="3" class="ink-line" />
+      <path d="M 60 46 L 62 25 C 62 21 66 20 74 20 C 82 20 86 21 86 25 L 88 46 Z" fill="#ffffff" stroke="#262626" stroke-width="3" class="ink-line" />
+      <path d="M 61 40 C 67 42 79 42 87 40 L 87.5 45 C 80 47 68 47 60.5 45 Z" fill="#262626" />
+    </g>
+
+    <!-- Eyes (Classic wide chibi oval eyes) -->
+    <ellipse cx="68" cy="98" rx="7.5" ry="14" fill="#262626" />
+    <ellipse cx="68" cy="93" rx="2.8" ry="6" fill="#ffffff" />
+    <circle cx="68" cy="105" r="1.8" fill="#ffffff" />
+
+    <ellipse cx="96" cy="98" rx="7.5" ry="14" fill="#262626" />
+    <ellipse cx="96" cy="93" rx="2.8" ry="6" fill="#ffffff" />
+    <circle cx="96" cy="105" r="1.8" fill="#ffffff" />
+
+    <!-- Cute Blush Lines `///` -->
+    <line x1="52" y1="110" x2="55" y2="116" stroke="#262626" stroke-width="1.8" class="ink-line" />
+    <line x1="56" y1="109" x2="59" y2="115" stroke="#262626" stroke-width="1.8" class="ink-line" />
+    <line x1="104" y1="110" x2="107" y2="116" stroke="#262626" stroke-width="1.8" class="ink-line" />
+    <line x1="108" y1="109" x2="111" y2="115" stroke="#262626" stroke-width="1.8" class="ink-line" />
+
+    <!-- Tiny Shy Smile -->
+    <path d="M 80 114 C 82 116 84 116 86 114" fill="none" stroke="#262626" stroke-width="2" class="ink-line" />
+  </g>
+
+  <!-- ==================== 6. CENTER RIGHT: Fallen in Leaves / Petals ==================== -->
+  <g transform="translate(400, 210)">
+    <text x="120" y="55" class="ink-text" font-size="12">Oh....</text>
+    <text x="120" y="70" class="ink-text" font-size="12">I fell....</text>
+
+    <!-- Leaves / Petals Burst Around -->
+    <g stroke="#262626" stroke-width="1.8" fill="#ffffff" class="ink-line">
+      <path d="M 25 60 C 20 50 30 45 35 55 C 38 62 30 68 25 60 Z" />
+      <path d="M 18 85 C 10 80 15 70 25 75 C 30 80 26 90 18 85 Z" />
+      <path d="M 28 115 C 20 115 22 105 32 105 C 38 110 35 120 28 115 Z" />
+      <path d="M 120 90 C 130 85 132 95 125 100 C 118 102 115 95 120 90 Z" />
+      <path d="M 115 125 C 125 120 128 132 120 135 C 112 136 110 128 115 125 Z" />
+      <path d="M 70 170 C 65 178 78 180 80 172 C 80 166 72 165 70 170 Z" />
+    </g>
+
+    <!-- Sitting Ghost Body -->
+    <path
+      d="
+        M 75 42
+        C 50 42 38 68 38 100
+        C 38 132 44 146 50 156
+        C 55 160 62 160 66 154
+        C 70 148 76 148 80 154
+        C 84 160 92 160 96 154
+        C 100 148 106 148 110 154
+        C 114 150 115 130 115 100
+        C 115 68 102 42 75 42
+        Z
+      "
+      fill="#ffffff"
+      stroke="#262626"
+      stroke-width="4.5"
+      class="ink-line"
+    />
+
+    <!-- Eyes (Tearful) -->
+    <ellipse cx="62" cy="85" rx="7" ry="13" fill="#262626" />
+    <ellipse cx="62" cy="80" rx="2.5" ry="5.5" fill="#ffffff" />
+    <path d="M 62 98 C 60 102 58 107 60 109 C 62 111 65 111 66 109 C 68 107 65 102 62 98 Z" fill="#ffffff" stroke="#262626" stroke-width="1.8" class="ink-line" />
+
+    <ellipse cx="88" cy="85" rx="7" ry="13" fill="#262626" />
+    <ellipse cx="88" cy="80" rx="2.5" ry="5.5" fill="#ffffff" />
+
+    <!-- Cute little ghost hands out -->
+    <path d="M 52 110 C 46 114 44 120 50 122 C 54 123 58 118 56 112" fill="#ffffff" stroke="#262626" stroke-width="2.5" class="ink-line" />
+    <path d="M 98 110 C 104 114 106 120 100 122 C 96 123 92 118 94 112" fill="#ffffff" stroke="#262626" stroke-width="2.5" class="ink-line" />
+  </g>
+
+  <!-- ==================== 7. BOTTOM LEFT: Blushing Covered Face Blook ==================== -->
+  <g transform="translate(35, 470)">
+    <text x="125" y="65" class="ink-text" font-size="13">Oooooh...</text>
+    <path d="M 132 80 C 132 76 136 74 139 77 C 142 74 146 76 146 80 C 146 85 139 89 139 89 C 139 89 132 85 132 80 Z" fill="#262626" />
+
+    <!-- Ghost Body Tilting & Blushing -->
+    <path
+      d="
+        M 75 35
+        C 46 35 34 60 36 94
+        C 38 126 42 148 50 162
+        C 55 168 62 168 66 162
+        C 70 156 78 156 82 162
+        C 86 168 94 168 98 162
+        C 102 156 110 156 114 162
+        C 120 152 122 128 120 94
+        C 118 60 104 35 75 35
+        Z
+      "
+      fill="#ffffff"
+      stroke="#262626"
+      stroke-width="4.5"
+      class="ink-line"
+    />
+
+    <!-- Hat flying off / tilted -->
+    <g transform="rotate(-35 55 35)">
+      <ellipse cx="55" cy="35" rx="20" ry="5.5" fill="#ffffff" stroke="#262626" stroke-width="3" class="ink-line" />
+      <path d="M 43 33 L 45 15 C 45 12 49 10 57 10 C 65 10 69 12 69 15 L 71 33 Z" fill="#ffffff" stroke="#262626" stroke-width="3" class="ink-line" />
+    </g>
+
+    <!-- Super Blush Lines Covering Face `///` -->
+    <g stroke="#262626" stroke-width="2.5" class="ink-line">
+      <line x1="58" y1="85" x2="64" y2="98" />
+      <line x1="65" y1="84" x2="71" y2="97" />
+      <line x1="72" y1="85" x2="78" y2="98" />
+      <line x1="79" y1="84" x2="85" y2="97" />
+      <line x1="86" y1="85" x2="92" y2="98" />
+      <line x1="93" y1="84" x2="99" y2="97" />
+    </g>
+
+    <!-- Closed Shy Happy Eyes `^^` -->
+    <path d="M 60 76 C 65 70 72 70 76 76" fill="none" stroke="#262626" stroke-width="3" class="ink-line" />
+    <path d="M 84 76 C 89 70 96 70 100 76" fill="none" stroke="#262626" stroke-width="3" class="ink-line" />
+  </g>
+
+  <!-- ==================== 8. BOTTOM CENTER: Cozy Sleeping in Bed with Laptop ==================== -->
+  <g transform="translate(200, 480)">
+    <!-- Bed frame 3D box -->
+    <path d="M 25 105 L 65 130 L 145 92 L 105 68 Z" fill="#f4f4f5" stroke="#262626" stroke-width="3" class="ink-line" />
+    <path d="M 25 105 L 25 116 L 65 141 L 65 130 Z" fill="#e4e4e7" stroke="#262626" stroke-width="3" class="ink-line" />
+    <path d="M 65 130 L 65 141 L 145 103 L 145 92 Z" fill="#d4d4d8" stroke="#262626" stroke-width="3" class="ink-line" />
+
+    <!-- Tiny Laptop on Bed -->
+    <g transform="translate(50, 85) rotate(-15)">
+      <path d="M 0 0 L 22 0 L 22 14 L 0 14 Z" fill="#ffffff" stroke="#262626" stroke-width="2" class="ink-line" />
+      <path d="M 0 14 L 22 14 L 28 22 L 6 22 Z" fill="#e4e4e7" stroke="#262626" stroke-width="2" class="ink-line" />
+    </g>
+
+    <!-- Sleeping Ghost -->
+    <path
+      d="
+        M 50 60
+        C 40 64 34 74 36 86
+        C 38 98 48 108 60 110
+        C 74 112 90 106 94 94
+        C 98 82 94 68 80 60
+        C 68 54 58 56 50 60
+        Z
+      "
+      fill="#ffffff"
+      stroke="#262626"
+      stroke-width="4"
+      class="ink-line"
+    />
+
+    <!-- Sleeping eye & teardrop -->
+    <path d="M 50 82 C 54 87 60 87 63 82" fill="none" stroke="#262626" stroke-width="3" class="ink-line" />
+    <circle cx="62" cy="90" r="1.5" fill="#262626" />
+
+    <!-- Nightcap -->
+    <g transform="rotate(-15 70 55)">
+      <path d="M 60 52 C 66 34 78 26 90 32 C 98 36 100 46 94 52 Z" fill="#ffffff" stroke="#262626" stroke-width="3" class="ink-line" />
+      <ellipse cx="68" cy="53" rx="11" ry="4" fill="#ffffff" stroke="#262626" stroke-width="2.5" />
+      <circle cx="98" cy="52" r="4.5" fill="#ffffff" stroke="#262626" stroke-width="2.5" />
+    </g>
+
+    <!-- Blanket with Stars -->
+    <path
+      d="
+        M 60 92
+        C 74 84 94 82 112 86
+        C 128 90 150 98 146 116
+        C 142 130 118 138 98 134
+        C 80 130 64 122 60 108
+        Z
+      "
+      fill="#ffffff"
+      stroke="#262626"
+      stroke-width="3.5"
+      class="ink-line"
+    />
+    <!-- Stars on blanket -->
+    <path d="M 86 100 L 87 103 L 90 104 L 87.5 106 L 88.5 109 L 85.5 107 L 83 109 L 84 106 L 81.5 104 L 84.5 103 Z" fill="#262626" />
+    <path d="M 108 98 L 109 101 L 112 102 L 109.5 104 L 110.5 107 L 107.5 105 L 105 107 L 106 104 L 103.5 102 L 106.5 101 Z" fill="#262626" />
+    <path d="M 125 106 L 126 108 L 128.5 109 L 126.5 110.5 L 127.5 113 L 125 111.5 L 123 113 L 124 110.5 L 122 109 L 124.5 108 Z" fill="#262626" />
+  </g>
+
+  <!-- ==================== 9. BOTTOM RIGHT: Headphones Jamming Blook ==================== -->
+  <g transform="translate(420, 480)">
+    <!-- Floating music notes -->
+    <path d="M 130 30 C 130 26 138 22 142 24 L 142 34 C 139 32 135 32 133 35 C 131 38 134 42 137 41 C 140 40 143 37 143 32 L 143 23" fill="#262626" stroke="#262626" stroke-width="0.8" />
+    <path d="M 25 50 L 25 38 C 25 36 28 35 30 36 L 30 52 C 28 50 24 50 22 53 C 20 56 23 60 26 59 C 29 58 31 55 31 50" fill="#262626" stroke="#262626" stroke-width="0.8" />
+
+    <!-- Ghost Body with Cloud Base -->
+    <path
+      d="
+        M 75 40
+        C 48 40 38 64 38 92
+        C 38 122 40 138 45 148
+        C 49 154 55 154 59 148
+        C 63 142 69 142 73 148
+        C 77 154 83 154 87 148
+        C 91 142 97 142 101 148
+        C 105 154 111 152 113 146
+        C 117 136 119 120 119 92
+        C 119 64 108 40 75 40
+        Z
+      "
+      fill="#ffffff"
+      stroke="#262626"
+      stroke-width="4.5"
+      class="ink-line"
+    />
+
+    <!-- Headphones Arc -->
+    <path d="M 34 88 C 32 46 52 26 77 26 C 102 26 122 46 120 88" fill="none" stroke="#262626" stroke-width="6.5" class="ink-line" />
+    <!-- Ear Cups -->
+    <rect x="24" y="74" width="16" height="30" rx="8" fill="#262626" />
+    <rect x="114" y="74" width="16" height="30" rx="8" fill="#262626" />
+
+    <!-- Eyes (Big tearful cute eyes) -->
+    <ellipse cx="64" cy="88" rx="7.5" ry="14" fill="#262626" />
+    <ellipse cx="64" cy="83" rx="2.8" ry="6" fill="#ffffff" />
+    <circle cx="64" cy="95" r="2" fill="#ffffff" />
+    <path d="M 64 102 C 62 106 60 112 62 115 C 64 118 67 118 69 115 C 71 112 68 106 64 102 Z" fill="#ffffff" stroke="#262626" stroke-width="1.8" class="ink-line" />
+
+    <ellipse cx="92" cy="88" rx="7.5" ry="14" fill="#262626" />
+    <ellipse cx="92" cy="83" rx="2.8" ry="6" fill="#ffffff" />
+    <circle cx="92" cy="95" r="2" fill="#ffffff" />
+
+    <!-- Holding Spooktune CD booklet -->
+    <g transform="translate(64, 112)">
+      <rect x="0" y="0" width="28" height="20" rx="3" fill="#ffffff" stroke="#262626" stroke-width="2" class="ink-line" />
+      <text x="14" y="14" class="ink-text" font-size="8" text-anchor="middle">HIT</text>
+    </g>
+
+    <!-- Hands holding CD -->
+    <path d="M 52 112 C 56 118 62 122 66 120" fill="#ffffff" stroke="#262626" stroke-width="2.5" class="ink-line" />
+    <path d="M 104 112 C 100 118 94 122 90 120" fill="#ffffff" stroke="#262626" stroke-width="2.5" class="ink-line" />
+  </g>
+
+  <!-- ==================== SIGNATURE / FOOTER ==================== -->
+  <text x="300" y="780" class="ink-text" font-size="12" text-anchor="middle" fill="#71717a">✦ cute chibi blook collection ✦</text>
+</svg>

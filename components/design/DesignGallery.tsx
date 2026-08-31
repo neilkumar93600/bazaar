@@ -7,6 +7,7 @@ import type { ColourMockup } from "@/lib/printify/mockups"
 import { toneForColourName } from "@/lib/printify/tones"
 import { cn } from "@/lib/utils"
 import { ShirtMockup } from "@/components/shared/ShirtMockup"
+import { GridReveal } from "@/components/ui/grid-reveal"
 
 /** The design's media: the printed shirt in every colour it is sold in, and the
  *  flat artwork.
@@ -23,26 +24,39 @@ import { ShirtMockup } from "@/components/shared/ShirtMockup"
 export function DesignGallery({
   imageUrl,
   mockupUrl,
+  backMockupUrl = null,
   alt,
   colourMockups = [],
+  backColourMockups = [],
   featuredVariantId,
   selectedColour: controlledColour,
   onSelectColour,
   showArt: controlledShowArt,
   onToggleArt,
+  side: controlledSide,
 }: {
   imageUrl: string
   mockupUrl: string | null
+  /** The back-print photo. Only set for `placement: "both"` — its presence is
+   *  what turns the Front/Back switch on. */
+  backMockupUrl?: string | null
   alt: string
   /** One real product photo per garment colour, in catalogue order. Empty until
    *  the design has a Printify product. */
   colourMockups?: ColourMockup[]
+  /** Same, for the back print. */
+  backColourMockups?: ColourMockup[]
   /** The maker's colour. */
   featuredVariantId?: number | null
   selectedColour?: string
   onSelectColour?: (colour: string) => void
   showArt?: boolean
   onToggleArt?: (show: boolean) => void
+  /** Which print side is on screen. The switch itself lives in
+   *  DesignDetailPanel, above the colour section — this only reads it, so the
+   *  two panes never disagree about which photo is showing. Uncontrolled
+   *  callers (none currently) stay on "front". */
+  side?: "front" | "back"
 }) {
   const [internalColour, setInternalColour] = useState(
     () =>
@@ -58,15 +72,19 @@ export function DesignGallery({
   const setColour = onSelectColour ?? setInternalColour
   const showArt = controlledShowArt ?? internalShowArt
   const setShowArt = onToggleArt ?? setInternalShowArt
+  const side = controlledSide ?? "front"
 
-  const offered = colourMockups.filter(
-    (option) => !broken.includes(option.colour)
+  const activeMockupUrl = side === "back" ? backMockupUrl : mockupUrl
+  const activeColourMockups = side === "back" ? backColourMockups : colourMockups
+
+  const offered = activeColourMockups.filter(
+    (option) => !broken.includes(`${side}:${option.colour}`)
   )
   const selected =
     offered.find((option) => option.colour.toLowerCase() === colour.toLowerCase()) ??
     offered[0] ??
     null
-  const shirt = selected?.url ?? mockupUrl
+  const shirt = selected?.url ?? activeMockupUrl
 
   return (
     <div className="flex w-full flex-col gap-3">
@@ -106,18 +124,21 @@ export function DesignGallery({
           )}
         >
           {shirt ? (
-            <Image
+            // A Printify mockup is a remote fetch, not our own storage — this is
+            // the one image on the page slow enough to be worth covering for.
+            // Keyed by `${side}:${shirt}` so the reveal replays for a genuinely
+            // new photo but not for a colour/side already in the browser cache.
+            <GridReveal
+              key={`${side}:${shirt}`}
               src={shirt}
-              alt={`${alt} - ${colour} shirt`}
-              fill
-              sizes="(min-width: 1024px) 640px, 100vw"
-              priority
+              alt={`${alt} - ${colour} shirt, ${side}`}
+              aspect={showArt ? 1 : 4 / 5}
+              className="absolute inset-0 h-full w-full rounded-none border-0"
               onError={() => {
                 if (selected) {
-                  setBroken((current) => [...current, selected.colour])
+                  setBroken((current) => [...current, `${side}:${selected.colour}`])
                 }
               }}
-              className="object-contain transition-all duration-300"
             />
           ) : (
             <ShirtMockup
