@@ -58,8 +58,15 @@ const TIMEOUT_MS = 90_000
  *  cut off mid-string, which parses as nothing at all — a truncated reply is
  *  worse than a short one. Length is controlled by the instructions and by
  *  clampField below; this is only here so a verbose answer still closes its
- *  braces. */
-const MAX_TOKENS = 1200
+ *  braces.
+ *
+ *  Raised from 1200 after a contradiction-heavy storefront-theme prompt (a
+ *  near-black bg paired with a cream surface, against this same file's own
+ *  "keep surface within a step of bg" rule) burned the whole budget on
+ *  reasoning the model never prints — "no thinking out loud" suppresses the
+ *  visible preamble, not whatever token spend happens before it. Cost is
+ *  four decimal places of a cent either way. */
+const MAX_TOKENS = 3000
 
 /** Per-field ceiling for the prompt-direction fields. The gallery prompts are
  *  dense but not essays, and a 200-word `Subject:` buries the composition and

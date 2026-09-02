@@ -35,6 +35,7 @@ const SYSTEM_PROMPT = [
   "- Read the whole sentence, including words about shape, weight and mood, not only the colours: \"sharp\", \"chunky\", \"soft\", \"rounded\", \"minimal\", \"no shadows\", \"typewriter\", \"handwritten sign\" all decide fields above.",
   "- When the sentence says nothing about a field, choose what that mood would choose — never default everything to the middle option.",
   "- Interpret the creator's words. Do not copy the example values in this schema.",
+  "- No thinking out loud. The first character of your reply is {.",
 ].join(" ")
 
 /** Asks the model for a theme and returns one that is safe to render.

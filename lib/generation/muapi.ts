@@ -102,6 +102,14 @@ export async function runModel(
 
   const deadline = Date.now() + POLL_TIMEOUT_MS
 
+  // `completed` can flip before `outputs` is done being written — observed as
+  // an empty array, but also as kimi-k3's text arriving mid-string (a JSON
+  // reply cut off with no closing brace, still parsed as a "successful" poll).
+  // A URL is written atomically by MuAPI once, so this only costs one extra
+  // POLL_INTERVAL_MS on the image models, where the value can never change
+  // between two completed polls.
+  let lastSeen: string | null = null
+
   while (Date.now() < deadline) {
     await sleep(POLL_INTERVAL_MS)
 
@@ -125,7 +133,12 @@ export async function runModel(
       // Treating it as terminal threw away a finished, paid-for model run;
       // observed on kimi-k3 and there is nothing model-specific about it. Keep
       // polling and let the deadline below be the only thing that gives up.
-      if (url) return url
+      if (!url) {
+        lastSeen = null
+        continue
+      }
+      if (url === lastSeen) return url
+      lastSeen = url
       continue
     }
 
