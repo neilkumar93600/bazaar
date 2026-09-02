@@ -1,3 +1,4 @@
+import Link from "next/link"
 import type { FeedColumn } from "@/lib/data/feed"
 import { Marquee } from "@/components/ui/marquee"
 import { cn } from "@/lib/utils"
@@ -54,11 +55,19 @@ export function Feed({ columns }: { columns: FeedColumn[] }) {
 
   if (designs.length === 0) {
     return (
-      <section className="flex min-h-[calc(100svh-67px)] flex-col items-center justify-center gap-2 px-6 text-center">
-        <p className="text-subheading text-foreground">No drops yet</p>
-        <p className="max-w-sm text-body-sm text-muted-foreground">
-          New 1-of-1 AI designs land here constantly. Check back soon.
-        </p>
+      <section className="flex min-h-[calc(100svh-67px)] flex-col items-center justify-center gap-4 px-6 text-center">
+        <div className="flex flex-col gap-1.5">
+          <p className="text-subheading font-medium text-foreground">No drops yet</p>
+          <p className="max-w-sm text-body-sm text-muted-foreground">
+            New 1-of-1 AI designs land here constantly. Generate your own or check back soon.
+          </p>
+        </div>
+        <Link
+          href="/create"
+          className="btn-ember inline-flex items-center gap-2 px-5 py-2.5 text-body-sm font-medium"
+        >
+          Create a design
+        </Link>
       </section>
     )
   }

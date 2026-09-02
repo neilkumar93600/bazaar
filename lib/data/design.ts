@@ -19,8 +19,9 @@ export type DesignDetail = {
   /** Printify's photo of the finished garment, once the design is claimed and
    *  synced. Null falls back to the drawn mockup. */
   mockupUrl: string | null
-  /** The back-print photo. Only ever set for `placement: "both"` — a front- or
-   *  back-only design has nothing else to show. */
+  /** The back-camera photo. Populated for every synced product regardless of
+   *  placement — Printify photographs every angle whether or not that side has
+   *  a print on it. Null until the design is synced. */
   backMockupUrl: string | null
   /** What the maker printed this on. Null is a pre-garment-config design,
    *  which the bazaar treats as "front". */

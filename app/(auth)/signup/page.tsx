@@ -6,11 +6,12 @@ export const metadata: Metadata = { title: "Sign up" };
 
 export default async function SignupPage(props: PageProps<"/signup">) {
   const searchParams = await props.searchParams;
-  // Defaults to /create rather than the dashboard: someone finishing signup
-  // came here to make something, not to read a page of zeros.
+  // Defaults home, same as login: a plain /signup visit has no gate to finish.
+  // `next` only ever holds /create or /dashboard here because the protected-
+  // route redirect in lib/supabase/middleware.ts set it that way.
   const next = safeNext(
     typeof searchParams.next === "string" ? searchParams.next : null,
-    "/create",
+    "/",
   );
   const carriedPrompt = promptFromNext(next);
 

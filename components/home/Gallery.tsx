@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 
+import { useThrottle } from "@/hooks/use-debounce"
+
 import type { FeedColumn } from "@/lib/data/feed"
 import type { VibeTile } from "@/lib/data/home"
 import { DesignCard } from "@/components/shared/DesignCard"
@@ -57,6 +59,9 @@ export function Gallery({
     // enabled at the true end of the track.
     setAtEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 1)
   }, [])
+
+  // RAF-throttled scroll handler prevents main-thread jank during rapid flicks.
+  const { run: onScroll } = useThrottle(updateEdges)
 
   // Interleave across vibes so the opening cards mix aesthetics rather than
   // running one vibe from front to back.
@@ -127,7 +132,7 @@ export function Gallery({
           to snap card one flush, knocking the row out of line with the heading. */}
       <div
         ref={scrollerRef}
-        onScroll={updateEdges}
+        onScroll={onScroll}
         className="no-scrollbar -mx-6 flex snap-x snap-mandatory gap-5 scroll-pl-6 overflow-x-auto px-6 pb-1 md:-mx-16 md:scroll-pl-16 md:px-16 lg:gap-6"
       >
         {designs.map((design, index) => (

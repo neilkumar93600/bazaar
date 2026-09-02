@@ -6,6 +6,7 @@ import Link from "next/link"
 import { formatDistanceToNowStrict } from "date-fns"
 
 import { cn, designLabel } from "@/lib/utils"
+import { useInView } from "@/hooks/use-in-view"
 import { DesignDialog } from "@/components/design/DesignDialog"
 import { ShirtMockup } from "@/components/shared/ShirtMockup"
 
@@ -69,6 +70,11 @@ export function DesignCard({
 
   const [dialogOpen, setDialogOpen] = useState(false)
 
+  // Entrance animation only triggers when the card scrolls into view.
+  // `triggerOnce: true` ensures the observer disconnects after first intersection,
+  // preventing layout thrashing on long grids.
+  const { ref: inViewRef, inView: isInView } = useInView({ threshold: 0.1, triggerOnce: true })
+
   // A real link, so the design still has a crawlable, shareable URL and a
   // middle-click/cmd-click still opens the full page in a new tab. A plain
   // left-click intercepts into a popup instead, so browsing the grid never
@@ -84,12 +90,13 @@ export function DesignCard({
   return (
     <>
       <Link
+        ref={inViewRef as React.Ref<HTMLAnchorElement>}
         href={`/design/${design.id}`}
         onClick={handleClick}
         className={cn(
           "group/card block outline-none transition-transform duration-300 hover:-translate-y-1",
-          index !== undefined && "animate-card-rise",
-          index !== undefined &&
+          isInView && index !== undefined && "animate-card-rise",
+          isInView && index !== undefined &&
           index < STAGGER_CLASSES.length &&
           STAGGER_CLASSES[index],
           className

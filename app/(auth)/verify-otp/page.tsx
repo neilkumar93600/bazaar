@@ -9,7 +9,7 @@ export default async function VerifyOtpPage(props: PageProps<"/verify-otp">) {
   const email = typeof searchParams.email === "string" ? searchParams.email : "";
   const next = safeNext(
     typeof searchParams.next === "string" ? searchParams.next : null,
-    "/create",
+    "/",
   );
 
   return (

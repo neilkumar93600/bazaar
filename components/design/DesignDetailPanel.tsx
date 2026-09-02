@@ -38,8 +38,8 @@ export function DesignDetailPanel({
   showArt?: boolean
   onToggleArt?: (show: boolean) => void
   /** Which print side the gallery is showing. Only rendered as a switch when
-   *  the design actually has a back photo (`placement: "both"`) — a front- or
-   *  back-only design has nothing to toggle to. */
+   *  the design actually has a back photo — a design with no synced back shot
+   *  has nothing to toggle to. */
   side?: "front" | "back"
   onChangeSide?: (side: "front" | "back") => void
   isSignedIn: boolean
@@ -79,10 +79,10 @@ export function DesignDetailPanel({
         {formatListingPrice(design.priceCents)}
       </span>
 
-      {/* Print side switch — only a `both`-placement design has a back photo
-          to switch to. Sits above the colour section: colour and side are
-          independent choices, but side is the one that decides which photo
-          the colour swatches below re-point. */}
+      {/* Print side switch — only a design with a synced back photo has
+          anything to toggle to. Sits above the colour section: colour and
+          side are independent choices, but side is the one that decides
+          which photo the colour swatches below re-point. */}
       {design.backMockupUrl && (
         <div className="flex items-center justify-between rounded-2xl border border-border/80 bg-card p-4 shadow-sm">
           <span className="text-body-sm font-semibold text-foreground">

@@ -11,7 +11,7 @@ import { stashHeroDraft } from "@/lib/hero-draft"
 import { cn } from "@/lib/utils"
 
 const INPUT_CLASS =
-  "min-w-0 flex-1 rounded-lg border border-rule bg-transparent px-3 py-2.5 text-body-sm text-foreground placeholder-muted-gray transition focus:border-transparent focus:ring-2 focus:ring-primary focus:outline-none"
+  "min-w-0 flex-1 rounded-lg border border-rule bg-transparent px-3 py-2.5 text-body-sm text-foreground placeholder:text-muted-foreground transition focus:border-transparent focus:ring-2 focus:ring-primary focus:outline-none"
 
 function SocialBtn({
   href,

@@ -64,7 +64,7 @@ export function BazaarFilterPanel({
                       "flex size-4 shrink-0 items-center justify-center rounded-[5px] border transition-colors",
                       checked
                         ? "border-primary bg-primary text-primary-foreground"
-                        : "border-input bg-input/40 group-hover/row:border-steel"
+                        : "border-border bg-card group-hover/row:border-foreground"
                     )}
                   >
                     {checked && (
@@ -74,12 +74,12 @@ export function BazaarFilterPanel({
                   <span
                     className={cn(
                       "flex-1 truncate text-body-sm",
-                      checked ? "text-foreground" : "text-muted-foreground"
+                      checked ? "text-foreground font-medium" : "text-muted-foreground"
                     )}
                   >
                     {facet.name}
                   </span>
-                  <span className="shrink-0 font-mono text-caption text-smoke">
+                  <span className="shrink-0 font-mono text-caption text-muted-foreground">
                     {facet.count}
                   </span>
                 </Link>
@@ -102,8 +102,8 @@ export function BazaarFilterPanel({
                 className={cn(
                   "inline-flex min-h-9 items-center rounded-lg border px-3.5 text-body-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
                   active
-                    ? "border-transparent bg-sunset-sweep font-medium text-background"
-                    : "border-border bg-card backdrop-blur-md text-muted-foreground hover:border-steel hover:text-foreground"
+                    ? "border-primary bg-primary font-medium text-primary-foreground shadow-xs"
+                    : "border-border bg-card text-muted-foreground hover:border-foreground hover:text-foreground"
                 )}
               >
                 {option.label}

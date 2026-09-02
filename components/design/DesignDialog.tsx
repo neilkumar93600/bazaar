@@ -86,7 +86,7 @@ export function DesignDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[calc(100vh-3rem)] w-full max-w-[calc(100%-2rem)] overflow-y-auto rounded-3xl border-border/80 bg-card p-6 shadow-2xl sm:max-w-2xl lg:max-w-4xl">
+      <DialogContent className="max-h-[calc(100vh-3rem)] w-full max-w-[calc(100%-2rem)] overflow-y-auto rounded-3xl border-border/80 bg-card p-6 shadow-2xl sm:max-w-2xl lg:max-w-5xl">
         <DialogTitle className="sr-only">{title}</DialogTitle>
 
         {loadedFor !== designId ? (
@@ -96,14 +96,9 @@ export function DesignDialog({
             This design isn&apos;t available anymore.
           </p>
         ) : (
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-            {/* Three grid items, not two flex columns: on mobile the buy
-                button must land above the maker card and description, not
-                trapped below them in the same stacked block. `order` handles
-                the mobile stack; `lg:order-none` restores the original
-                two-column layout, where those sections belong under the
-                gallery either way. */}
-            <div className="order-1 lg:order-none">
+          <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12 lg:gap-10">
+            {/* Left Column: Gallery + Creator Card + About artwork (on desktop) */}
+            <div className="flex flex-col gap-6 lg:col-span-6">
               <DesignGallery
                 imageUrl={design.imageUrl}
                 mockupUrl={design.mockupUrl}
@@ -118,29 +113,60 @@ export function DesignDialog({
                 onToggleArt={setShowArt}
                 side={side}
               />
+
+              <div className="hidden lg:flex flex-col gap-5">
+                {design.creator && <CreatorCard creator={design.creator} />}
+                {design.description && (
+                  <div className="flex flex-col gap-2 rounded-2xl border border-border/80 bg-card p-4 shadow-xs">
+                    <h4 className="text-caption font-semibold text-muted-foreground uppercase tracking-wider">
+                      About this artwork
+                    </h4>
+                    <p className="text-body-sm text-muted-ink leading-relaxed">
+                      {design.description}
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* pr-9 clears the dialog's own close button, which is pinned
-                top-right over exactly where the panel puts its edition badge. */}
-            <div className="order-2 lg:order-none flex flex-col justify-between pr-9">
-              <DesignDetailPanel
-                design={design}
-                orderOptions={data!.orderOptions}
-                availableColours={availableColours}
-                selectedColour={selectedColour}
-                onSelectColour={(colour) => {
-                  setSelectedColour(colour)
-                  setShowArt(false)
-                }}
-                showArt={showArt}
-                onToggleArt={setShowArt}
-                side={side}
-                onChangeSide={setSide}
-                isSignedIn={data!.viewerIsLoggedIn}
-                viewerEmail={data!.viewerEmail}
-                viewerDisplayName={data!.viewerName}
-              />
-              <div className="mt-6 flex items-center justify-between border-t border-border/80 pt-4">
+            {/* Right Column: Transactional details, buy form, accordions */}
+            <div className="flex flex-col justify-between gap-6 lg:col-span-6">
+              <div className="flex flex-col gap-6">
+                <DesignDetailPanel
+                  design={design}
+                  orderOptions={data!.orderOptions}
+                  availableColours={availableColours}
+                  selectedColour={selectedColour}
+                  onSelectColour={(colour) => {
+                    setSelectedColour(colour)
+                    setShowArt(false)
+                  }}
+                  showArt={showArt}
+                  onToggleArt={setShowArt}
+                  side={side}
+                  onChangeSide={setSide}
+                  isSignedIn={data!.viewerIsLoggedIn}
+                  viewerEmail={data!.viewerEmail}
+                  viewerDisplayName={data!.viewerName}
+                />
+
+                {/* Mobile only: Creator + Description under buy section */}
+                <div className="flex lg:hidden flex-col gap-5">
+                  {design.creator && <CreatorCard creator={design.creator} />}
+                  {design.description && (
+                    <div className="flex flex-col gap-2 rounded-2xl border border-border/80 bg-card p-4 shadow-xs">
+                      <h4 className="text-caption font-semibold text-muted-foreground uppercase tracking-wider">
+                        About this artwork
+                      </h4>
+                      <p className="text-body-sm text-muted-ink leading-relaxed">
+                        {design.description}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-2 flex items-center justify-between border-t border-border/80 pt-4">
                 <Link
                   href={`/design/${design.id}`}
                   onClick={() => onOpenChange(false)}
@@ -151,20 +177,6 @@ export function DesignDialog({
                 </Link>
               </div>
             </div>
-
-            <div className="order-3 lg:order-none flex flex-col gap-5">
-              {design.creator && <CreatorCard creator={design.creator} />}
-              {design.description && (
-                <div className="flex flex-col gap-2 rounded-2xl border border-border/80 bg-card p-4 shadow-xs">
-                  <h4 className="text-caption font-semibold text-muted-foreground uppercase tracking-wider">
-                    About this artwork
-                  </h4>
-                  <p className="text-body-sm text-muted-ink leading-relaxed">
-                    {design.description}
-                  </p>
-                </div>
-              )}
-            </div>
           </div>
         )}
       </DialogContent>
@@ -174,9 +186,11 @@ export function DesignDialog({
 
 function DialogSkeleton() {
   return (
-    <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-      <Skeleton className="aspect-[4/5] w-full rounded-2xl sm:aspect-square" />
-      <div className="flex flex-col gap-4">
+    <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12 lg:gap-10">
+      <div className="lg:col-span-6">
+        <Skeleton className="aspect-[4/5] w-full rounded-2xl" />
+      </div>
+      <div className="flex flex-col gap-4 lg:col-span-6">
         <Skeleton className="h-4 w-32" />
         <Skeleton className="h-9 w-3/4" />
         <Skeleton className="h-11 w-full rounded-xl" />

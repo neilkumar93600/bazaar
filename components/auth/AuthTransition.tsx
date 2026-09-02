@@ -1,6 +1,7 @@
 "use client";
 
-import { AnimatePresence, motion, useReducedMotion, type Variants } from "framer-motion";
+import { AnimatePresence, motion, type Variants } from "framer-motion";
+import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 

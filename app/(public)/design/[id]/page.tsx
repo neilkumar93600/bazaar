@@ -9,7 +9,7 @@ import {
   getRelatedDesigns,
 } from "@/lib/data/design";
 import { getOrderOptions } from "@/app/(public)/design/[id]/order-actions";
-import { colourMockups } from "@/lib/printify/mockups";
+import { colourMockups, frontMockupFrom } from "@/lib/printify/mockups";
 import { createClient } from "@/lib/supabase/server";
 import { designLabel, formatListingPrice } from "@/lib/utils";
 import { designJsonLd } from "@/lib/seo/design-schema";
@@ -53,9 +53,18 @@ export async function generateMetadata(
  */
 export default async function DesignDetailPage(props: PageProps<"/design/[id]">) {
   const { id } = await props.params;
-  const design = await getDesignDetail(id);
+  const rawDesign = await getDesignDetail(id);
 
-  if (!design) notFound();
+  if (!rawDesign) notFound();
+
+  const frontUrl = frontMockupFrom(rawDesign.mockupUrl) ?? rawDesign.mockupUrl;
+  const backUrl = rawDesign.backMockupUrl;
+
+  const design = {
+    ...rawDesign,
+    mockupUrl: frontUrl,
+    backMockupUrl: backUrl,
+  };
 
   const supabase = await createClient();
   const {
@@ -82,8 +91,8 @@ export default async function DesignDetailPage(props: PageProps<"/design/[id]">)
   const title = designLabel(design);
   // Only a claimed design with a product can actually be ordered.
   const canOrder = Boolean(design.claimedBy && design.printifyProductId);
-  const shirtColours = colourMockups(design.mockupUrl, orderOptions?.colours ?? []);
-  const backShirtColours = colourMockups(design.backMockupUrl, orderOptions?.colours ?? []);
+  const shirtColours = colourMockups(frontUrl, orderOptions?.colours ?? []);
+  const backShirtColours = colourMockups(backUrl, orderOptions?.colours ?? []);
 
   return (
     <div className="mx-auto flex max-w-page flex-col gap-14 px-6 py-8 md:px-16 sm:py-12">

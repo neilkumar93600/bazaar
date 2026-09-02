@@ -52,6 +52,55 @@ export function mockupInColour(mockupUrl: string, variantId: number): string | n
   return url.toString()
 }
 
+/** Swaps camera angle between front and back on a Printify mockup URL. */
+export function mockupInCamera(
+  mockupUrl: string | null,
+  camera: "front" | "back"
+): string | null {
+  if (!mockupUrl) return null
+  let url: URL
+  try {
+    url = new URL(mockupUrl)
+  } catch {
+    return null
+  }
+
+  if (url.hostname !== HOST && !url.hostname.endsWith(`.${HOST}`)) return null
+
+  // ["", "mockup", productId, variantId, imageId, slug.jpg]
+  const parts = url.pathname.split("/")
+  if (parts.length !== SEGMENTS + 1 || parts[1] !== "mockup") return null
+
+  const currentImageId = parts[4]
+  const currentCamera = url.searchParams.get("camera_label")
+
+  if (camera === "back") {
+    if (currentCamera?.includes("back") || currentImageId === "102045") {
+      return url.toString()
+    }
+    if (currentImageId === "102044") {
+      parts[4] = "102045"
+    }
+    url.pathname = parts.join("/")
+    url.searchParams.set("camera_label", "back-2")
+    return url.toString()
+  } else {
+    if (currentCamera?.includes("front") || currentImageId === "102044") {
+      return url.toString()
+    }
+    if (currentImageId === "102045") {
+      parts[4] = "102044"
+    }
+    url.pathname = parts.join("/")
+    url.searchParams.set("camera_label", "front-2")
+    return url.toString()
+  }
+}
+
+export function frontMockupFrom(mockupUrl: string | null): string | null {
+  return mockupInCamera(mockupUrl, "front")
+}
+
 /** One real product photo per colour the garment is sold in.
  *
  *  Colours that can't be re-pointed are dropped rather than falling back to the

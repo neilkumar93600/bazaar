@@ -125,7 +125,8 @@ function pickMockup(
 export type PrintifySyncResult = {
   productId: string
   mockupUrl: string | null
-  /** The back-print photo, only ever populated for `placement: "both"`. */
+  /** The back-camera photo. Fetched regardless of placement — Printify shoots
+   *  every angle whether or not that side has a print on it. */
   backMockupUrl: string | null
 }
 
@@ -201,14 +202,13 @@ export async function createDesignProduct({
   // Front camera is the hero everywhere except a back-only design, where the
   // hero has to be the shot that actually shows the print.
   const heroCamera = placement === "back" ? "back" : "front"
-  const needsBack = placement === "both"
 
   let mockupUrl = pickMockup(created, featuredVariantId, heroCamera)
-  let backMockupUrl = needsBack ? pickMockup(created, featuredVariantId, "back") : null
+  let backMockupUrl = pickMockup(created, featuredVariantId, "back")
 
   for (
     let attempt = 0;
-    attempt < MOCKUP_POLL_ATTEMPTS && (!mockupUrl || (needsBack && !backMockupUrl));
+    attempt < MOCKUP_POLL_ATTEMPTS && (!mockupUrl || !backMockupUrl);
     attempt++
   ) {
     await sleep(MOCKUP_POLL_DELAY_MS)
@@ -217,7 +217,7 @@ export async function createDesignProduct({
       `/v1/shops/${config.shopId}/products/${created.id}.json`
     )
     if (!mockupUrl) mockupUrl = pickMockup(product, featuredVariantId, heroCamera)
-    if (needsBack && !backMockupUrl) {
+    if (!backMockupUrl) {
       backMockupUrl = pickMockup(product, featuredVariantId, "back")
     }
   }

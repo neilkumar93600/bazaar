@@ -1,12 +1,14 @@
 "use client"
 
-import { useState, useSyncExternalStore } from "react"
+import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 
 import type { VibeTile } from "@/lib/data/home"
 import { HeroPromptForm } from "@/components/home/HeroPromptForm"
 import { MenuToggle } from "@/components/layout/MenuToggle"
+import { useMediaQuery } from "@/hooks/use-responsive"
+import { useReducedMotion } from "@/hooks/use-reduced-motion"
 import { Logo } from "@/components/ui/logo"
 import {
   Sheet,
@@ -16,22 +18,12 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 
-// Matches hooks/use-mobile.ts's 768px breakpoint. One query, because the two
-// conditions are asked together and never apart.
-const VIDEO_OK = "(min-width: 768px) and (prefers-reduced-motion: no-preference)"
-
 // "Home" is omitted — this nav only ever renders on it.
 const HERO_LINKS = [
   { href: "/shop", label: "Bazaar" },
   { href: "/auctions", label: "Auctions" },
   { href: "#vibe-feed", label: "Feed" },
 ]
-
-function subscribe(onChange: () => void) {
-  const mql = window.matchMedia(VIDEO_OK)
-  mql.addEventListener("change", onChange)
-  return () => mql.removeEventListener("change", onChange)
-}
 
 export function Hero({
   vibes,
@@ -41,12 +33,9 @@ export function Hero({
   /** Designs nobody owns yet. Drives the status pill; zero hides it. */
   unclaimedCount: number
 }) {
-
-  const showVideo = useSyncExternalStore(
-    subscribe,
-    () => window.matchMedia(VIDEO_OK).matches,
-    () => false
-  )
+  const isDesktop = useMediaQuery("(min-width: 768px)")
+  const prefersReducedMotion = useReducedMotion()
+  const showVideo = isDesktop && !prefersReducedMotion
 
   const [menuOpen, setMenuOpen] = useState(false)
 

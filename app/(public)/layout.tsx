@@ -32,13 +32,13 @@ export default async function PublicLayout({ children }: { children: ReactNode }
   }
 
   return (
-    <div className="relative flex min-h-svh flex-col pb-20 lg:pb-0">
+    <div className="relative flex min-h-svh flex-col pb-24 lg:pb-0">
       <Navbar user={navbarUser} notifications={notifications} />
       <main className="flex-1">
         <PageTransition>{children}</PageTransition>
       </main>
       <Footer />
-      <MobileBottomNav isLoggedIn={Boolean(user)} />
+      <MobileBottomNav isLoggedIn={Boolean(user)} unreadCount={notifications?.unreadCount ?? 0} />
       {!user && (
         <>
           <WelcomePopup />

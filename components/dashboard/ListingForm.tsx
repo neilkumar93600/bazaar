@@ -67,7 +67,7 @@ export function ListingForm({
     () => initialConfig.garmentSlug ?? garmentOptions[0]?.slug ?? ""
   )
   const [placement, setPlacement] = useState<Placement>(
-    () => initialConfig.placement ?? "front"
+    () => initialConfig.placement ?? "both"
   )
 
   const garment = garmentOptions.find((option) => option.slug === garmentSlug)

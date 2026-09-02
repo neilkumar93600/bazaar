@@ -4,11 +4,7 @@ import { useActionState, useState, useTransition } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { resendOtp, verifyOtp, type VerifyOtpState } from "@/app/(auth)/verify-otp/actions";
 import { Stagger, StaggerItem } from "@/components/ui/motion";
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-} from "@/components/ui/input-otp";
+import { OtpInput } from "@/components/ui/otp-input";
 
 const initialState: VerifyOtpState = {};
 const INPUT_TRANSITION = { type: "spring", stiffness: 400, damping: 25 } as const;
@@ -66,22 +62,13 @@ export function VerifyOtpForm({
 
         {/* 6-box Segmented OTP Digit Input matching reference image */}
         <StaggerItem className="w-full flex flex-col items-center justify-center">
-          <InputOTP
-            maxLength={6}
+          <OtpInput
+            length={6}
             value={token}
-            onChange={(val) => setToken(val)}
+            onChange={setToken}
+            status={state.error ? "error" : "idle"}
             autoFocus
-            inputMode="numeric"
-          >
-            <InputOTPGroup className="gap-2 sm:gap-3">
-              <InputOTPSlot index={0} />
-              <InputOTPSlot index={1} />
-              <InputOTPSlot index={2} />
-              <InputOTPSlot index={3} />
-              <InputOTPSlot index={4} />
-              <InputOTPSlot index={5} />
-            </InputOTPGroup>
-          </InputOTP>
+          />
         </StaggerItem>
 
         {/* Error message banner */}

@@ -40,9 +40,8 @@ export async function verifyOtp(
 
   // Straight to the thing they signed up to do. There is no separate setup
   // step — handle and display name were captured at signup and written above.
-  // `next` is whatever the gate interrupted; /create is the right default
-  // because that is what signup is for.
-  redirect(safeNext(String(formData.get("next") ?? ""), "/create"));
+  // `next` is whatever the gate interrupted; no gate means home, same as login.
+  redirect(safeNext(String(formData.get("next") ?? ""), "/"));
 }
 
 export async function resendOtp(email: string) {

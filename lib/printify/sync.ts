@@ -17,6 +17,64 @@ function serviceClient() {
   )
 }
 
+type MintableDesign = {
+  id: string
+  image_url: string
+  print_ready_front_url: string | null
+  vibe_id: string | null
+  garment_slug: string | null
+  featured_variant_id: number | null
+  description: string | null
+}
+
+/** Shared by the first mint and the forced remint below: resolve the garment
+ *  and vibe, create the Printify product, and store what it returns —
+ *  including `placement` itself, so a design that arrived with no garment
+ *  config on record ends up with the resolved value on the row rather than a
+ *  null that no longer matches what got minted. */
+async function mintAndStore(
+  admin: ReturnType<typeof serviceClient>,
+  design: MintableDesign,
+  placement: Placement
+): Promise<boolean> {
+  const garment = design.garment_slug
+    ? findGarment(design.garment_slug)
+    : defaultGarment()
+
+  if (!garment) return false
+
+  const { data: vibe } = design.vibe_id
+    ? await admin.from("vibes").select("name").eq("id", design.vibe_id).maybeSingle()
+    : { data: null }
+
+  const result = await createDesignProduct({
+    designId: design.id,
+    garment,
+    title: `${vibe?.name ?? "Shirt Bazaar"} — 1 of 1`,
+    // Composed alongside the title at generation time (lib/generation/compose.ts
+    // composeListing). Null on designs generated before that column existed,
+    // or when the composer call failed — same generic line either way.
+    description: design.description ?? FALLBACK_DESCRIPTION,
+    imageUrl: design.print_ready_front_url ?? design.image_url,
+    placement,
+    featuredVariantId: design.featured_variant_id ?? null,
+  })
+
+  if (!result) return false
+
+  await admin
+    .from("designs")
+    .update({
+      printify_product_id: result.productId,
+      mockup_url: result.mockupUrl,
+      back_mockup_url: result.backMockupUrl,
+      placement,
+    })
+    .eq("id", design.id)
+
+  return true
+}
+
 /** Mints the Printify product for a design and stores the id and mockup on the
  *  row.
  *
@@ -52,45 +110,46 @@ export async function syncDesignProduct(designId: string): Promise<void> {
   // product exists: re-minting would orphan the old one in the Printify shop.
   if (design.printify_product_id) return
 
-  // A null config is the backfill path — designs from before garment choice
-  // existed, and the claim-path retry. Default garment, front print.
-  const garment = design.garment_slug
-    ? findGarment(design.garment_slug)
-    : defaultGarment()
-
-  if (!garment) return
-
-  const { data: vibe } = design.vibe_id
-    ? await admin.from("vibes").select("name").eq("id", design.vibe_id).maybeSingle()
-    : { data: null }
-
   try {
-    const result = await createDesignProduct({
-      designId: design.id,
-      garment,
-      title: `${vibe?.name ?? "Shirt Bazaar"} — 1 of 1`,
-      // Composed alongside the title at generation time (lib/generation/compose.ts
-      // composeListing). Null on designs generated before that column existed,
-      // or when the composer call failed — same generic line either way.
-      description: design.description ?? FALLBACK_DESCRIPTION,
-      imageUrl: design.print_ready_front_url ?? design.image_url,
-      placement: (design.placement as Placement | null) ?? "front",
-      featuredVariantId: design.featured_variant_id ?? null,
-    })
-
-    if (!result) return
-
-    await admin
-      .from("designs")
-      .update({
-        printify_product_id: result.productId,
-        mockup_url: result.mockupUrl,
-        back_mockup_url: result.backMockupUrl,
-      })
-      .eq("id", design.id)
+    // A null placement is the backfill path — designs from before garment
+    // choice existed, and the claim-path retry. Default garment, both sides
+    // printed.
+    await mintAndStore(admin, design, (design.placement as Placement | null) ?? "both")
   } catch (error) {
     // Logged, not thrown: an unhandled rejection in `after()` would surface as a
     // server error for a request that already succeeded.
     console.error(`[printify] sync failed for design ${designId}`, error)
+  }
+}
+
+/** Force-remints a design's Printify product with a new placement, orphaning
+ *  whatever product it already has — the one case where that trade-off (see
+ *  above) is deliberately accepted rather than avoided. Printify doesn't bill
+ *  for an unsold product, so the orphan costs nothing; this exists for the
+ *  one-time move to real dual-side printing on designs minted before `both`
+ *  was the default, not for routine use. */
+export async function remintDesignProduct(
+  designId: string,
+  placement: Placement = "both"
+): Promise<boolean> {
+  if (!printifyConfig()) return false
+
+  const admin = serviceClient()
+
+  const { data: design } = await admin
+    .from("designs")
+    .select(
+      "id, image_url, print_ready_front_url, vibe_id, garment_slug, featured_variant_id, description"
+    )
+    .eq("id", designId)
+    .maybeSingle()
+
+  if (!design) return false
+
+  try {
+    return await mintAndStore(admin, design, placement)
+  } catch (error) {
+    console.error(`[printify] remint failed for design ${designId}`, error)
+    return false
   }
 }

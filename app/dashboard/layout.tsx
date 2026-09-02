@@ -47,7 +47,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         creditsTotal={DAILY_CAP}
         designsCount={designsCount}
       />
-      <SidebarInset className="relative pb-20 lg:pb-0 bg-background min-h-screen">
+      <SidebarInset className="relative pb-24 lg:pb-0 bg-background min-h-screen">
         {/* Top Header Bar */}
         <header className="flex h-16 shrink-0 items-center justify-end gap-4 border-b border-border bg-card px-6 lg:px-8">
 
@@ -88,7 +88,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
           <PageTransition>{children}</PageTransition>
         </main>
 
-        <MobileBottomNav isLoggedIn={true} />
+        <MobileBottomNav isLoggedIn={true} unreadCount={notifications?.unreadCount ?? 0} />
       </SidebarInset>
     </SidebarProvider>
   );

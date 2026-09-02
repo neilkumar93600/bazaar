@@ -65,6 +65,27 @@ const TEE_PATH = [
 
 const COLLAR_PATH = "M40,12 C41.5,18.5 58.5,18.5 60,12"
 
+const TEE_PATH_BACK = [
+  "M40,12",
+  "C35,12.4 31,12.4 28,13", // left shoulder seam
+  "C20,17.5 12,25 7,34", // over the sleeve cap
+  "C6.2,36.5 6.8,40 9,45", // round the cuff corner
+  "C12,48.5 16.5,50.5 21,51", // sleeve hem
+  "C23,48.5 24.8,45.8 26,43", // back up into the armpit
+  "C24.6,60 24,84 25,102", // side seam, tapered at the waist
+  "C41,104.5 59,104.5 75,102", // hem, hanging low in the middle
+  "C76,84 75.4,60 74,43", // right side seam
+  "C75.2,45.8 77,48.5 79,51",
+  "C83.5,50.5 88,48.5 91,45",
+  "C93.2,40 93.8,36.5 93,34",
+  "C88,25 80,17.5 72,13",
+  "C69,12.4 65,12.4 60,12", // right shoulder seam
+  "C56,9.5 44,9.5 40,12", // back collar curve
+  "Z",
+].join(" ")
+
+const COLLAR_PATH_BACK = "M40,12 C44,9.5 56,9.5 60,12"
+
 /** Where the fabric breaks. Drawn as open strokes rather than filled shapes so
  *  they stay hairlines at any card size. */
 const FOLDS = [
@@ -76,8 +97,16 @@ const FOLDS = [
   "M70,88 C63,94 55,96 50,96",
 ]
 
+const FOLDS_BACK = [
+  "M29,60 C30.8,72 30.8,85 29,97",
+  "M71,60 C69.2,72 69.2,85 71,97",
+  "M30,88 C37,94 45,96 50,96",
+  "M70,88 C63,94 55,96 50,96",
+  "M34,18 C44,21 56,21 66,18", // upper back yoke
+]
+
 /** A design shown as apparel rather than as flat artwork: a drawn tee blank with
- *  the design printed on the chest.
+ *  the design printed on the chest or back.
  *
  *  Drawn, not photographed, on purpose — a photographic blank would need a
  *  matching mockup render per garment tone and per design, and the artwork's own
@@ -95,6 +124,8 @@ export function ShirtMockup({
   className,
   tone: toneOverride,
   sizes = "(min-width: 1280px) 110px, (min-width: 768px) 12vw, 18vw",
+  side = "front",
+  placement = "front",
 }: {
   imageUrl: string
   priority?: boolean
@@ -109,11 +140,38 @@ export function ShirtMockup({
    *  hash keeps a wall of mockups from reading as one shirt photocopied fifty
    *  times. */
   tone?: GarmentTone
+  side?: "front" | "back"
+  placement?: string | null
 }) {
   const tone = toneOverride ?? garmentToneFor(imageUrl)
-  const sideId = `tee-side-${tone.id}`
-  const chestId = `tee-chest-${tone.id}`
+  const isBack = side === "back"
+  const sideId = `tee-side-${tone.id}${isBack ? "-back" : ""}`
+  const chestId = `tee-chest-${tone.id}${isBack ? "-back" : ""}`
   const contactId = `tee-contact-${tone.id}`
+
+  const currentTeePath = isBack ? TEE_PATH_BACK : TEE_PATH
+  const currentFolds = isBack ? FOLDS_BACK : FOLDS
+  const currentCollarPath = isBack ? COLLAR_PATH_BACK : COLLAR_PATH
+
+  // Artwork visibility & sizing: artwork is rendered on both front and back
+  // so the user can preview the custom design across all garment colors and sides.
+  const shouldRenderArtwork = true
+
+  const isChestMark = !isBack && placement === "both"
+
+  const printStyle = isChestMark
+    ? {
+        left: "44%",
+        top: "22%",
+        width: "12%",
+        height: "18%",
+      }
+    : {
+        left: `${PRINT.x}%`,
+        top: `${((isBack ? PRINT.y - 2 : PRINT.y) / VIEWBOX.height) * 100}%`,
+        width: `${PRINT.width}%`,
+        height: `${(PRINT.height / VIEWBOX.height) * 100}%`,
+      }
 
   return (
     <div
@@ -141,9 +199,9 @@ export function ShirtMockup({
               <stop offset="100%" stopColor={tone.deep} stopOpacity="0.85" />
             </linearGradient>
 
-            {/* Key light on the upper chest, where a garment on a hanger catches
+            {/* Key light on the garment, where a garment on a hanger catches
                 it. Warm white at low strength — enough to lift, not to glare. */}
-            <radialGradient id={chestId} cx="0.5" cy="0.3" r="0.55">
+            <radialGradient id={chestId} cx="0.5" cy={isBack ? "0.25" : "0.3"} r="0.55">
               <stop offset="0%" stopColor="#ffffff" stopOpacity="0.22" />
               <stop offset="55%" stopColor="#ffffff" stopOpacity="0.06" />
               <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
@@ -160,12 +218,12 @@ export function ShirtMockup({
 
           <ellipse cx="50" cy="103" rx="34" ry="4.5" fill={`url(#${contactId})`} />
 
-          <path d={TEE_PATH} fill={tone.body} />
+          <path d={currentTeePath} fill={tone.body} />
 
           {/* Shading passes, painted through the silhouette so none of it can
               spill past the garment's edge. */}
-          <path d={TEE_PATH} fill={`url(#${sideId})`} />
-          <path d={TEE_PATH} fill={`url(#${chestId})`} />
+          <path d={currentTeePath} fill={`url(#${sideId})`} />
+          <path d={currentTeePath} fill={`url(#${chestId})`} />
 
           {/* Under-sleeve shadow: the arm scoop is the darkest part of a tee
               photographed flat, and its absence is what made the sleeves read as
@@ -181,7 +239,7 @@ export function ShirtMockup({
             opacity="0.35"
           />
 
-          {FOLDS.map((fold) => (
+          {currentFolds.map((fold) => (
             <path
               key={fold}
               d={fold}
@@ -220,66 +278,76 @@ export function ShirtMockup({
             opacity="0.3"
           />
 
-          {/* Collar: a ribbed band, then the shadow it casts into the neck
-              opening, then the highlight along its top edge. */}
+          {/* Collar: a ribbed band, then the shadow it casts, then the highlight */}
           <path
-            d={COLLAR_PATH}
+            d={currentCollarPath}
             fill="none"
             stroke={tone.seam}
             strokeWidth="3.4"
             strokeLinecap="round"
           />
-          <path
-            d="M40.6,13.6 C42,19.4 58,19.4 59.4,13.6"
-            fill="none"
-            stroke={tone.deep}
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            opacity="0.4"
-          />
-          <path
-            d={COLLAR_PATH}
-            fill="none"
-            stroke="#ffffff"
-            strokeWidth="0.7"
-            strokeLinecap="round"
-            opacity="0.18"
-            transform="translate(0,-1.5)"
-          />
+          {!isBack ? (
+            <>
+              <path
+                d="M40.6,13.6 C42,19.4 58,19.4 59.4,13.6"
+                fill="none"
+                stroke={tone.deep}
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                opacity="0.4"
+              />
+              <path
+                d={COLLAR_PATH}
+                fill="none"
+                stroke="#ffffff"
+                strokeWidth="0.7"
+                strokeLinecap="round"
+                opacity="0.18"
+                transform="translate(0,-1.5)"
+              />
+            </>
+          ) : (
+            <path
+              d={COLLAR_PATH_BACK}
+              fill="none"
+              stroke="#ffffff"
+              strokeWidth="0.7"
+              strokeLinecap="round"
+              opacity="0.18"
+              transform="translate(0,-1)"
+            />
+          )}
         </svg>
 
         {/* Outside the SVG rather than an <image> href, so this stays a
             next/image and keeps its responsive srcset — a feed renders dozens of
             these at once and the source art is 1024×1536. */}
-        <div
-          className="absolute"
-          style={{
-            left: `${PRINT.x}%`,
-            top: `${(PRINT.y / VIEWBOX.height) * 100}%`,
-            width: `${PRINT.width}%`,
-            height: `${(PRINT.height / VIEWBOX.height) * 100}%`,
-          }}
-        >
-          <Image
-            src={imageUrl}
-            alt=""
-            fill
-            sizes={sizes}
-            priority={priority}
-            className="object-contain"
-          />
-          {/* The print has to take the same light as the fabric under it, or it
-              floats above the shirt no matter how well the shirt is drawn: the
-              chest curves away at both edges, so the ink there is in shadow. */}
+        {shouldRenderArtwork && (
           <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0 mix-blend-multiply"
-            style={{
-              background:
-                "linear-gradient(90deg, rgba(0,0,0,0.22) 0%, rgba(0,0,0,0.05) 16%, rgba(0,0,0,0) 40%, rgba(0,0,0,0) 60%, rgba(0,0,0,0.05) 84%, rgba(0,0,0,0.22) 100%)",
-            }}
-          />
-        </div>
+            className="absolute transition-all duration-300"
+            style={printStyle}
+          >
+            <Image
+              src={imageUrl}
+              alt=""
+              fill
+              sizes={sizes}
+              priority={priority}
+              className="object-contain"
+            />
+            {/* The print has to take the same light as the fabric under it, or it
+                floats above the shirt no matter how well the shirt is drawn: the
+                chest curves away at both edges, so the ink there is in shadow. */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 mix-blend-multiply"
+              style={{
+                background:
+                  "linear-gradient(90deg, rgba(0,0,0,0.22) 0%, rgba(0,0,0,0.05) 16%, rgba(0,0,0,0) 40%, rgba(0,0,0,0) 60%, rgba(0,0,0,0.05) 84%, rgba(0,0,0,0.22) 100%)",
+              }}
+            />
+          </div>
+        )}
       </div>
     </div>
   )

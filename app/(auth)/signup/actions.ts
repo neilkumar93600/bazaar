@@ -60,7 +60,8 @@ export async function signup(
   }
 
   // `next` rides along so the OTP screen can finish the trip the gate stopped.
-  const next = safeNext(String(formData.get("next") ?? ""), "/create");
+  // No `next` means no gate caught them — home, same as a plain login.
+  const next = safeNext(String(formData.get("next") ?? ""), "/");
   redirect(
     `/verify-otp?email=${encodeURIComponent(email)}&next=${encodeURIComponent(next)}`,
   );

@@ -64,15 +64,9 @@ export function DesignView({
   const title = designLabel(design)
 
   return (
-    <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-2 lg:gap-12">
-      {/* Split into three grid items, not two flex columns: a mobile buyer
-          reads image -> price/colour/buy -> maker/description, so the buy
-          button can't sit inside the same block as the stuff that used to
-          push it down the page. `order` reshuffles that stack on mobile;
-          `lg:order-none` plus explicit col/row-start put it all back for the
-          two-column desktop layout, where the maker card and description
-          belong under the gallery either way. */}
-      <div className="order-1 lg:order-none lg:col-start-1 lg:row-start-1">
+    <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12 lg:gap-12">
+      {/* Left Column: Gallery + Creator Card + About artwork (on desktop) */}
+      <div className="flex flex-col gap-8 lg:col-span-6 lg:sticky lg:top-24">
         <DesignGallery
           imageUrl={design.imageUrl}
           mockupUrl={design.mockupUrl}
@@ -87,10 +81,34 @@ export function DesignView({
           onToggleArt={setShowArt}
           side={side}
         />
+
+        <div className="hidden lg:flex flex-col gap-6">
+          {design.creator ? (
+            <CreatorCard
+              creator={design.creator}
+              designCount={creatorDesignCount}
+            />
+          ) : (
+            <div className="rounded-xl border border-border bg-card p-5 text-body-sm text-muted-ink">
+              House stock — no maker attached to this one.
+            </div>
+          )}
+
+          {design.description && (
+            <div className="flex flex-col gap-2 rounded-2xl border border-border/80 bg-card p-5 shadow-xs">
+              <h4 className="text-caption font-semibold text-muted-foreground uppercase tracking-wider">
+                About this artwork
+              </h4>
+              <p className="text-body text-muted-ink leading-relaxed">
+                {design.description}
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Transactional Panel with Colour Selector below pricing */}
-      <div className="order-2 lg:order-none lg:col-start-2 lg:row-span-2 lg:row-start-1">
+      {/* Right Column: Transactional Panel with Side & Colour Selector & Buy & Accordions */}
+      <div className="flex flex-col gap-8 lg:col-span-6">
         <DesignDetailPanel
           design={design}
           orderOptions={orderOptions}
@@ -108,30 +126,31 @@ export function DesignView({
           viewerEmail={viewerEmail}
           viewerDisplayName={viewerDisplayName}
         />
-      </div>
 
-      <div className="order-3 lg:order-none flex flex-col gap-6 lg:col-start-1">
-        {design.creator ? (
-          <CreatorCard
-            creator={design.creator}
-            designCount={creatorDesignCount}
-          />
-        ) : (
-          <div className="rounded-xl border border-border bg-card p-5 text-body-sm text-muted-ink">
-            House stock — no maker attached to this one.
-          </div>
-        )}
+        {/* Mobile only: Creator Card + About under transactional section */}
+        <div className="flex lg:hidden flex-col gap-6">
+          {design.creator ? (
+            <CreatorCard
+              creator={design.creator}
+              designCount={creatorDesignCount}
+            />
+          ) : (
+            <div className="rounded-xl border border-border bg-card p-5 text-body-sm text-muted-ink">
+              House stock — no maker attached to this one.
+            </div>
+          )}
 
-        {design.description && (
-          <div className="flex flex-col gap-2 rounded-2xl border border-border/80 bg-card p-5 shadow-xs">
-            <h4 className="text-caption font-semibold text-muted-foreground uppercase tracking-wider">
-              About this artwork
-            </h4>
-            <p className="text-body text-muted-ink leading-relaxed">
-              {design.description}
-            </p>
-          </div>
-        )}
+          {design.description && (
+            <div className="flex flex-col gap-2 rounded-2xl border border-border/80 bg-card p-5 shadow-xs">
+              <h4 className="text-caption font-semibold text-muted-foreground uppercase tracking-wider">
+                About this artwork
+              </h4>
+              <p className="text-body text-muted-ink leading-relaxed">
+                {design.description}
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

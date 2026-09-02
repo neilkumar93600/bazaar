@@ -37,8 +37,8 @@ export function DesignGallery({
 }: {
   imageUrl: string
   mockupUrl: string | null
-  /** The back-print photo. Only set for `placement: "both"` — its presence is
-   *  what turns the Front/Back switch on. */
+  /** The back-print photo. Populated once the product is synced — its presence
+   *  is what turns the Front/Back switch on. */
   backMockupUrl?: string | null
   alt: string
   /** One real product photo per garment colour, in catalogue order. Empty until

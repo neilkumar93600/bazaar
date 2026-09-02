@@ -60,11 +60,17 @@ function PersonaCreateForm() {
     setUploadError(null)
   }
 
-  // Same input element sticks around after a save, so drop the old selection
-  // rather than let it be submitted a second time.
+  const prevSuccessRef = useRef(state.success)
   useEffect(() => {
-    if (state.success) clearFiles()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (state.success && !prevSuccessRef.current) {
+      if (inputRef.current) inputRef.current.value = ""
+      // Schedule clearing after render to avoid cascading renders
+      setTimeout(() => {
+        setFiles([])
+        setUploadError(null)
+      }, 0)
+    }
+    prevSuccessRef.current = state.success
   }, [state.success])
 
   // Images go straight from the browser to Storage under the caller's own

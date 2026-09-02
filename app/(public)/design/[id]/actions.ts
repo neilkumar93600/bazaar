@@ -17,7 +17,11 @@ import {
   getOrderOptions,
   type OrderOptions,
 } from "@/app/(public)/design/[id]/order-actions";
-import { colourMockups, type ColourMockup } from "@/lib/printify/mockups";
+import {
+  colourMockups,
+  frontMockupFrom,
+  type ColourMockup,
+} from "@/lib/printify/mockups";
 
 /** `boltToken` means the purchase isn't finished: the browser still has to
  *  open Bolt's modal with it. A free purchase redirects instead and returns
@@ -40,20 +44,33 @@ export type DesignDialogData = {
   orderOptions: OrderOptions;
   /** One product photo per garment colour, for the gallery's swatch row. */
   shirtColours: ColourMockup[];
-  /** Same, for the back print. Empty unless the design is `placement: "both"`. */
+  /** Same, for the back print. */
   backShirtColours: ColourMockup[];
 };
 
 export async function getDesignDialogData(
   designId: string
 ): Promise<DesignDialogData> {
-  const [design, supabase] = await Promise.all([
+  const [rawDesign, supabase] = await Promise.all([
     getDesignDetail(designId),
     createClient(),
   ]);
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  const frontUrl = rawDesign
+    ? (frontMockupFrom(rawDesign.mockupUrl) ?? rawDesign.mockupUrl)
+    : null;
+  const backUrl = rawDesign ? rawDesign.backMockupUrl : null;
+
+  const design = rawDesign
+    ? {
+        ...rawDesign,
+        mockupUrl: frontUrl,
+        backMockupUrl: backUrl,
+      }
+    : null;
 
   // Fetched for every design, not just orderable ones: the gallery needs the
   // colour list to re-point the product photo. The catalogue is cached for the
@@ -77,8 +94,8 @@ export async function getDesignDialogData(
     // Only a claimed design with a product can actually be ordered.
     orderOptions:
       design?.claimedBy && design.printifyProductId ? options : null,
-    shirtColours: colourMockups(design?.mockupUrl ?? null, options?.colours ?? []),
-    backShirtColours: colourMockups(design?.backMockupUrl ?? null, options?.colours ?? []),
+    shirtColours: colourMockups(frontUrl, options?.colours ?? []),
+    backShirtColours: colourMockups(backUrl, options?.colours ?? []),
   };
 }
 
