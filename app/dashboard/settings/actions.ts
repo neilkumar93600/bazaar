@@ -9,6 +9,22 @@ import { generateBannerFromPrompt } from "@/lib/storefront/banner-prompt";
 
 export type UpdateProfileState = { error?: string; success?: boolean };
 
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "image/gif"]);
+
+/** Rejects anything that isn't a small, actually-an-image upload before it
+ *  ever reaches Storage — nothing downstream (avatar/banner) needs anything
+ *  else. Returns an error string, or null when the file is fine. */
+function validateImageFile(file: File): string | null {
+  if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+    return "Please upload a PNG, JPEG, WebP, or GIF image.";
+  }
+  if (file.size > MAX_IMAGE_BYTES) {
+    return "Image must be smaller than 5MB.";
+  }
+  return null;
+}
+
 export async function updateProfile(
   _prevState: UpdateProfileState,
   formData: FormData,
@@ -59,50 +75,40 @@ export async function updateProfile(
 
   // 3. Process avatarFile upload
   if (avatarFile && avatarFile.size > 0 && avatarFile.name) {
-    try {
-      const fileExt = avatarFile.name.split(".").pop() || "png";
-      const filePath = `avatar-${user.id}-${Date.now()}.${fileExt}`;
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(filePath, avatarFile, { upsert: true });
+    const validationError = validateImageFile(avatarFile);
+    if (validationError) return { error: validationError };
 
-      if (!uploadError && uploadData) {
-        const { data: publicUrlData } = supabase.storage
-          .from("avatars")
-          .getPublicUrl(filePath);
-        avatarUrl = publicUrlData.publicUrl;
-      } else {
-        const buffer = Buffer.from(await avatarFile.arrayBuffer());
-        avatarUrl = `data:${avatarFile.type || "image/png"};base64,${buffer.toString("base64")}`;
-      }
-    } catch {
-      const buffer = Buffer.from(await avatarFile.arrayBuffer());
-      avatarUrl = `data:${avatarFile.type || "image/png"};base64,${buffer.toString("base64")}`;
+    const fileExt = avatarFile.name.split(".").pop() || "png";
+    const filePath = `avatar-${user.id}-${Date.now()}.${fileExt}`;
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from("avatars")
+      .upload(filePath, avatarFile, { upsert: true, contentType: avatarFile.type });
+
+    if (uploadError || !uploadData) {
+      return { error: "Avatar upload failed. Please try again." };
     }
+
+    const { data: publicUrlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
+    avatarUrl = publicUrlData.publicUrl;
   }
 
   // 4. Process bannerFile upload
   if (bannerFile && bannerFile.size > 0 && bannerFile.name) {
-    try {
-      const fileExt = bannerFile.name.split(".").pop() || "png";
-      const filePath = `banner-${user.id}-${Date.now()}.${fileExt}`;
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(filePath, bannerFile, { upsert: true });
+    const validationError = validateImageFile(bannerFile);
+    if (validationError) return { error: validationError };
 
-      if (!uploadError && uploadData) {
-        const { data: publicUrlData } = supabase.storage
-          .from("avatars")
-          .getPublicUrl(filePath);
-        bannerUrl = publicUrlData.publicUrl;
-      } else {
-        const buffer = Buffer.from(await bannerFile.arrayBuffer());
-        bannerUrl = `data:${bannerFile.type || "image/png"};base64,${buffer.toString("base64")}`;
-      }
-    } catch {
-      const buffer = Buffer.from(await bannerFile.arrayBuffer());
-      bannerUrl = `data:${bannerFile.type || "image/png"};base64,${buffer.toString("base64")}`;
+    const fileExt = bannerFile.name.split(".").pop() || "png";
+    const filePath = `banner-${user.id}-${Date.now()}.${fileExt}`;
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from("avatars")
+      .upload(filePath, bannerFile, { upsert: true, contentType: bannerFile.type });
+
+    if (uploadError || !uploadData) {
+      return { error: "Banner upload failed. Please try again." };
     }
+
+    const { data: publicUrlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
+    bannerUrl = publicUrlData.publicUrl;
   }
 
   const update: Record<string, unknown> = {

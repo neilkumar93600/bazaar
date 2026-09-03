@@ -254,6 +254,7 @@ async function runGeneration(
         prompt,
         title,
         description,
+        quote,
         style,
         aspectRatio,
         quality,
@@ -297,6 +298,11 @@ async function generateOne(
    *  lifted from the prompt — see composeListing. */
   title: string | null,
   description: string,
+  /** The line printed under the illustration, for poster styles. Copied onto
+   *  the design row (not just generation_jobs) so the design detail page can
+   *  read it without a join that RLS blocks for anyone but the job's owner —
+   *  see 20260903120000_design_quote_content.sql. */
+  quote: string | null,
   style: StylePreset,
   aspectRatio: AspectRatio,
   quality: Quality,
@@ -335,6 +341,7 @@ async function generateOne(
       prompt: idea,
       title,
       description,
+      quote_content: quote,
       // Private until the maker lists it. Generation is not publication —
       // see docs/superpowers/specs/2026-08-09-design-ownership-listing-design.md
       listed_at: null,

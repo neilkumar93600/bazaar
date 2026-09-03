@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 
 import { createClient } from "@/lib/supabase/server"
 import { analyzePersonaStyle } from "@/lib/generation/persona-analysis"
+import { storagePathFromUrl } from "@/lib/images/storage-path"
 
 export type PersonaState = { error?: string; success?: boolean }
 
@@ -53,9 +54,23 @@ export async function createPersona(
 
   // Ownership check: the client picked these paths itself, so confirm every
   // URL actually points at this user's own persona-refs prefix rather than
-  // trusting whatever the form posted.
-  const ownPrefix = `/designs/persona-refs/${user.id}/`
-  if (imageUrls.some((url) => !url.includes(ownPrefix))) {
+  // trusting whatever the form posted. Anchored on the parsed origin +
+  // storage path (not a substring match, which a query string or fragment
+  // could smuggle a real victim path past — see docs/SECURITY.md).
+  const supabaseOrigin = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL!).origin
+  const ownPathPrefix = `persona-refs/${user.id}/`
+  const isOwnReferenceImage = (url: string): boolean => {
+    let origin: string
+    try {
+      origin = new URL(url).origin
+    } catch {
+      return false
+    }
+    if (origin !== supabaseOrigin) return false
+    const path = storagePathFromUrl(url, "designs")
+    return path !== null && path.startsWith(ownPathPrefix)
+  }
+  if (imageUrls.some((url) => !isOwnReferenceImage(url))) {
     return { error: "Those images weren't uploaded by you. Try again." }
   }
 

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { type EmailOtpType } from "@supabase/supabase-js";
 
 import { createClient } from "@/lib/supabase/server";
+import { safeNext } from "@/lib/auth/next-url";
 
 /** The click `app/api/auth/confirm/route.ts` now waits for before it will
  *  verify a recovery token — see that file's comment for why. Runs the exact
@@ -15,7 +16,7 @@ import { createClient } from "@/lib/supabase/server";
 export async function confirmRecovery(formData: FormData) {
   const token_hash = String(formData.get("token_hash") ?? "");
   const type = String(formData.get("type") ?? "") as EmailOtpType;
-  const next = String(formData.get("next") ?? "/dashboard");
+  const next = safeNext(String(formData.get("next") ?? ""), "/dashboard");
 
   if (!token_hash || !type) {
     redirect("/login?error=confirmation_failed");

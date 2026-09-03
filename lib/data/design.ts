@@ -62,7 +62,7 @@ export async function getDesignDetail(id: string): Promise<DesignDetail | null> 
   const { data: design } = await supabase
     .from("designs")
     .select(
-      "id, image_url, mockup_url, back_mockup_url, placement, title, description, price_cents, vibe_id, is_claimed, claimed_by, created_at, generation_job_id, printify_product_id, garment_slug, featured_variant_id"
+      "id, image_url, mockup_url, back_mockup_url, placement, title, description, quote_content, price_cents, vibe_id, is_claimed, claimed_by, created_at, creator_id, printify_product_id, garment_slug, featured_variant_id"
     )
     .eq("id", id)
     .eq("moderation_status", "approved")
@@ -70,20 +70,16 @@ export async function getDesignDetail(id: string): Promise<DesignDetail | null> 
 
   if (!design) return null
 
-  type CreatorJob = {
-    text_content: string | null
-    quote_content: string | null
-    profiles: {
-      id: string
-      handle: string
-      display_name: string | null
-      avatar_url: string | null
-      banner_url: string | null
-      bio: string | null
-    } | null
+  type CreatorProfile = {
+    id: string
+    handle: string
+    display_name: string | null
+    avatar_url: string | null
+    banner_url: string | null
+    bio: string | null
   }
 
-  const [{ data: vibe }, { data: claimantProfile }, { data: claimRow }, { data: job }] =
+  const [{ data: vibe }, { data: claimantProfile }, { data: claimRow }, { data: creatorProfile }] =
     await Promise.all([
       design.vibe_id
         ? supabase.from("vibes").select("name").eq("id", design.vibe_id).maybeSingle()
@@ -102,21 +98,21 @@ export async function getDesignDetail(id: string): Promise<DesignDetail | null> 
             .eq("design_id", design.id)
             .maybeSingle()
         : Promise.resolve({ data: null as { claimed_at: string } | null }),
-      // Embeds the creator's profile via the generation_jobs -> profiles FK
-      // in the same request, instead of a second round trip once we know
-      // the job's user_id.
-      design.generation_job_id
+      // Read straight off designs.creator_id rather than joining through
+      // generation_jobs: that join used to work here, but generation_jobs'
+      // only public-read policy was dropped in 20260809140315 (see that
+      // migration's step 5) once creator_id made it redundant for
+      // attribution. Left as a join, this silently returned null for every
+      // visitor but the design's own maker — see
+      // 20260903120000_design_quote_content.sql.
+      design.creator_id
         ? supabase
-            .from("generation_jobs")
-            .select(
-              "profiles(id, handle, display_name, avatar_url, banner_url, bio), text_content, quote_content"
-            )
-            .eq("id", design.generation_job_id)
-            .maybeSingle<CreatorJob>()
-        : Promise.resolve({ data: null as CreatorJob | null }),
+            .from("profiles")
+            .select("id, handle, display_name, avatar_url, banner_url, bio")
+            .eq("id", design.creator_id)
+            .maybeSingle<CreatorProfile>()
+        : Promise.resolve({ data: null as CreatorProfile | null }),
     ])
-
-  const creatorProfile = job?.profiles ?? null
 
   return {
     id: design.id,
@@ -126,7 +122,7 @@ export async function getDesignDetail(id: string): Promise<DesignDetail | null> 
     placement: (design.placement as Placement | null) ?? null,
     description: design.description ?? null,
     title: design.title ?? null,
-    quote: job?.quote_content ?? null,
+    quote: design.quote_content ?? null,
     priceCents: design.price_cents,
     vibeName: vibe?.name ?? null,
     vibeId: design.vibe_id ?? null,
